@@ -14,7 +14,6 @@ load("@bazel_toolchains//rules/exec_properties:exec_properties.bzl", "create_rbe
 # supports C/C++, Java, and Python. The downside of this image compared to the
 # RBE images is that it does not come with configs, so the first build can take
 # about a minute to generate them.
-
 rbe_autoconfig(
     name = "engflow_remote_config",
     detect_java_home = True,
@@ -22,5 +21,7 @@ rbe_autoconfig(
     registry = "gcr.io",
     repository = "bazel-public/ubuntu1804-bazel-java11",
     use_legacy_platform_definition = False,
+    exec_properties = {
+    },
 )
 
