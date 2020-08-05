@@ -11,15 +11,15 @@ build:engflow --remote_timeout=3600
 build:engflow --spawn_strategy=remote,local
 
 build:engflow --action_env=BAZEL_DO_NOT_DETECT_CPP_TOOLCHAIN=1
-build:engflow --crosstool_top=@rbe_default//cc:toolchain
-build:engflow --extra_execution_platforms=@rbe_default//config:platform
-build:engflow --extra_toolchains=@rbe_default//config:cc-toolchain
+build:engflow --crosstool_top=@engflow_remote_config//cc:toolchain
+build:engflow --extra_execution_platforms=@engflow_remote_config//config:platform
+build:engflow --extra_toolchains=@engflow_remote_config//config:cc-toolchain
 build:engflow --host_java_toolchain=@bazel_tools//tools/jdk:toolchain_java11
-build:engflow --host_javabase=@rbe_default//java:jdk
-build:engflow --host_platform=@rbe_default//config:platform
+build:engflow --host_javabase=@engflow_remote_config//java:jdk
+build:engflow --host_platform=@engflow_remote_config//config:platform
 build:engflow --java_toolchain=@bazel_tools//tools/jdk:toolchain_java11
-build:engflow --javabase=@rbe_default//java:jdk
-build:engflow --platforms=@rbe_default//config:platform
+build:engflow --javabase=@engflow_remote_config//java:jdk
+build:engflow --platforms=@engflow_remote_config//config:platform
 
 build:without_bytes --experimental_inmemory_jdeps_files
 build:without_bytes --experimental_inmemory_dotd_files
