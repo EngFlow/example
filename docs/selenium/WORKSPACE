@@ -1,5 +1,6 @@
-# The `rbe_autoconfig("rbe_default")` does not work; we think it's because it ships with Jdk 8,
-# and that no longer works with a recent Bazel version.
+# The `rbe_autoconfig(name = "rbe_default")` does not work;
+# we think it's because it ships with Jdk 8, and that no
+# longer works with a recent Bazel version.
 rbe_autoconfig(
     name = "engflow_remote_config",
     detect_java_home = True,
