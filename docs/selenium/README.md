@@ -1,7 +1,12 @@
 # Building Selenium w/ EngFlow Remote Execution
 
-In order to start using EngFlow Remote Execution, you need access to a cluster, e.g., using a client certificate.
-Below, we use `name@example.com.crt` and `name@example.com.key` as the client cert and key.
+This directory contains almost everything needed to get started building the open-source
+[Selenium](https://github.com/SeleniumHQ/selenium) project on an EngFlow Remote Execution cluster.
+In addition to the files and documentation here, you also need to run your own cluster or obtain
+access to an existing cluster.
+
+Below, we use `name@example.com.crt` and `name@example.com.key` as the client cert and key for
+TLS client authentication. Other methods may apply depending on the cluster configuration.
 
 ```
 $ git clone https://github.com/SeleniumHQ/selenium.git selenium
