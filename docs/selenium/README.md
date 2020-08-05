@@ -18,3 +18,10 @@ $ echo "build:engflow --tls_client_certificate=name@example.com.crt" >> .bazelrc
 $ echo "build:engflow --tls_client_key=name@example.com.crt" >> .bazelrc.local
 $ bazel build --config=engflow //java/... //py/... //deploys/...
 ```
+
+# Known Issues
+
+1. The Python parts of Selenium require a locally installed `dataclasses` module, which is not in the
+image we use here.
+
+2. Some actions require more than 1 GB of inputs, and the default cluster configuration has a 1 GB limit.
