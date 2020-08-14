@@ -1,0 +1,12 @@
+configs: {
+    remoteexec_platform: {
+        # EngFlow does not currently use the OSFamily property for routing.
+        properties:{
+            name: "OSFamily"
+            value: "Linux"
+        }
+        rbe_instance_basename: "unused"
+    }
+    # Necessary for goma server to work correctly.
+    dimensions: "os:linux"
+}
