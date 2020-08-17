@@ -1,0 +1,41 @@
+From a82544406765e0fa980687fa772db00f6fc2eee9 Mon Sep 17 00:00:00 2001
+From: Ulf Adams <ulf@engflow.com>
+Date: Mon, 17 Aug 2020 23:06:03 +0200
+Subject: [PATCH 2/3] Use absolute paths for which and find
+
+According to the REAPI documentation, relative paths are not resolved
+relative to PATH but relative to the working directory, but TF apparently
+expects them to be resolved relative to PATH. For now, patch the relevant
+places to use absolute paths - the build runs within a Docker image where
+the absolute paths are known.
+
+Longer-term solution is TBD.
+---
+ third_party/remote_config/common.bzl | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/third_party/remote_config/common.bzl b/third_party/remote_config/common.bzl
+index 2d627e26cb..1511d24417 100644
+--- a/third_party/remote_config/common.bzl
++++ b/third_party/remote_config/common.bzl
+@@ -26,7 +26,7 @@ def which(repository_ctx, program_name):
+             program_name = program_name + ".exe"
+         result = execute(repository_ctx, ["C:\\Windows\\System32\\where.exe", program_name])
+     else:
+-        result = execute(repository_ctx, ["which", program_name])
++        result = execute(repository_ctx, ["/usr/bin/which", program_name])
+     return result.stdout.rstrip()
+ 
+ def get_python_bin(repository_ctx):
+@@ -100,7 +100,7 @@ def read_dir(repository_ctx, src_dir):
+     else:
+         find_result = execute(
+             repository_ctx,
+-            ["find", src_dir, "-follow", "-type", "f"],
++            ["/usr/bin/find", src_dir, "-follow", "-type", "f"],
+             empty_stdout_fine = True,
+         )
+         result = find_result.stdout
+-- 
+2.28.0
+

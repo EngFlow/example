@@ -1,0 +1,38 @@
+From 35f5864a2bad2ef39366a21c6ddac2c399de1ea1 Mon Sep 17 00:00:00 2001
+From: Ulf Adams <ulf@engflow.com>
+Date: Mon, 17 Aug 2020 23:05:34 +0200
+Subject: [PATCH 1/3] Update .bazelrc settings for EngFlow RE
+
+---
+ .bazelrc | 11 ++++++-----
+ 1 file changed, 6 insertions(+), 5 deletions(-)
+
+diff --git a/.bazelrc b/.bazelrc
+index 1b9f5e87c6..121b42425b 100644
+--- a/.bazelrc
++++ b/.bazelrc
+@@ -382,15 +382,16 @@ build:xla --define=with_xla_support=true
+ common --experimental_repo_remote_exec
+ 
+ build:rbe --action_env=BAZEL_DO_NOT_DETECT_CPP_TOOLCHAIN=1
+-build:rbe --google_default_credentials
+-build:rbe --bes_backend=buildeventservice.googleapis.com
+-build:rbe --bes_results_url="https://source.cloud.google.com/results/invocations"
+-build:rbe --bes_timeout=600s
++#build:rbe --google_default_credentials
++#build:rbe --bes_backend=buildeventservice.googleapis.com
++#build:rbe --bes_results_url="https://source.cloud.google.com/results/invocations"
++#build:rbe --bes_timeout=600s
+ build:rbe --define=EXECUTOR=remote
+ build:rbe --distinct_host_configuration=false
+ build:rbe --flaky_test_attempts=3
+ build:rbe --jobs=200
+-build:rbe --remote_executor=grpcs://remotebuildexecution.googleapis.com
++build:rbe --remote_executor=grpcs://oss-cluster.engflow.com
++build:rbe --tls_certificate=engflow-ca.crt
+ build:rbe --remote_timeout=3600
+ build:rbe --spawn_strategy=remote,worker,standalone,local
+ test:rbe --test_env=USER=anon
+-- 
+2.28.0
+

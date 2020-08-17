@@ -1,0 +1,46 @@
+From c96910d29bdec0b68519f15251385cd07cd5d09c Mon Sep 17 00:00:00 2001
+From: Ulf Adams <ulf@engflow.com>
+Date: Mon, 17 Aug 2020 23:07:32 +0200
+Subject: [PATCH 3/3] Disable Pool platform option
+
+The oss-cluster.engflow.com does not use a pool name; setting one causes
+all actions to timeout as the scheduler cannot find the corresponding
+pool.
+---
+ third_party/toolchains/remote_config/rbe_config.bzl | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
+
+diff --git a/third_party/toolchains/remote_config/rbe_config.bzl b/third_party/toolchains/remote_config/rbe_config.bzl
+index 08c115ab3a..1f44ab383d 100644
+--- a/third_party/toolchains/remote_config/rbe_config.bzl
++++ b/third_party/toolchains/remote_config/rbe_config.bzl
+@@ -55,7 +55,7 @@ def _tensorflow_rbe_config(name, compiler, python_versions, os, rocm_version = N
+         container_image = _container_image_uri(container_name)
+         exec_properties = {
+             "container-image": container_image,
+-            "Pool": "default",
++#            "Pool": "default",
+         }
+ 
+         remote_cuda_configure(
+@@ -87,7 +87,7 @@ def _tensorflow_rbe_config(name, compiler, python_versions, os, rocm_version = N
+         container_image = _container_image_uri(container_name)
+         exec_properties = {
+             "container-image": container_image,
+-            "Pool": "default",
++#            "Pool": "default",
+         }
+ 
+         remote_rocm_configure(
+@@ -99,7 +99,7 @@ def _tensorflow_rbe_config(name, compiler, python_versions, os, rocm_version = N
+         container_image = _container_image_uri(os)
+         exec_properties = {
+             "container-image": container_image,
+-            "Pool": "default",
++#            "Pool": "default",
+         }
+ 
+     else:
+-- 
+2.28.0
+
