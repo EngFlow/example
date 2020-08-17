@@ -27,3 +27,6 @@ $ bazel build --config=rbe_cpu_linux --config=rbe_linux_py3 -c opt -k --jobs=75 
    with `--experimental_remote_download_outputs=minimal`, which is set in the TensorFlow
    `.bazelrc`.
 
+2. If you are talking to a cluster over a slow-ish Internet connection, you may observe very slow
+   builds. We are working on a Bazel patch that significantly reduces build times.
+
