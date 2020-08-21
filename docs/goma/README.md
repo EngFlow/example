@@ -45,7 +45,8 @@ uses `$(pwd)` below:
 cd goma_client/
 export GOMA_ARBITRARY_TOOLCHAIN_SUPPORT=true GOMA_USE_LOCAL=false \
     GOMA_USE_SSL=false GOMACTL_SKIP_AUTH=true GOMA_SERVER_HOST=localhost \
-    GOMA_SERVER_PORT=5050 CC="$(pwd)/gomacc gcc" USER=me@localhost
+    GOMA_SERVER_PORT=5050 GOMA_FALLBACK=false CC="$(pwd)/gomacc gcc" \
+    USER=me@localhost
 ```
 
 We can now try connecting the Goma client to the Goma server:
