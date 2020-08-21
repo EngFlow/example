@@ -9,7 +9,7 @@ TODO: Figure out how to authenticate the Goma server to the cluster.
 TODO: Figure out how to get better relative paths.
 
 The first step is to run Goma server and point it at an EngFlow Remote Execution
-cluster. Below, we use `localhost:8080`:
+cluster:
 ```
 curl https://raw.githubusercontent.com/EngFlow/example/master/engflow-ca.crt > engflow-ca.crt
 curl https://raw.githubusercontent.com/EngFlow/example/master/docs/goma/goma_server_patches.patch > goma_server_patches.patch
