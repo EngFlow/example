@@ -11,27 +11,33 @@ TODO: Figure out how to get better relative paths.
 The first step is to run Goma server and point it at an EngFlow Remote Execution
 cluster. Below, we use `localhost:8080`:
 ```
+curl https://raw.githubusercontent.com/EngFlow/example/master/engflow-ca.crt > engflow-ca.crt
+curl https://raw.githubusercontent.com/EngFlow/example/master/docs/goma/goma_server_patches.patch > goma_server_patches.patch
+curl https://raw.githubusercontent.com/EngFlow/example/master/docs/goma/platform > platform
 git clone https://chromium.googlesource.com/infra/goma/server goma_server
 cd goma_server
 git am ../goma_server_patches.patch
 cd cmd/remoteexec_proxy
 go build
 ./remoteexec_proxy \
-    -exec-config-file ../../../../remote-apis-testing/docker-compose/goma_config/platform \
+    -exec-config-file ../../../platform \
     -allowed-users "*@localhost" \
-    -remoteexec-addr localhost:8080 \
+    -remoteexec-addr oss-cluster.engflow.com:443 \
     -port 5050 \
     -remote-instance-name "unused" \
     -insecure-serveraccess \
-    -insecure-skip-verify
+    -tls-certificate ../../../engflow-ca.crt \
+    -tls-client-certificate ../../../name@example.com.crt \
+    -tls-client-key ../../../name@example.com.key
 ```
 
-You can additionally pass `-insecure-remoteexec` if you disabled TLS server
-authentication.
+You can pass `-insecure-remoteexec` instead of `-tls-certificate` if you
+disabled TLS server authentication, or you can drop the `-tls-client-*` options
+if you disabled client authentication.
 
-You need a second terminal window to continue as we are running the Goma server
-in the foreground. The next step is to install the Goma client (we use a
-precompiled binary for this):
+You need a second terminal window to continue as we are running the Goma remote
+execution proxy in the foreground. The next step is to install the Goma client
+(we use a precompiled binary for this):
 ```
 git clone https://chromium.googlesource.com/chromium/tools/depot_tools depot_tools
 cd depot_tools

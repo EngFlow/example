@@ -1,5 +1,9 @@
 configs: {
     remoteexec_platform: {
+        properties:{
+            name:"container-image"  
+            value:"docker://gcr.io/bazel-public/ubuntu1804-bazel-java11@sha256:d318041b3a16e36550e42c443e856d93710e10252e7111431802fe54b99f2dc9"
+        }
         # EngFlow does not currently use the OSFamily property for routing.
         properties:{
             name: "OSFamily"

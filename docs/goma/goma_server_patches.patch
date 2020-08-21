@@ -1,0 +1,325 @@
+From 56503c2760ba4c2791077a0e81ab61025ea9190f Mon Sep 17 00:00:00 2001
+From: Christopher Phang <christopher.phang@codethink.co.uk>
+Date: Sun, 9 Aug 2020 13:53:37 +0100
+Subject: [PATCH 1/4] remoteexec: provide no auth option
+
+Currently, there is only one method for authentication
+for goma server/client communication which is mandatory.
+In certain scenarios this is unnecessary.
+
+Provide an -insecure-serveraccess boolean flag (default false)
+that provides a second 'authentication' option that always
+permit access to the server from valid clients.
+---
+ auth/allow.go                | 15 +++++++++++++++
+ cmd/remoteexec_proxy/main.go | 15 ++++++++++++---
+ 2 files changed, 27 insertions(+), 3 deletions(-)
+ create mode 100644 auth/allow.go
+
+diff --git a/auth/allow.go b/auth/allow.go
+new file mode 100644
+index 0000000..5e7bf07
+--- /dev/null
++++ b/auth/allow.go
+@@ -0,0 +1,15 @@
++package auth
++
++import (
++	"context"
++	"net/http"
++)
++
++// AllowAuth creates an authenticator that permits any access. This is used
++// for goma client/server setups that do not require any authentication.
++type AllowAuth struct{}
++
++// Auth always returns success
++func (a AllowAuth) Auth(ctx context.Context, req *http.Request) (context.Context, error) {
++	return ctx, nil
++}
+diff --git a/cmd/remoteexec_proxy/main.go b/cmd/remoteexec_proxy/main.go
+index 55f018e..8ad580c 100644
+--- a/cmd/remoteexec_proxy/main.go
++++ b/cmd/remoteexec_proxy/main.go
+@@ -67,6 +67,7 @@ var (
+ 	serviceAccountJSON     = flag.String("service-account-json", "", "service account json, used to talk to RBE and cloud storage (if --file-cache-bucket is used)")
+ 	platformContainerImage = flag.String("platform-container-image", "", "docker uri of platform container image")
+ 	insecureRemoteexec     = flag.Bool("insecure-remoteexec", false, "insecure grpc for remoteexec API")
++	insecureServerAccess   = flag.Bool("insecure-serveraccess", false, "insecure access between goma client/server")
+ 	insecureSkipVerify     = flag.Bool("insecure-skip-verify", false, "insecure skip verifying the server certificate")
+ 	execMaxRetryCount      = flag.Int("exec-max-retry-count", 5, "max retry count for exec call. 0 is unlimited count, but bound to ctx timtout. Use small number for powerful clients to run local fallback quickly. Use large number for powerless clients to use remote more than local.")
+ 
+@@ -438,13 +439,21 @@ func main() {
+ 		logger.Fatal(err)
+ 	}
+ 	mux := http.DefaultServeMux
++
++	var authenticator httprpc.Auth
++	if *insecureServerAccess {
++		authenticator = auth.AllowAuth{}
++		logger.Warnf("No Authentication setup on goma server")
++	} else {
++		authenticator = &auth.Auth{
++			Client: authClient{Service: authService},
++		}
++	}
+ 	frontend.Register(mux, frontend.Frontend{
+ 		Backend: localBackend{
+ 			ExecService: reExecServer{re},
+ 			FileService: reFileServer{fileServiceClient.Service},
+-			Auth: &auth.Auth{
+-				Client: authClient{Service: authService},
+-			},
++			Auth:        authenticator,
+ 		},
+ 	})
+ 
+-- 
+2.25.1
+
+
+From 32f62ca22073a401515f89b074d7fe6b4ed5dc1e Mon Sep 17 00:00:00 2001
+From: Christopher Phang <christopher.phang@codethink.co.uk>
+Date: Sun, 9 Aug 2020 13:55:27 +0100
+Subject: [PATCH 2/4] WIP: Provide example configuration
+
+This includes platform configuration and command descriptors.
+
+Some documentation in the README may also be of benefit.
+---
+ cmd/remoteexec_proxy/platform | 14 ++++++++++++++
+ 1 file changed, 14 insertions(+)
+ create mode 100644 cmd/remoteexec_proxy/platform
+
+diff --git a/cmd/remoteexec_proxy/platform b/cmd/remoteexec_proxy/platform
+new file mode 100644
+index 0000000..2cb6493
+--- /dev/null
++++ b/cmd/remoteexec_proxy/platform
+@@ -0,0 +1,14 @@
++version_id: "1234"
++configs: {
++    target: {
++        addr: "localhost:8980"
++    }
++    remoteexec_platform: {
++        properties:{
++            name:"OSFamily"  
++            value:"Linux"
++        }  
++        rbe_instance_basename:"remote-execution"
++    }  
++    dimensions: "os:linux"
++}
+-- 
+2.25.1
+
+
+From 0fab0b403e4ef81250409499835fa14979ef0d90 Mon Sep 17 00:00:00 2001
+From: Christopher Phang <christopher.phang@codethink.co.uk>
+Date: Sun, 9 Aug 2020 13:58:21 +0100
+Subject: [PATCH 3/4] WIP: Hardcode input root dir determination
+
+---
+ remoteexec/inputroot.go | 18 +-----------------
+ 1 file changed, 1 insertion(+), 17 deletions(-)
+
+diff --git a/remoteexec/inputroot.go b/remoteexec/inputroot.go
+index c3e282a..4ae1af2 100644
+--- a/remoteexec/inputroot.go
++++ b/remoteexec/inputroot.go
+@@ -163,23 +163,7 @@ func checkInputRootDir(filepath clientFilePath, dir string) error {
+ // If second return value is true, chroot must be used.  It become true only
+ // if `allowChroot` is true and common input root is "/".
+ func inputRootDir(filepath clientFilePath, paths []string, allowChroot bool) (string, bool, error) {
+-	root := commonDir(filepath, paths)
+-	if needChroot(filepath, root) && allowChroot {
+-		switch filepath.(type) {
+-		// TODO: support non-posix platform
+-		case posixpath.FilePath:
+-			return "/", true, nil
+-		}
+-	}
+-	if !validCommonDir(filepath, root) {
+-		pair := getPathsWithNoCommonDir(filepath, paths)
+-		return "", false, fmt.Errorf("no common paths in inputs: %v", pair)
+-	}
+-	err := checkInputRootDir(filepath, root)
+-	if err != nil {
+-		return "", false, err
+-	}
+-	return root, false, nil
++	return "/", false, nil
+ }
+ 
+ var errOutOfRoot = errors.New("out of root")
+-- 
+2.25.1
+
+
+From e70125285f6645ee5d5e6c35910cb2412b1c0eea Mon Sep 17 00:00:00 2001
+From: Christopher Phang <christopher.phang@codethink.co.uk>
+Date: Sun, 9 Aug 2020 17:20:03 +0100
+Subject: [PATCH 4/4] WIP: Remove out of band additions of platform properties
+
+---
+ remoteexec/exec.go | 12 ------------
+ 1 file changed, 12 deletions(-)
+
+diff --git a/remoteexec/exec.go b/remoteexec/exec.go
+index 8533800..a7c20f4 100644
+--- a/remoteexec/exec.go
++++ b/remoteexec/exec.go
+@@ -718,10 +718,6 @@ func (r *request) newWrapperScript(ctx context.Context, cmdConfig *cmdpb.Config,
+ 	switch wt {
+ 	case wrapperNsjailChroot:
+ 		logger.Infof("run with nsjail chroot")
+-		// needed for bind mount.
+-		r.addPlatformProperty(ctx, "dockerPrivileged", "true")
+-		// needed for chroot command and mount command.
+-		r.addPlatformProperty(ctx, "dockerRunAsRoot", "true")
+ 		nsjailCfg := nsjailConfig(cwd, r.filepath, r.gomaReq.GetToolchainSpecs(), r.gomaReq.Env)
+ 		files = []fileDesc{
+ 			{
+@@ -737,13 +733,9 @@ func (r *request) newWrapperScript(ctx context.Context, cmdConfig *cmdpb.Config,
+ 	case wrapperInputRootAbsolutePath:
+ 		if rand.Float64() < r.f.HardeningRatio {
+ 			logger.Infof("run with InputRootAbsolutePath + runsc")
+-			r.addPlatformProperty(ctx, "dockerRuntime", "runsc")
+-			r.addPlatformProperty(ctx, "label:runsc", "available")
+ 		} else {
+ 			logger.Infof("run with InputRootAbsolutePath")
+ 		}
+-		// https://cloud.google.com/remote-build-execution/docs/remote-execution-properties#container_properties
+-		r.addPlatformProperty(ctx, "InputRootAbsolutePath", r.tree.RootDir())
+ 		for _, e := range r.gomaReq.Env {
+ 			envs = append(envs, e)
+ 		}
+@@ -757,8 +749,6 @@ func (r *request) newWrapperScript(ctx context.Context, cmdConfig *cmdpb.Config,
+ 	case wrapperRelocatable:
+ 		if rand.Float64() < r.f.HardeningRatio {
+ 			logger.Infof("run with chdir + runsc: relocatable")
+-			r.addPlatformProperty(ctx, "dockerRuntime", "runsc")
+-			r.addPlatformProperty(ctx, "label:runsc", "available")
+ 		} else {
+ 			logger.Infof("run with chdir: relocatable")
+ 		}
+@@ -793,8 +783,6 @@ func (r *request) newWrapperScript(ctx context.Context, cmdConfig *cmdpb.Config,
+ 		}
+ 	case wrapperWinInputRootAbsolutePath:
+ 		logger.Infof("run on win with InputRootAbsolutePath")
+-		// https://cloud.google.com/remote-build-execution/docs/remote-execution-properties#container_properties
+-		r.addPlatformProperty(ctx, "InputRootAbsolutePath", r.tree.RootDir())
+ 		wn, data, err := wrapperForWindows(ctx)
+ 		if err != nil {
+ 			return err
+-- 
+2.25.1
+
+
+From 413e669b7fa579abe411d889eb3ebdab7b2f10e3 Mon Sep 17 00:00:00 2001
+From: Ulf Adams <ulf@engflow.com>
+Date: Fri, 21 Aug 2020 13:34:04 +0200
+Subject: [PATCH 1/2] Add -tls-certificate to add a root certificate
+
+This can be used to verify TLS certificates for remote execution services
+that are not signed with a well-known CA.
+
+Change-Id: Ia4d6e602d2ebbf2408f2850c4fb87a638c748ea5
+---
+ cmd/remoteexec_proxy/main.go | 17 +++++++++++++++++
+ 1 file changed, 17 insertions(+)
+
+diff --git a/cmd/remoteexec_proxy/main.go b/cmd/remoteexec_proxy/main.go
+index 8ad580c..2c10ae0 100644
+--- a/cmd/remoteexec_proxy/main.go
++++ b/cmd/remoteexec_proxy/main.go
+@@ -11,6 +11,7 @@ package main
+ import (
+ 	"context"
+ 	"crypto/tls"
++	"crypto/x509"
+ 	"flag"
+ 	"fmt"
+ 	"html/template"
+@@ -69,6 +70,7 @@ var (
+ 	insecureRemoteexec     = flag.Bool("insecure-remoteexec", false, "insecure grpc for remoteexec API")
+ 	insecureServerAccess   = flag.Bool("insecure-serveraccess", false, "insecure access between goma client/server")
+ 	insecureSkipVerify     = flag.Bool("insecure-skip-verify", false, "insecure skip verifying the server certificate")
++	tlsCertificate         = flag.String("tls-certificate", "", "TLS CA certificate to verify the server certificate")
+ 	execMaxRetryCount      = flag.Int("exec-max-retry-count", 5, "max retry count for exec call. 0 is unlimited count, but bound to ctx timtout. Use small number for powerful clients to run local fallback quickly. Use large number for powerless clients to use remote more than local.")
+ 
+ 	fileCacheBucket = flag.String("file-cache-bucket", "", "file cache bucking store bucket")
+@@ -352,8 +354,23 @@ func main() {
+ 		},
+ 	}
+ 
++	certPool, _ := x509.SystemCertPool()
++	// Fall back to an empty pool if the system cert pool could not be loaded.
++	if certPool == nil {
++		certPool = x509.NewCertPool()
++	}
++	if *tlsCertificate != "" {
++		caCert, err := ioutil.ReadFile(*tlsCertificate)
++		if err != nil {
++			logger.Fatal(err)
++		}
++		if ok := certPool.AppendCertsFromPEM(caCert); !ok {
++			logger.Warnf("No certificates loaded from %s", *tlsCertificate)
++		}
++	}
+ 	tlsConfig := &tls.Config{
+ 		InsecureSkipVerify: *insecureSkipVerify,
++		RootCAs: certPool,
+ 	}
+ 	opts := []grpc.DialOption{
+ 		grpc.WithTransportCredentials(credentials.NewTLS(tlsConfig)),
+-- 
+2.28.0
+
+
+From 04311add652d44997cffa3fb365475bf2a816961 Mon Sep 17 00:00:00 2001
+From: Ulf Adams <ulf@engflow.com>
+Date: Fri, 21 Aug 2020 13:35:47 +0200
+Subject: [PATCH 2/2] Add -tls-client-{certificate,key}
+
+This can be used to authenticate to a remote execution service that uses
+client certificates for authentication (rather than GCP access tokens).
+
+Change-Id: Ied2652eb1e9aee0c8e66fc220b5613dc50be6782
+---
+ cmd/remoteexec_proxy/main.go | 11 +++++++++++
+ 1 file changed, 11 insertions(+)
+
+diff --git a/cmd/remoteexec_proxy/main.go b/cmd/remoteexec_proxy/main.go
+index 2c10ae0..3d2fa13 100644
+--- a/cmd/remoteexec_proxy/main.go
++++ b/cmd/remoteexec_proxy/main.go
+@@ -71,6 +71,8 @@ var (
+ 	insecureServerAccess   = flag.Bool("insecure-serveraccess", false, "insecure access between goma client/server")
+ 	insecureSkipVerify     = flag.Bool("insecure-skip-verify", false, "insecure skip verifying the server certificate")
+ 	tlsCertificate         = flag.String("tls-certificate", "", "TLS CA certificate to verify the server certificate")
++	tlsClientCertificate   = flag.String("tls-client-certificate", "", "TLS client certificate to present to the server")
++	tlsClientKey           = flag.String("tls-client-key", "", "TLS client key to use with the client certificate")
+ 	execMaxRetryCount      = flag.Int("exec-max-retry-count", 5, "max retry count for exec call. 0 is unlimited count, but bound to ctx timtout. Use small number for powerful clients to run local fallback quickly. Use large number for powerless clients to use remote more than local.")
+ 
+ 	fileCacheBucket = flag.String("file-cache-bucket", "", "file cache bucking store bucket")
+@@ -372,6 +374,15 @@ func main() {
+ 		InsecureSkipVerify: *insecureSkipVerify,
+ 		RootCAs: certPool,
+ 	}
++	// Configure a client certificate if specified.
++	if *tlsClientCertificate != "" && *tlsClientKey != "" {
++		cert, err := tls.LoadX509KeyPair(*tlsClientCertificate, *tlsClientKey)
++		if err != nil {
++			logger.Fatal(err)
++		}
++		tlsConfig.Certificates = []tls.Certificate{cert}
++	}
++
+ 	opts := []grpc.DialOption{
+ 		grpc.WithTransportCredentials(credentials.NewTLS(tlsConfig)),
+ 		grpc.WithStatsHandler(&ocgrpc.ClientHandler{}),
+-- 
+2.28.0
+
