@@ -67,3 +67,8 @@ git clone --branch v1.1.0 https://github.com/tlsa/libcyaml.git libcyaml
 cd libcyaml
 make && make test
 ```
+
+# Known Issues
+
+1. `libcyaml` compiles against `libyaml-dev`, which is not installed in the
+   image we use here.
