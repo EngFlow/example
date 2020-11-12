@@ -11,10 +11,10 @@ TLS client authentication. Other methods may apply depending on the cluster conf
 ```
 $ git clone https://github.com/tensorflow/tensorflow.git tensorflow
 $ cd tensorflow
-$ curl https://raw.githubusercontent.com/EngFlow/example/master/engflow-ca.crt > engflow-ca.crt
-$ curl https://raw.githubusercontent.com/EngFlow/example/master/docs/tensorflow/0001-Update-.bazelrc-settings-for-EngFlow-RE.patch > 0001-Update-.bazelrc-settings-for-EngFlow-RE.patch
-$ curl https://raw.githubusercontent.com/EngFlow/example/master/docs/tensorflow/0002-Use-absolute-paths-for-which-and-find.patch > 0002-Use-absolute-paths-for-which-and-find.patch
-$ curl https://raw.githubusercontent.com/EngFlow/example/master/docs/tensorflow/0003-Disable-Pool-platform-option.patch > 0003-Disable-Pool-platform-option.patch
+$ curl https://raw.githubusercontent.com/EngFlow/example/main/engflow-ca.crt > engflow-ca.crt
+$ curl https://raw.githubusercontent.com/EngFlow/example/main/docs/tensorflow/0001-Update-.bazelrc-settings-for-EngFlow-RE.patch > 0001-Update-.bazelrc-settings-for-EngFlow-RE.patch
+$ curl https://raw.githubusercontent.com/EngFlow/example/main/docs/tensorflow/0002-Use-absolute-paths-for-which-and-find.patch > 0002-Use-absolute-paths-for-which-and-find.patch
+$ curl https://raw.githubusercontent.com/EngFlow/example/main/docs/tensorflow/0003-Disable-Pool-platform-option.patch > 0003-Disable-Pool-platform-option.patch
 $ git am *.patch
 $ echo "build:engflow --tls_client_certificate=name@example.com.crt" >> .bazelrc.user
 $ echo "build:engflow --tls_client_key=name@example.com.crt" >> .bazelrc.user
