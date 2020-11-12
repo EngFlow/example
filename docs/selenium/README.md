@@ -15,7 +15,7 @@ $ curl https://raw.githubusercontent.com/EngFlow/example/main/engflow-ca.crt > e
 $ curl https://raw.githubusercontent.com/EngFlow/example/main/docs/selenium/bazelrc >> .bazelrc.local
 $ curl https://raw.githubusercontent.com/EngFlow/example/main/docs/selenium/WORKSPACE >> WORKSPACE
 $ echo "build:engflow --tls_client_certificate=name@example.com.crt" >> .bazelrc.local
-$ echo "build:engflow --tls_client_key=name@example.com.crt" >> .bazelrc.local
+$ echo "build:engflow --tls_client_key=name@example.com.key" >> .bazelrc.local
 $ bazel build --config=engflow //java/... //py/... //deploys/...
 ```
 
