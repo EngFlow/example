@@ -11,9 +11,9 @@ TODO: Figure out how to get better relative paths.
 The first step is to run Goma server and point it at an EngFlow Remote Execution
 cluster:
 ```
-curl https://raw.githubusercontent.com/EngFlow/example/master/engflow-ca.crt > engflow-ca.crt
-curl https://raw.githubusercontent.com/EngFlow/example/master/docs/goma/goma_server_patches.patch > goma_server_patches.patch
-curl https://raw.githubusercontent.com/EngFlow/example/master/docs/goma/platform > platform
+curl https://raw.githubusercontent.com/EngFlow/example/main/engflow-ca.crt > engflow-ca.crt
+curl https://raw.githubusercontent.com/EngFlow/example/main/docs/goma/goma_server_patches.patch > goma_server_patches.patch
+curl https://raw.githubusercontent.com/EngFlow/example/main/docs/goma/platform > platform
 git clone https://chromium.googlesource.com/infra/goma/server goma_server
 cd goma_server
 git am ../goma_server_patches.patch
