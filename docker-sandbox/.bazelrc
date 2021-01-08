@@ -1,0 +1,8 @@
+build:docker-sandbox --host_javabase=@engflow_remote_config//java:jdk
+build:docker-sandbox --javabase=@engflow_remote_config//java:jdk
+build:docker-sandbox --crosstool_top=@engflow_remote_config//cc:toolchain
+build:docker-sandbox --spawn_strategy=docker --strategy=Javac=docker --genrule_strategy=docker
+build:docker-sandbox --define=EXECUTOR=remote
+build:docker-sandbox --experimental_docker_verbose
+build:docker-sandbox --experimental_enable_docker_sandbox
+build:docker-sandbox --experimental_docker_image=gcr.io/bazel-public/ubuntu2004-java11@sha256:7a4f71955cb0f74ace1e285314933a8c9608f7b20e720abc10cb8107b7093b19

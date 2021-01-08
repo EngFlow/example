@@ -1,0 +1,17 @@
+load("@bazel_tools//tools/build_defs/repo:git.bzl", "git_repository")
+
+git_repository(
+    name = "bazel_toolchains",
+    commit = "109dfdb8a8ffb47a45fa4b4dea58f0b21f708e70",  # Release 3.7.1
+    remote = "https://github.com/bazelbuild/bazel-toolchains.git",
+)
+
+load("@bazel_toolchains//rules:rbe_repo.bzl", "rbe_autoconfig")
+
+rbe_autoconfig(
+    name = "engflow_remote_config",
+    detect_java_home = True,
+    digest = "sha256:7a4f71955cb0f74ace1e285314933a8c9608f7b20e720abc10cb8107b7093b19",
+    registry = "gcr.io",
+    repository = "bazel-public/ubuntu2004-java11",
+)
