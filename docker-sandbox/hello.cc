@@ -1,5 +1,5 @@
-#include <stdio.h>
+#include <iostream>
 int main() {
-  printf("hello c++!\n");
+  std::cout << "Hello C++!" << std::endl;
   return 0;
 }
