@@ -25,3 +25,7 @@ build:without_bytes --experimental_inmemory_jdeps_files
 build:without_bytes --experimental_inmemory_dotd_files
 build:without_bytes --experimental_remote_download_outputs=minimal
 
+build:bes --tls_certificate=engflow-ca.crt
+build:bes --bes_backend=grpcs://demo.engflow.com:8080
+build:bes --bes_lifecycle_events
+build:bes --bes_results_url=https://demo.engflow.com:8080/invocation/
