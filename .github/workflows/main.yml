@@ -1,0 +1,20 @@
+name: CI
+
+on:
+  push:
+    branches: [ master ]
+    tags: 'v*'
+  pull_request:
+    branches: [ master ]
+
+# Recommended here: https://github.com/bazelbuild/bazelisk/issues/88#issuecomment-625178467
+env:
+  BAZELISK_GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+jobs:
+  test-extra:
+    runs-on: [linux]
+    steps:
+    - uses: actions/checkout@v2
+
