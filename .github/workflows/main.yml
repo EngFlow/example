@@ -13,8 +13,8 @@ env:
   GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
 jobs:
-  test-extra:
-    runs-on: [linux]
+  test:
+    runs-on: [ubuntu-20.04]
     steps:
     - uses: actions/checkout@v2
 
