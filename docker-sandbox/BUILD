@@ -8,7 +8,7 @@ genrule(
 [genrule(
     name = "dep%d" % i,
     outs = ["dep%d.txt" % i],
-    cmd = "(echo hello %d ; echo \"inside docker: $$(cat /proc/1/cgroup | grep -q 'docker\|lxc' && echo yes || echo no)\" ; echo \"host: $$(hostname)\" ; echo \"date: $$(date)\" ; echo) > $@" % i,
+    cmd = "(echo hello %d ; echo \"inside docker: $$(cat /proc/1/cgroup | grep -Eq 'docker|lxc' && echo yes || echo no)\" ; echo \"host: $$(hostname)\" ; echo \"date: $$(date)\" ; echo) > $@" % i,
 ) for i in range(3)]
 
 java_binary(
