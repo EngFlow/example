@@ -23,7 +23,6 @@ import org.junit.Test;
 public final class DockerNetworkTest {
 
   private static final String POSTGRESQL_SERVER_IMAGE = "circleci/postgres:9.6-alpine-postgis";
-  private static final String CONNECTION_REFUSED = "Connection refused";
 
   @Test
   public void dockerNetwork() throws Exception {
@@ -51,16 +50,14 @@ public final class DockerNetworkTest {
     System.out.println(" | DEBUG | Server address: " + ipAddr);
 
     // Wait until the server is ready: when it stops replying "Connection refused".
-    waitForServer(ipAddr);
+    waitForServer(ipAddr, "psql", "-h", ipAddr, "-U", "postgres", "-l");
 
     // We expect "psql" to fail, but without a "Connection refused" error.
-    Result pingResult = runCommand("psql", "-h", ipAddr, "-U", "foo");
-    Assert.assertEquals(2, pingResult.exitCode);
+    Result pingResult = runCommand("psql", "-h", ipAddr, "-U", "postgres", "-l");
+    Assert.assertEquals(0, pingResult.exitCode);
     System.out.println(" | DEBUG | Server replied:");
     System.out.println(pingResult.stdout);
     System.out.println(pingResult.stderr);
-    Assert.assertFalse(pingResult.stdout.contains(CONNECTION_REFUSED));
-    Assert.assertFalse(pingResult.stderr.contains(CONNECTION_REFUSED));
 
     // Kill the server.
     runCommand("docker", "kill", serverContainerName);
@@ -120,16 +117,16 @@ public final class DockerNetworkTest {
     throw new Exception("Could not get ip address:\n" + result.stderr);
   }
 
-  /** Runs "psql" against |ipAddr| as long as it keeps replying with "Connection refused". */
-  private static void waitForServer(String ipAddr) throws Exception {
+  /** Runs |args| against |ipAddr| as long as it keeps replying with "Connection refused". */
+  private static void waitForServer(String ipAddr, String... args) throws Exception {
     while (true) {
       System.out.println(" | DEBUG | Waiting for server...");
-      Result result = runCommand("psql", "-h", ipAddr, "-U", "foo");
+      Result result = runCommand(args);
       System.out.println(result.stdout);
       System.out.println(result.stderr);
       boolean running = true;
       for (String line : (result.stdout + result.stderr).split("\n")) {
-        if (line.contains(CONNECTION_REFUSED)) {
+        if (line.contains("Connection refused")) {
           running = false;
           break;
         }
