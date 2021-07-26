@@ -57,6 +57,9 @@ public final class DockerNetworkTest {
     Assert.assertEquals(2, pingResult.exitCode);
     Assert.assertFalse(pingResult.stdout.contains("Connection refused"));
     Assert.assertFalse(pingResult.stderr.contains("Connection refused"));
+    System.out.println(" | DEBUG | Server replied:");
+    System.out.println(pingResult.stdout);
+    System.out.println(pingResult.stderr);
 
     // Kill the server.
     runCommand("docker", "kill", serverContainerName);
@@ -106,7 +109,8 @@ public final class DockerNetworkTest {
       if (line.contains("inet 172.") && line.contains("brd")) {
         for (String part : line.split(" ")) {
           if (part.startsWith("172.")) {
-            return part;
+            int slash = part.indexOf('/');
+            return part.substring(0, slash);
           }
         }
         break;
@@ -119,6 +123,8 @@ public final class DockerNetworkTest {
   private static void waitForServer(String ipAddr) throws Exception {
     while (true) {
       Result result = runCommand("psql", "-h", ipAddr);
+      System.out.println(result.stdout);
+      System.out.println(result.stderr);
       boolean running = true;
       for (String line : result.stdout.split("\n")) {
         if (line.contains("Connection refused")) {
