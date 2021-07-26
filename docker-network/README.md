@@ -51,14 +51,18 @@ The test should pass. If you look at the log, it'll show:
 
 ```
   $ cat bazel-testlogs/docker-network-test/test.log
-exec ${PAGER:-/usr/bin/less} "$0" || exit 1
-Executing tests from //:docker-network-test
-whoami: cannot find name for user ID 1000
------------------------------------------------------------------------------
-JUnit4 Test Runner
-. | DEBUG | Network name: bridge-f5daa207-379a-449a-9b49-51dd870b16d4
- | DEBUG | Server address: 172.21.0.3/16
- | DEBUG | Server running
+(...)
+
+JUnit4 Test Runner                      
+. | DEBUG | Network name: bridge-f7d98cfa-f2b8-46cb-a2fa-24bd9138925e            
+ | DEBUG | Server address: 172.25.0.3                                            
+                                                                                                                                                                   
+psql: local user with ID 1000 does not exist                                                                                                                       
+                                                                                 
+ | DEBUG | Server running                                                        
+ | DEBUG | Server replied:                                                       
+                                                                                                                                                                   
+psql: local user with ID 1000 does not exist 
 
 (...)
 ```
