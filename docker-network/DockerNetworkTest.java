@@ -23,6 +23,7 @@ import org.junit.Test;
 public final class DockerNetworkTest {
 
   private static final String POSTGRESQL_SERVER_IMAGE = "circleci/postgres:9.6-alpine-postgis";
+  private static final String CONNECTION_REFUSED = "Connection refused";
 
   @Test
   public void dockerNetwork() throws Exception {
@@ -53,13 +54,13 @@ public final class DockerNetworkTest {
     waitForServer(ipAddr);
 
     // We expect "psql" to fail, but without a "Connection refused" error.
-    Result pingResult = runCommand("psql", "-h", ipAddr);
+    Result pingResult = runCommand("psql", "-h", ipAddr, "-U", "foo");
     Assert.assertEquals(2, pingResult.exitCode);
-    Assert.assertFalse(pingResult.stdout.contains("Connection refused"));
-    Assert.assertFalse(pingResult.stderr.contains("Connection refused"));
     System.out.println(" | DEBUG | Server replied:");
     System.out.println(pingResult.stdout);
     System.out.println(pingResult.stderr);
+    Assert.assertFalse(pingResult.stdout.contains(CONNECTION_REFUSED));
+    Assert.assertFalse(pingResult.stderr.contains(CONNECTION_REFUSED));
 
     // Kill the server.
     runCommand("docker", "kill", serverContainerName);
@@ -122,13 +123,13 @@ public final class DockerNetworkTest {
   /** Runs "psql" against |ipAddr| as long as it keeps replying with "Connection refused". */
   private static void waitForServer(String ipAddr) throws Exception {
     while (true) {
-      Result result = runCommand("psql", "-h", ipAddr);
+      System.out.println(" | DEBUG | Waiting for server...");
+      Result result = runCommand("psql", "-h", ipAddr, "-U", "foo");
       System.out.println(result.stdout);
       System.out.println(result.stderr);
       boolean running = true;
-      for (String line : result.stdout.split("\n")) {
-        if (line.contains("Connection refused")) {
-          System.out.println(" | DEBUG | Waiting for server...");
+      for (String line : (result.stdout + result.stderr).split("\n")) {
+        if (line.contains(CONNECTION_REFUSED)) {
           running = false;
           break;
         }
