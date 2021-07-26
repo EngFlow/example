@@ -50,19 +50,49 @@ bazel --ignore_all_rc_files test          \
 The test should pass. If you look at the log, it'll show:
 
 ```
-  $ cat bazel-testlogs/docker-network-test/test.log
-(...)
+exec ${PAGER:-/usr/bin/less} "$0" || exit 1
+Executing tests from //:docker-network-test
+whoami: cannot find name for user ID 1000
+-----------------------------------------------------------------------------
+JUnit4 Test Runner
+. | DEBUG | Network name: bridge-f7d98cfa-f2b8-46cb-a2fa-24bd9138925e
+ | DEBUG | Server address: 172.25.0.4
+ | DEBUG | Waiting for server...
 
-JUnit4 Test Runner                      
-. | DEBUG | Network name: bridge-f7d98cfa-f2b8-46cb-a2fa-24bd9138925e            
- | DEBUG | Server address: 172.25.0.3                                            
-                                                                                                                                                                   
-psql: local user with ID 1000 does not exist                                                                                                                       
-                                                                                 
- | DEBUG | Server running                                                        
- | DEBUG | Server replied:                                                       
-                                                                                                                                                                   
-psql: local user with ID 1000 does not exist 
+psql: could not connect to server: Connection refused
+	Is the server running on host "172.25.0.4" and accepting
+	TCP/IP connections on port 5432?
 
-(...)
+ | DEBUG | Waiting for server...
+
+psql: could not connect to server: Connection refused
+	Is the server running on host "172.25.0.4" and accepting
+	TCP/IP connections on port 5432?
+
+ | DEBUG | Waiting for server...
+
+psql: could not connect to server: Connection refused
+	Is the server running on host "172.25.0.4" and accepting
+	TCP/IP connections on port 5432?
+
+ | DEBUG | Waiting for server...
+
+psql: FATAL:  role "foo" does not exist
+
+ | DEBUG | Server running
+ | DEBUG | Server replied:
+
+psql: FATAL:  role "foo" does not exist
+
+
+Time: 6.895
+
+OK (1 test)
+
+
+BazelTestRunner exiting with a return value of 0
+JVM shutdown hooks (if any) will run now.
+The JVM will exit once they complete.
+
+-- JVM shutdown starting at 2021-07-26 07:53:39 --
 ```
