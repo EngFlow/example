@@ -58,38 +58,21 @@ JUnit4 Test Runner
 . | DEBUG | Network name: bridge-8743470f-a035-49b8-8cd1-95eb0f7ff19d
  | DEBUG | Server address: 172.27.0.3
  | DEBUG | Waiting for server...
-
 psql: could not connect to server: Connection refused
 	Is the server running on host "172.27.0.3" and accepting
 	TCP/IP connections on port 5432?
 
  | DEBUG | Waiting for server...
-
 psql: could not connect to server: Connection refused
 	Is the server running on host "172.27.0.3" and accepting
 	TCP/IP connections on port 5432?
 
  | DEBUG | Waiting for server...
-
 psql: could not connect to server: Connection refused
 	Is the server running on host "172.27.0.3" and accepting
 	TCP/IP connections on port 5432?
 
  | DEBUG | Waiting for server...
-                                    List of databases
-       Name       |  Owner   | Encoding |  Collate   |   Ctype    |   Access privileges   
-------------------+----------+----------+------------+------------+-----------------------
- circle_test      | postgres | UTF8     | en_US.utf8 | en_US.utf8 | 
- postgres         | postgres | UTF8     | en_US.utf8 | en_US.utf8 | 
- template0        | postgres | UTF8     | en_US.utf8 | en_US.utf8 | =c/postgres          +
-                  |          |          |            |            | postgres=CTc/postgres
- template1        | postgres | UTF8     | en_US.utf8 | en_US.utf8 | =c/postgres          +
-                  |          |          |            |            | postgres=CTc/postgres
- template_postgis | postgres | UTF8     | en_US.utf8 | en_US.utf8 | 
-(5 rows)
-
-
-
  | DEBUG | Server running
  | DEBUG | Server replied:
                                     List of databases
@@ -107,7 +90,7 @@ psql: could not connect to server: Connection refused
 
 
 
-Time: 6.863
+Time: 6.957
 
 OK (1 test)
 
@@ -116,6 +99,6 @@ BazelTestRunner exiting with a return value of 0
 JVM shutdown hooks (if any) will run now.
 The JVM will exit once they complete.
 
--- JVM shutdown starting at 2021-07-26 08:05:47 --
+-- JVM shutdown starting at 2021-07-26 08:10:44 --
 ```
 

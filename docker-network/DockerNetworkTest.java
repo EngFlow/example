@@ -52,7 +52,7 @@ public final class DockerNetworkTest {
     // Wait until the server is ready: when it stops replying "Connection refused".
     waitForServer(ipAddr, "psql", "-h", ipAddr, "-U", "postgres", "-l");
 
-    // We expect "psql" to fail, but without a "Connection refused" error.
+    // We expect success this time.
     Result pingResult = runCommand("psql", "-h", ipAddr, "-U", "postgres", "-l");
     Assert.assertEquals(0, pingResult.exitCode);
     System.out.println(" | DEBUG | Server replied:");
@@ -122,11 +122,10 @@ public final class DockerNetworkTest {
     while (true) {
       System.out.println(" | DEBUG | Waiting for server...");
       Result result = runCommand(args);
-      System.out.println(result.stdout);
-      System.out.println(result.stderr);
       boolean running = true;
       for (String line : (result.stdout + result.stderr).split("\n")) {
         if (line.contains("Connection refused")) {
+          System.out.println(result.stderr);
           running = false;
           break;
         }
