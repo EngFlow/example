@@ -13,8 +13,12 @@ env:
   GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
 jobs:
-  test:
-    runs-on: [ubuntu-20.04]
+  test-matrix:
+    runs-on: ${{ matrix.runs_on }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest]
     steps:
     - uses: actions/checkout@v2
 
