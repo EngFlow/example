@@ -2,10 +2,10 @@ name: CI
 
 on:
   push:
-    branches: [ master ]
+    branches: [ main ]
     tags: 'v*'
   pull_request:
-    branches: [ master ]
+    branches: [ main ]
 
 # Recommended here: https://github.com/bazelbuild/bazelisk/issues/88#issuecomment-625178467
 env:
@@ -14,7 +14,7 @@ env:
 
 jobs:
   test-matrix:
-    runs-on: ${{ matrix.runs_on }}
+    runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
       matrix:
