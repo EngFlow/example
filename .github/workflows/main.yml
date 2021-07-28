@@ -21,4 +21,6 @@ jobs:
         os: [ubuntu-latest, macos-latest]
     steps:
     - uses: actions/checkout@v2
+    - name: build everything
+      run: bazel build //...
 
