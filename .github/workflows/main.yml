@@ -16,23 +16,13 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-20.04, macos-10.15]
+        os: [macos-10.15]
     steps:
     - uses: actions/checkout@v2
-    - name: build everything
+    - name: Build everything
       run: bazel build //...
-
-    - name: Run test
+    - name: Build remotely
       run: |
-        sleep 20
-    - name: Run test
-      run: |
-        echo "$GITHUB_TOKEN" | base64
-        curl \
-          --header "Authorization: Bearer $GITHUB_TOKEN" \
-          --header "Accept: application/vnd.github.inertia-preview+json" \
-          https://api.github.com/repos/envoyproxy/envoy-mobile/collaborators
-        echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u nobody --password-stdin
-        docker pull ghcr.io/engflow/hello-world:1.0
-        sleep 20
+        bazel clean
+        bazel build --remote_executor=grpcs://dolomite.cluster.engflow.com --remote_header="Authentication=Bearer $GITHUB_TOKEN" //...
 
