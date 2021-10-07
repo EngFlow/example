@@ -28,3 +28,9 @@ build:engflow --tls_certificate=engflow-ca.crt
 build:engflow --bes_backend=grpcs://10.0.0.10:8080
 build:engflow --bes_lifecycle_events
 build:engflow --bes_results_url=https://10.0.0.10:8080/invocation/
+
+build:engflow_oss --config=engflow_common
+build:engflow_oss --remote_executor=grpcs://oss-cluster.engflow.com
+build:engflow_oss --bes_backend=grpcs://oss-cluster.engflow.com
+build:engflow_oss --bes_lifecycle_events
+build:engflow_oss --bes_results_url=https://oss-cluster.engflow.com/invocation/
