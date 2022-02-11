@@ -22,5 +22,5 @@ jobs:
     steps:
     - uses: actions/checkout@v2
     - name: build everything
-      run: bazel build //...
+      run: bazel build -- //... -//remote_config/...
 
