@@ -28,7 +28,7 @@
  name = "foo_text" + str(x),
  outs = ["foo_text" + str(x) + ".txt"],
  cmd = "echo 'Hello engflow world' > $@",
-) for x in range(1,10000)]
+) for x in range(1,101)]
 
 # PDF document with size 76KB
 [genrule(
@@ -36,7 +36,7 @@
  outs = ["gnu-manifesto" + str(x) + ".pdf"],
  cmd = "cp $(location gnu-manifesto.pdf) $@",
  tools = ["gnu-manifesto.pdf"]
-) for x in range(1,1001)]
+) for x in range(1,101)]
 
 # Emacs text editor with size 68MB
 [genrule(
@@ -44,7 +44,7 @@
  outs = ["emacs" + str(x) + ".tar.gz"],
  cmd = "cp $(location @emacs//file) $@",
  tools = ["@emacs//file"]
-) for x in range(1,1001)]
+) for x in range(1,101)]
 
 # Large sized files are hard. Size limit 2GB.
 # Ubuntu live with size 1.3GB.  
@@ -53,4 +53,4 @@
   outs = ["ubuntu_20.04_1.3GB" + str(x) + ".iso"],
   cmd = "cp $(location @ubuntu_20.04_1.3GB//file) $@",
   tools = ["@ubuntu_20.04_1.3GB//file"]
-) for x in range(1,3)]
+) for x in range(1,2)]
