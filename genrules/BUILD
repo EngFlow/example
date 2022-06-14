@@ -1,4 +1,4 @@
-# Copyright 2021 EngFlow Inc. All rights reserved.
+# Copyright 2022 EngFlow Inc. All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -13,8 +13,9 @@
 # limitations under the License.
 #
 # The following genrules are able to produce thousands of targets based
-# on the user's input. Change the upper bound of the range and enjoy! 
-#
+# on the user's input. 
+# This can be used for stress testing your build infrastructure.
+# Change the upper bound of the range and enjoy! 
 UPPER_BOUND = 10
 [genrule(
  name = "foo_TXT_4KB_" + str(x),
