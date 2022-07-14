@@ -1,3 +1,4 @@
+# Options common for all EngFlow remote configurations.
 build:engflow_common --jobs=8
 build:engflow_common --define=EXECUTOR=remote
 build:engflow_common --disk_cache=
@@ -8,6 +9,7 @@ build:engflow_common --remote_timeout=3600
 
 build:engflow_common --action_env=BAZEL_DO_NOT_DETECT_CPP_TOOLCHAIN=1
 build:engflow_common --crosstool_top=//remote_config/cc:toolchain
+build:engflow_common --cpu=k8
 build:engflow_common --extra_execution_platforms=//remote_config/config:platform
 build:engflow_common --extra_toolchains=//remote_config/config:cc-toolchain
 build:engflow_common --host_platform=//remote_config/config:platform
@@ -17,13 +19,20 @@ build:engflow_common --java_language_version=11
 
 build:without_bytes --experimental_remote_download_outputs=minimal
 
+# Options for a private EngFlow cluster.
+# - Change "10.0.0.10:8080" to the actual cluster IP and port.
+# - You'll also need to set flags for your authentication method.
+#   For example, if your cluster uses mTLS authentication, you could add
+#   the flags below (with correct paths), either here or in ~/.bazelrc:
+# build:engflow --tls_client_certificate=/path/to/client.crt
+# build:engflow --tls_client_key=/path/to/client.key
 build:engflow --config=engflow_common
 build:engflow --remote_executor=grpcs://10.0.0.10:8080
-build:engflow --tls_certificate=engflow-ca.crt
 build:engflow --bes_backend=grpcs://10.0.0.10:8080
 build:engflow --bes_lifecycle_events
 build:engflow --bes_results_url=https://10.0.0.10:8080/invocation/
 
+# Options for the open source cluster.
 build:engflow_oss --config=engflow_common
 build:engflow_oss --remote_executor=grpcs://oss-cluster.engflow.com
 build:engflow_oss --bes_backend=grpcs://oss-cluster.engflow.com
