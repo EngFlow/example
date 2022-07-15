@@ -8,8 +8,8 @@ genrule(
 [genrule(
     name = "dep%d" % i,
     outs = ["dep%d.txt" % i],
-    target_compatible_with = ["@platforms//os:linux"],
     cmd = "(echo hello %d ; echo \"inside docker: $$(cat /proc/1/cgroup | grep -Eq 'docker|lxc' && echo yes || echo no)\" ; echo \"host: $$(hostname)\" ; echo \"date: $$(date)\" ; echo) > $@" % i,
+    target_compatible_with = ["@platforms//os:linux"],
 ) for i in range(3)]
 
 java_binary(
