@@ -16,7 +16,6 @@
 # TODO: edit this value to match your Docker registry, image name, and digest
 DOCKER_JDK_PSQL = "docker://gcr.io/YOUR-IMAGE-NAME@sha256:b6ed8f68abd6e23409ee7a500c2c50a8064cea11071ac447a59b88e6afa4c220"
 
-
 java_test(
     name = "docker-network-test",
     srcs = ["DockerNetworkTest.java"],
