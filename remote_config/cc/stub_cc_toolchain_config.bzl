@@ -21,14 +21,14 @@ load(
 )
 
 def _impl(ctx):
-    toolchain_identifier = "stub_armeabi-v7a"
-    host_system_name = "armeabi-v7a"
-    target_system_name = "armeabi-v7a"
-    target_cpu = "armeabi-v7a"
-    target_libc = "armeabi-v7a"
+    toolchain_identifier = "stub_" + ctx.attr.cpu_name
+    host_system_name = ctx.attr.cpu_name
+    target_system_name = ctx.attr.cpu_name
+    target_cpu = ctx.attr.cpu_name
+    target_libc = ctx.attr.cpu_name
     compiler = "compiler"
-    abi_version = "armeabi-v7a"
-    abi_libc_version = "armeabi-v7a"
+    abi_version = ctx.attr.cpu_name
+    abi_libc_version = ctx.attr.cpu_name
     cc_target_os = None
     builtin_sysroot = None
     action_configs = []
@@ -41,18 +41,19 @@ def _impl(ctx):
     artifact_name_patterns = []
     make_variables = []
 
+    stub_tool_name = "/DONOTUSE/stub/" + ctx.attr.cpu_name
     tool_paths = [
-        tool_path(name = "ar", path = "/bin/false"),
-        tool_path(name = "compat-ld", path = "/bin/false"),
-        tool_path(name = "cpp", path = "/bin/false"),
-        tool_path(name = "dwp", path = "/bin/false"),
-        tool_path(name = "gcc", path = "/bin/false"),
-        tool_path(name = "gcov", path = "/bin/false"),
-        tool_path(name = "ld", path = "/bin/false"),
-        tool_path(name = "nm", path = "/bin/false"),
-        tool_path(name = "objcopy", path = "/bin/false"),
-        tool_path(name = "objdump", path = "/bin/false"),
-        tool_path(name = "strip", path = "/bin/false"),
+        tool_path(name = "ar", path = stub_tool_name),
+        tool_path(name = "compat-ld", path = stub_tool_name),
+        tool_path(name = "cpp", path = stub_tool_name),
+        tool_path(name = "dwp", path = stub_tool_name),
+        tool_path(name = "gcc", path = stub_tool_name),
+        tool_path(name = "gcov", path = stub_tool_name),
+        tool_path(name = "ld", path = stub_tool_name),
+        tool_path(name = "nm", path = stub_tool_name),
+        tool_path(name = "objcopy", path = stub_tool_name),
+        tool_path(name = "objdump", path = stub_tool_name),
+        tool_path(name = "strip", path = stub_tool_name),
     ]
 
     return cc_common.create_cc_toolchain_config_info(
@@ -75,8 +76,10 @@ def _impl(ctx):
         cc_target_os = cc_target_os,
     )
 
-armeabi_cc_toolchain_config = rule(
+stub_cc_toolchain_config = rule(
     implementation = _impl,
-    attrs = {},
+    attrs = {
+        "cpu_name": attr.string(mandatory = True),
+    },
     provides = [CcToolchainConfigInfo],
 )

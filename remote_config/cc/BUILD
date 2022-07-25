@@ -15,7 +15,7 @@
 # This becomes the BUILD file for @local_config_cc// under non-BSD unixes.
 
 load(":cc_toolchain_config.bzl", "cc_toolchain_config")
-load(":armeabi_cc_toolchain_config.bzl", "armeabi_cc_toolchain_config")
+load(":stub_cc_toolchain_config.bzl", "stub_cc_toolchain_config")
 load("@rules_cc//cc:defs.bzl", "cc_toolchain", "cc_toolchain_suite")
 
 package(default_visibility = ["//visibility:public"])
@@ -54,6 +54,7 @@ cc_toolchain_suite(
         "k8": ":cc-compiler-k8",
         "armeabi-v7a|compiler": ":cc-compiler-armeabi-v7a",
         "armeabi-v7a": ":cc-compiler-armeabi-v7a",
+        "darwin_arm64": ":cc-compiler-darwin_arm64",
     },
 )
 
@@ -165,4 +166,27 @@ cc_toolchain(
     toolchain_identifier = "stub_armeabi-v7a",
 )
 
-armeabi_cc_toolchain_config(name = "stub_armeabi-v7a")
+stub_cc_toolchain_config(
+    name = "stub_armeabi-v7a",
+    cpu_name = "armeabi-v7a",
+)
+
+cc_toolchain(
+    name = "cc-compiler-darwin_arm64",
+    all_files = ":empty",
+    ar_files = ":empty",
+    as_files = ":empty",
+    compiler_files = ":empty",
+    dwp_files = ":empty",
+    linker_files = ":empty",
+    objcopy_files = ":empty",
+    strip_files = ":empty",
+    supports_param_files = 1,
+    toolchain_config = ":stub_darwin_arm64",
+    toolchain_identifier = "stub_darwin_arm64",
+)
+
+stub_cc_toolchain_config(
+    name = "stub_darwin_arm64",
+    cpu_name = "darwin_arm64",
+)
