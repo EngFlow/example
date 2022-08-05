@@ -103,11 +103,6 @@ git_repository(
     remote = "https://github.com/EngFlow/engflowapis",
 )
 
-#local_repository(
-#    name = "com_engflow_engflowapis",
-#    path = "../engflowapis",
-#)
-
 maven_install(
     artifacts = IO_GRPC_GRPC_JAVA_ARTIFACTS,
     generate_compat_repositories = True,

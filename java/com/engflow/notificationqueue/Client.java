@@ -23,6 +23,7 @@ import io.netty.handler.ssl.SslContextBuilder;
 import javax.annotation.Nullable;
 import javax.net.ssl.SSLException;
 import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.concurrent.CountDownLatch;
@@ -52,17 +53,24 @@ class Client {
     ManagedChannel channel = null;
     try {
       channel =
-          createChannel(
-              args[0].split("=")[1],
-              "",
-              args[2].split("=")[1],
-              args[3].split("=")[1]);
+              createChannel(
+                      args[0].split("=")[1],
+                      "",
+                      args[2].split("=")[1],
+                      args[3].split("=")[1]);
 
+    } catch (IllegalArgumentException e) {
+      System.err.println("Unable to open channel to " + args[0].split("=")[1]);
+      throw new IllegalArgumentException(e);
+    } catch (IllegalStateException e) {
+      System.err.println("Unable to open channel to " + args[0].split("=")[1]);
+      throw new IllegalStateException(e);
+    }
+    try {
       pull(channel, args[1]);
     } finally {
       if (channel != null) {
         channel.shutdownNow();
-
         try {
           channel.awaitTermination(10, TimeUnit.SECONDS);
         } catch (InterruptedException e) {
