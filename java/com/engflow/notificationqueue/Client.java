@@ -1,4 +1,4 @@
-package java.com.engflow.notificationqueue;
+package com.engflow.notificationqueue;
 
 import com.engflow.eventstore.v1.BuildLifecycleEventNotification;
 import com.engflow.eventstore.v1.EventStoreGrpc;
@@ -28,17 +28,16 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
+import org.apache.commons.cli.Options;
 
 class Client {
 
   public static void main(String[] args) throws Exception {
-    /**
-     * Check for the command line arguments in specific order.
-     * In this case, only the presence of the flags are checked.
-     * Create appropriated validations when needed.
-     */
-    if (!areAllInputsProvided(args)){
-      System.err.println("Please add the following flags: ");
+    NotificationOptions clientOptions;
+    try {
+      clientOptions = new NotificationOptions().parseOptions(args);
+    } catch (IllegalArgumentException e) {
+      System.err.println(e);
       System.err.println(" --notification_queue_endpoint");
       System.err.println(" --queue_name");
       System.err.println(" --tls_certificate");
@@ -54,10 +53,10 @@ class Client {
     try {
       channel =
               createChannel(
-                      args[0].split("=")[1],
+                      clientOptions.getOption("notification_queue_endpoint"),
                       "",
-                      args[2].split("=")[1],
-                      args[3].split("=")[1]);
+                      clientOptions.getOption("tls_certificate"),
+                      clientOptions.getOption("tls_key"));
 
     } catch (IllegalArgumentException e) {
       System.err.println("Unable to open channel to " + args[0].split("=")[1]);
@@ -67,7 +66,7 @@ class Client {
       throw new IllegalStateException(e);
     }
     try {
-      pull(channel, args[1]);
+      pull(channel, clientOptions.getOption("queue_name"));
     } finally {
       if (channel != null) {
         channel.shutdownNow();
@@ -80,20 +79,6 @@ class Client {
     }
   }
 
-  private static boolean areAllInputsProvided(String[] args){
-    final String[] global_options = {"--notification_queue_endpoint", "--queue_name", "--tls_certificate", "--tls_key"};
-    int checks = 0;
-    for (String predefinedOption : global_options) {
-      for (String givenOption : args) {
-        if (predefinedOption.equals(givenOption.substring(0, predefinedOption.length()))){
-          checks++;
-          break;
-        }
-      }
-    }
-    return checks == 4 ? true : false;
-  }
-
   private static void pull(ManagedChannel channel, String queueName) throws InterruptedException {
     NotificationQueueGrpc.NotificationQueueStub asyncStub = NotificationQueueGrpc.newStub(channel);
     final CountDownLatch finishLatch = new CountDownLatch(1);
@@ -102,7 +87,6 @@ class Client {
             new StreamObserver<PullNotificationResponse>() {
               @Override
               public void onNext(PullNotificationResponse response) {
-                System.out.println("Nothing here");
                 Notification streamedNotification = response.getNotification().getNotification();
                 System.out.println("Notification: " + streamedNotification);
                 Any notificationContent = streamedNotification.getPayload();
