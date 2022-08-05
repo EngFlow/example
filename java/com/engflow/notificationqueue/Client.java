@@ -4,7 +4,11 @@ import com.engflow.eventstore.v1.BuildLifecycleEventNotification;
 import com.engflow.eventstore.v1.EventStoreGrpc;
 import com.engflow.eventstore.v1.GetInvocationRequest;
 import com.engflow.eventstore.v1.StreamedBuildEvent;
-import com.engflow.notification.v1.*;
+import com.engflow.notification.v1.Notification;
+import com.engflow.notification.v1.PullNotificationResponse;
+import com.engflow.notification.v1.PullNotificationRequest;
+import com.engflow.notification.v1.NotificationQueueGrpc;
+import com.engflow.notification.v1.QueueId;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 import com.google.protobuf.Any;
@@ -81,6 +85,7 @@ class Client {
     }
     return checks == 4 ? true : false;
   }
+
   private static void pull(ManagedChannel channel, String queueName) throws InterruptedException {
     NotificationQueueGrpc.NotificationQueueStub asyncStub = NotificationQueueGrpc.newStub(channel);
     final CountDownLatch finishLatch = new CountDownLatch(1);

@@ -1,18 +1,6 @@
 package(default_visibility = ["//visibility:public"])
 load("@io_grpc_grpc_java//:java_grpc_library.bzl", "java_grpc_library")
 
-proto_library(
-    name = "engflowapis_proto",
-    visibility = ["//visibility:public"],
-    deps = ["@com_engflow_engflowapis//engflow:protos"],
-)
-
-proto_library(
-    name = "engflowapis_proto_extra",
-    visibility = ["//visibility:public"],
-    deps = [":engflowapis_proto"],
-)
-
 java_proto_library(
     name = "engflowapis_java_proto",
     visibility = ["//visibility:public"],
@@ -20,16 +8,13 @@ java_proto_library(
         "@com_engflow_engflowapis//engflow/eventstore/v1:build_event_proto",
         "@com_engflow_engflowapis//engflow/eventstore/v1:eventstore_proto",
         "@com_engflow_engflowapis//engflow/eventstore/v1:notifications_proto",
-        "@com_engflow_engflowapis//engflow/eventstore/v1:protos",
         "@com_engflow_engflowapis//engflow/notification/v1:notification_proto",
         "@com_engflow_engflowapis//engflow/notification/v1:notification_queue_proto",
-        "@com_engflow_engflowapis//engflow/notification/v1:protos",
-        "@com_engflow_engflowapis//engflow:protos",
     ],
 )
 
 java_grpc_library(
-    name = "engflowapis_java_grpc_proto_noti",
+    name = "notification_queue_java_grpc",
     srcs = [
         "@com_engflow_engflowapis//engflow/notification/v1:notification_queue_proto",
     ],
@@ -39,7 +24,7 @@ java_grpc_library(
 )
 
 java_grpc_library(
-    name = "engflowapis_java_grpc_proto_event",
+    name = "eventstore_java_grpc",
     srcs = [
         "@com_engflow_engflowapis//engflow/eventstore/v1:eventstore_proto",
     ],
@@ -55,8 +40,8 @@ java_binary(
     ],
     main_class = "com.engflow.notificationqueue.Client",
     deps = [
-        ":engflowapis_java_grpc_proto_event",
-        ":engflowapis_java_grpc_proto_noti",
+        ":notification_queue_java_grpc",
+        ":eventstore_java_grpc",
         ":engflowapis_java_proto",
         "@com_google_protobuf//:any_proto",
         "@com_google_protobuf//java/core",

@@ -21,9 +21,6 @@ http_file(
     ],
 )
 
-load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
-load("@bazel_tools//tools/build_defs/repo:git.bzl", "git_repository")
-
 http_archive(
     name = "rules_jvm_external",
     sha256 = "c21ce8b8c4ccac87c809c317def87644cdc3a9dd650c74f41698d761c95175f3",
@@ -40,8 +37,6 @@ http_archive(
         "https://github.com/googleapis/googleapis/archive/4f46ddcc9349121b27331e5cb5d18c553696a6c3.tar.gz",
     ],
 )
-
-io_grpc_grpc_java_tag = "1.45.1"
 
 http_archive(
     name = "io_grpc_grpc_java",
@@ -67,7 +62,6 @@ http_archive(
     urls = ["https://github.com/rules-proto-grpc/rules_proto_grpc/archive/4.0.1.tar.gz"],
 )
 
-load("@rules_proto//proto:defs.bzl", "proto_library")
 load("@rules_proto_grpc//java:repositories.bzl", rules_proto_grpc_java_repos = "java_repos")
 
 rules_proto_grpc_java_repos()
@@ -108,6 +102,11 @@ git_repository(
     branch = "main",
     remote = "https://github.com/EngFlow/engflowapis",
 )
+
+#local_repository(
+#    name = "com_engflow_engflowapis",
+#    path = "../engflowapis",
+#)
 
 maven_install(
     artifacts = IO_GRPC_GRPC_JAVA_ARTIFACTS,

@@ -1,6 +1,6 @@
 # Using the notification queue and event store APIs
 
-This documents explains how to make use of the **notification queue API** to
+This document explains how to make use of the **notification queue API** to
 obtain the notifications for a given build and use the notification data
 to obtain invocation events from the **event store API**. To do so,
 the [EngFlow API](https://github.com/EngFlow/engflowapis) is used as external
@@ -11,15 +11,20 @@ dependency (see [WORKSPACE](../../../../WORKSPACE)).
 In order to execute the client example, you must pass the following arguments
 that depends on the target cluster. 
 
-1. `--notification_queue_endpoint=CLUSTER_URL` holds the `grpc/grpcs` endpoint of the cluster
+1. `--notification_queue_endpoint=CLUSTER_URL`  the URL of the cluster gRPC 
+    server. Must start with `grpc://` or `grpcs://`
 2. `--queue_name=eventstore/lifecycle-events` holds the name of the queue to listen 
-3. `--tls_certificate=/path/to/your/client.crt` holds the path of the crt file to access the cluster
-4. `--tls_key=/path/to/your/client.key` holds the path of the key file used to access the cluster
+3. `--tls_certificate=certificate file containing your public key` 
+    holds the path of the crt file to access the cluster.
+    Only needed for `grpcs://` connections
+4. `--tls_key=/path/to/your/file containing your private key` 
+    holds the path of the key file used to access the cluster.
+    Only needed for `grpcs://` connections
 
 ```
 bazel run //java/com/engflow/notificationqueue/client  -- \
-      --notification_queue_endpoint=CLUSTER_URL --queue_name=eventstore/lifecycle-events \
-      --tls_certificate=/path/to/your/client.crt --tls_key=/path/to/your/client.key
+      --notification_queue_endpoint=grpcs://example.cluster.engflow.com --queue_name=eventstore/lifecycle-events \
+      --tls_certificate=client.crt --tls_key=client.key
 ```
 
 At this point, the client should be listening to the lifecycle events of the cluster. It then remains
