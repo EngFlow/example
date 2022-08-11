@@ -23,8 +23,7 @@ public class NotificationOptions {
             throw new IllegalArgumentException(e);
         }
 
-        if (cmd.hasOption("queue_name") && cmd.hasOption("notification_queue_endpoint") &&
-                cmd.hasOption("tls_certificate") && cmd.hasOption("tls_key")) {
+        if (cmd.hasOption("queue_name") && cmd.hasOption("notification_queue_endpoint")){
             return this;
         } else {
             throw new IllegalArgumentException("Please provide the arguments...");
@@ -76,5 +75,15 @@ public class NotificationOptions {
                 .desc("Path to the `--tls_certificate`'s private key." )
                 .build();
         options.addOption(key);
+
+        Option remoteHeader = Option.builder()
+                .longOpt("token")
+                .argName("property=value" )
+                .hasArgs()
+                .valueSeparator()
+                .numberOfArgs(2)
+                .desc("Token for open access clusters." )
+                .build();
+        options.addOption(remoteHeader);
     }
 }

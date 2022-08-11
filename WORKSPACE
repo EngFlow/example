@@ -97,6 +97,11 @@ switched_rules_by_language(
     java = True,
 )
 
+local_repository(
+    name = "googleapis",
+    path = "java/com/engflow/notificationqueue/third_party/googleapis",
+)
+
 git_repository(
     name = "com_engflow_engflowapis",
     branch = "main",
@@ -104,7 +109,10 @@ git_repository(
 )
 
 maven_install(
-    artifacts = IO_GRPC_GRPC_JAVA_ARTIFACTS + ["commons-cli:commons-cli:1.3.1"],
+    artifacts = IO_GRPC_GRPC_JAVA_ARTIFACTS + [
+        "commons-cli:commons-cli:1.3.1",
+        "com.google.oauth-client:google-oauth-client:1.34.1",
+    ],
     generate_compat_repositories = True,
     override_targets = IO_GRPC_GRPC_JAVA_OVERRIDE_TARGETS,
     repositories = [

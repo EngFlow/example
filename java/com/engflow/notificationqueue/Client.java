@@ -13,12 +13,17 @@ import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 import com.google.protobuf.Any;
 import com.google.protobuf.InvalidProtocolBufferException;
+
 import io.grpc.ManagedChannel;
+import io.grpc.Metadata;
+import io.grpc.Context;
+import io.grpc.stub.MetadataUtils;
 import io.grpc.netty.GrpcSslContexts;
 import io.grpc.netty.NegotiationType;
 import io.grpc.netty.NettyChannelBuilder;
-import io.grpc.stub.StreamObserver;
 import io.netty.handler.ssl.SslContextBuilder;
+import io.grpc.stub.StreamObserver;
+
 
 import javax.annotation.Nullable;
 import javax.net.ssl.SSLException;
@@ -40,8 +45,7 @@ class Client {
       System.err.println(e);
       System.err.println(" --notification_queue_endpoint");
       System.err.println(" --queue_name");
-      System.err.println(" --tls_certificate");
-      System.err.println(" --tls_key");
+      System.err.println("Please provide also authentication credentials");
       return;
     }
 
@@ -54,7 +58,6 @@ class Client {
       channel =
               createChannel(
                       clientOptions.getOption("notification_queue_endpoint"),
-                      "",
                       clientOptions.getOption("tls_certificate"),
                       clientOptions.getOption("tls_key"));
 
@@ -66,7 +69,10 @@ class Client {
       throw new IllegalStateException(e);
     }
     try {
-      pull(channel, clientOptions.getOption("queue_name"));
+      final Metadata header = new Metadata();
+      Metadata.Key<String> userKey = Metadata.Key.of("Authorization", Metadata.ASCII_STRING_MARSHALLER);
+      header.put(userKey, "Bearer " + clientOptions.getOption("token"));
+      pull(channel, clientOptions.getOption("queue_name"), header);
     } finally {
       if (channel != null) {
         channel.shutdownNow();
@@ -79,9 +85,11 @@ class Client {
     }
   }
 
-  private static void pull(ManagedChannel channel, String queueName) throws InterruptedException {
+  private static void pull(ManagedChannel channel, String queueName, Metadata header) throws InterruptedException {
     NotificationQueueGrpc.NotificationQueueStub asyncStub = NotificationQueueGrpc.newStub(channel);
+    asyncStub = MetadataUtils.attachHeaders(asyncStub, header);
     final CountDownLatch finishLatch = new CountDownLatch(1);
+    System.out.println("Pulling");
     StreamObserver<PullNotificationRequest> requestObserver =
         asyncStub.pull(
             new StreamObserver<PullNotificationResponse>() {
@@ -97,7 +105,7 @@ class Client {
                   if (lifeCycleEvent.getKindCase().name().equals("INVOCATION_STARTED")) {
                     String invocation = lifeCycleEvent.getInvocationStarted().getInvocationId();
                     try {
-                      getInvocations(channel, invocation);
+                      getInvocations(channel, invocation, header);
                     } catch (InterruptedException e) {
                       System.err.println("Could not get invocation with uuid " + invocation);
                     }
@@ -135,9 +143,10 @@ class Client {
     finishLatch.await();
   }
 
-  public static void getInvocations(ManagedChannel channel, String invocationId)
+  public static void getInvocations(ManagedChannel channel, String invocationId, Metadata header)
       throws InterruptedException {
     EventStoreGrpc.EventStoreStub asyncStub = EventStoreGrpc.newStub(channel);
+    asyncStub = MetadataUtils.attachHeaders(asyncStub, header);
     asyncStub.getInvocation(
         GetInvocationRequest.newBuilder().setInvocationId(invocationId).build(),
         new StreamObserver<StreamedBuildEvent>() {
@@ -160,7 +169,6 @@ class Client {
 
   private static ManagedChannel createChannel(
       String endpoint,
-      String tlsTrustedCertificate,
       @Nullable String clientCertificate,
       @Nullable String clientKey) {
     Preconditions.checkArgument(
@@ -179,17 +187,10 @@ class Client {
         NettyChannelBuilder.forTarget(endpoint)
             .negotiationType(tls ? NegotiationType.TLS : NegotiationType.PLAINTEXT);
 
+
     if (tls) {
       try {
         SslContextBuilder contextBuilder = GrpcSslContexts.forClient();
-        if (!Strings.isNullOrEmpty(tlsTrustedCertificate)) {
-          File cert = new File(tlsTrustedCertificate);
-          if (!cert.isFile()) {
-            throw new IllegalArgumentException(
-                "\"--tls_trusted_certificate\" must point to an existing file");
-          }
-          contextBuilder = contextBuilder.trustManager(cert);
-        }
         if (!Strings.isNullOrEmpty(clientCertificate) && !Strings.isNullOrEmpty(clientKey)) {
           contextBuilder =
               contextBuilder.keyManager(new File(clientCertificate), new File(clientKey));
@@ -201,4 +202,6 @@ class Client {
     }
     return builder.build();
   }
+
+
 }
