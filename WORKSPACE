@@ -39,6 +39,16 @@ http_archive(
 )
 
 http_archive(
+    name = "com_engflow_engflowapis",
+    sha256 = "a04a2d2a978355c85dff8b1018d12a8e0a1e6692add9de716fd4d1b7aa1e2a0d",
+    strip_prefix = "engflowapis-47aa858b498da13e7863356aaef9c6d05da0a7f2",
+    urls = [
+        "https://storage.googleapis.com/engflow-tools-public/engflowapis-47aa858b498da13e7863356aaef9c6d05da0a7f2.zip",
+        "https://github.com/EngFlow/engflowapis/archive/47aa858b498da13e7863356aaef9c6d05da0a7f2.zip",
+    ],
+)
+
+http_archive(
     name = "io_grpc_grpc_java",
     sha256 = "51bac553d269b97214dbd6aee4e65fc616d8ccd414fc12d708e85979ed4c19b4",
     strip_prefix = "grpc-java-1.45.1",
@@ -95,12 +105,6 @@ load("@com_google_googleapis//:repository_rules.bzl", "switched_rules_by_languag
 switched_rules_by_language(
     name = "com_google_googleapis_imports",
     java = True,
-)
-
-git_repository(
-    name = "com_engflow_engflowapis",
-    branch = "main",
-    remote = "https://github.com/EngFlow/engflowapis",
 )
 
 maven_install(
