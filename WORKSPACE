@@ -97,11 +97,6 @@ switched_rules_by_language(
     java = True,
 )
 
-local_repository(
-    name = "googleapis",
-    path = "java/com/engflow/notificationqueue/third_party/googleapis",
-)
-
 git_repository(
     name = "com_engflow_engflowapis",
     branch = "main",

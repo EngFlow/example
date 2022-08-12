@@ -89,7 +89,6 @@ class Client {
     NotificationQueueGrpc.NotificationQueueStub asyncStub = NotificationQueueGrpc.newStub(channel);
     asyncStub = MetadataUtils.attachHeaders(asyncStub, header);
     final CountDownLatch finishLatch = new CountDownLatch(1);
-    System.out.println("Pulling");
     StreamObserver<PullNotificationRequest> requestObserver =
         asyncStub.pull(
             new StreamObserver<PullNotificationResponse>() {
