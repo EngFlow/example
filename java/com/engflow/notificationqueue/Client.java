@@ -60,9 +60,8 @@ class Client {
     } catch (IllegalStateException e) {
       System.err.println("Unable to open channel to " + args[0].split("=")[1]);
       throw new IllegalStateException(e);
-    } catch (IOException e) {
-      throw new IOException(e);
     }
+
     try {
       final Metadata header = new Metadata();
       Metadata.Key<String> userKey =
@@ -216,8 +215,6 @@ class Client {
         builder.sslContext(contextBuilder.build());
       } catch (SSLException e) {
         throw new IllegalStateException(e);
-      } catch (IOException e) {
-        throw new IOException(e);
       }
     }
     return builder.build();
