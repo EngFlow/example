@@ -25,8 +25,8 @@ java_test(
 platform(
     name = "platform",
     constraint_values = [
-        "@bazel_tools//platforms:x86_64",
-        "@bazel_tools//platforms:linux",
+        "@platforms//cpu:x86_64",
+        "@platforms//os:linux",
     ],
     exec_properties = {
         "container-image": DOCKER_JDK_PSQL,
