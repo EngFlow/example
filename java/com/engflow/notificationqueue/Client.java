@@ -125,6 +125,7 @@ class Client {
                 Notification streamedNotification = response.getNotification().getNotification();
                 System.out.println("Notification: " + streamedNotification.toString());
                 try {
+                  /** Forward notification data to external server */
                   forwardToBESStub(
                       forwardChannel,
                       streamedNotification.getId().toString(),
@@ -206,6 +207,7 @@ class Client {
             System.out.println("Invocation: " + response.toString());
             String buildEvent = response.getEvent().toString();
             try {
+              /** Forward invocation data to external server */
               forwardToBESStub(forwardChannel, invocationId, buildEvent);
             } catch (Exception e) {
               System.err.println("Could not forward invocation to external sever...");
@@ -224,6 +226,13 @@ class Client {
         });
   }
 
+  /**
+   * Forwards data to an external grpc stub.
+   *
+   * @param channel a grpc channel for connection
+   * @param id the id of the data to send
+   * @param payload the payload
+   */
   private static void forwardToBESStub(ManagedChannel channel, String id, String payload) {
     if (channel == null) {
       return;

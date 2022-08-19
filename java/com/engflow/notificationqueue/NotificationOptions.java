@@ -99,10 +99,7 @@ public class NotificationOptions {
             .hasArgs()
             .valueSeparator()
             .numberOfArgs(2)
-            .desc(
-                "The service endpoint in protocol://host:port format. The protocol must be 'grpc'"
-                    + " or 'grpcs' signifying plaintext or TLS-encrypted communication"
-                    + " respectively.")
+            .desc("The external service endpoint in grpc://host:port format.")
             .build();
     options.addOption(forwardSever);
   }
