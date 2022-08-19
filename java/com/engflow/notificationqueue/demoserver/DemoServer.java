@@ -60,6 +60,7 @@ class DemoServer {
     public void forwardStream(
         EngFlowRequest req, StreamObserver<EngFlowResponse> responseObserver) {
       System.out.println("Receiving data... id " + req.getId() + ", payload " + req.getPayload());
+      // DO STUFF
       EngFlowResponse response =
           EngFlowResponse.newBuilder()
               .setMessage("Processed request with id " + req.getId() + " in the server.")

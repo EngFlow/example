@@ -35,7 +35,6 @@ import javax.net.ssl.SSLException;
 class Client {
 
   public static void main(String[] args) throws Exception {
-    // forwardToBESStub("grpc://localhost:50051");
     NotificationOptions clientOptions;
     try {
       clientOptions = new NotificationOptions().parseOptions(args);
@@ -43,7 +42,9 @@ class Client {
       System.err.println(e);
       System.err.println(" --notification_queue_endpoint");
       System.err.println(" --queue_name");
-      System.err.println("Please provide also authentication credentials");
+      System.err.println(
+          "Please provide also authentication credentials "
+              + "and if you want to forward then add another external server endpoint");
       return;
     }
 
@@ -68,16 +69,17 @@ class Client {
     }
 
     ManagedChannel forwardChannel = null;
-    try {
-      forwardChannel = createChannel("grpc://localhost:50051", null, null);
-    } catch (IllegalArgumentException e) {
-      System.err.println("Could not open forwarding channel");
-    } catch (IllegalStateException e) {
-      System.err.println("Could not open forwarding channel");
-    } catch (IOException e) {
-      System.err.println("Could not open forwarding channel");
+    if (!Strings.isNullOrEmpty(clientOptions.getOption("forward"))) {
+      try {
+        forwardChannel = createChannel(clientOptions.getOption("forward"), null, null);
+      } catch (IllegalArgumentException e) {
+        System.err.println("Could not open forwarding channel");
+      } catch (IllegalStateException e) {
+        System.err.println("Could not open forwarding channel");
+      } catch (IOException e) {
+        System.err.println("Could not open forwarding channel");
+      }
     }
-
     try {
       final Metadata header = new Metadata();
       Metadata.Key<String> userKey =
@@ -223,6 +225,9 @@ class Client {
   }
 
   private static void forwardToBESStub(ManagedChannel channel, String id, String payload) {
+    if (channel == null) {
+      return;
+    }
     final ForwardingGrpc.ForwardingBlockingStub blockingStub =
         ForwardingGrpc.newBlockingStub(channel);
     EngFlowRequest request = EngFlowRequest.newBuilder().setId(id).setPayload(payload).build();
