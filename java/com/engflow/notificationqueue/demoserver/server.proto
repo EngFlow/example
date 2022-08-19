@@ -1,0 +1,25 @@
+syntax = "proto3";
+
+package com.engflow.notificationqueue.demoserver;
+
+
+option java_multiple_files = true;
+option java_package = "com.engflow.notificationqueue.demoserver";
+option java_outer_classname = "ServerProto";
+
+
+service Forwarding {
+  // Simple service for printing invocations
+  rpc ForwardStream (EngFlowRequest)
+      returns (EngFlowResponse) {}
+}
+
+message EngFlowRequest {
+  string id = 1;
+
+  string payload = 2;
+}
+
+message EngFlowResponse {
+  string message = 1;
+}

@@ -1,4 +1,4 @@
-package com.engflow.notificationqueue;
+package com.engflow.notificationqueue.demoserver;
 
 import io.grpc.Server;
 import io.grpc.ServerBuilder;
@@ -7,7 +7,6 @@ import java.io.IOException;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Logger;
 
-/** Server that manages startup/shutdown of a {@code Greeter} server. */
 class DemoServer {
   private static final Logger logger = Logger.getLogger(DemoServer.class.getName());
 
@@ -16,7 +15,7 @@ class DemoServer {
   private void start() throws IOException {
     /* The port on which the server should run */
     int port = 50051;
-    server = ServerBuilder.forPort(port).addService(new GreeterImpl()).build().start();
+    server = ServerBuilder.forPort(port).addService(new ForwardingImpl()).build().start();
     logger.info("Server started, listening on " + port);
     Runtime.getRuntime()
         .addShutdownHook(
@@ -55,12 +54,17 @@ class DemoServer {
     server.blockUntilShutdown();
   }
 
-  static class GreeterImpl extends GreeterGrpc.GreeterImplBase {
+  static class ForwardingImpl extends ForwardingGrpc.ForwardingImplBase {
 
     @Override
-    public void sayHello(HelloRequest req, StreamObserver<HelloReply> responseObserver) {
-      HelloReply reply = HelloReply.newBuilder().setMessage("Hello " + req.getName()).build();
-      responseObserver.onNext(reply);
+    public void forwardStream(
+        EngFlowRequest req, StreamObserver<EngFlowResponse> responseObserver) {
+      System.out.println("Receiving data... id " + req.getId() + ", payload " + req.getPayload());
+      EngFlowResponse response =
+          EngFlowResponse.newBuilder()
+              .setMessage("Processed request with id " + req.getId() + " in the server.")
+              .build();
+      responseObserver.onNext(response);
       responseObserver.onCompleted();
     }
   }
