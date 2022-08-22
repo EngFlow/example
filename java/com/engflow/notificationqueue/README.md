@@ -85,7 +85,7 @@ the client. To execute the server run
 bazel run //java/com/engflow/notificationqueue:server
 ```
 
-This wil stat the demo server listening at `localhost:50051`. Now you can start the client with a given
+This will start the demo server listening at `localhost:50051`. Now you can start the client with a given
 authentication method and the forwarding endpoint
 
 ```bash
