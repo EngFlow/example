@@ -82,7 +82,7 @@ To execute a client that forwards information to an external server you add the 
 the client. To execute the server run
 
 ```bash
-bazel run //java/com/engflow/notificationqueue:server
+bazel run //java/com/engflow/notificationqueue/demoserver:server
 ```
 
 This will start the demo server listening at `localhost:50051`. Now you can start the client with a given

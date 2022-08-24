@@ -34,26 +34,6 @@ java_grpc_library(
     ],
 )
 
-proto_library(
-    name = "server_proto",
-    srcs = ["demoserver/server.proto"],
-)
-
-java_proto_library(
-    name = "server_java_proto",
-    deps = [":server_proto"],
-)
-
-java_grpc_library(
-    name = "server_java_grpc_proto",
-    srcs = [
-        ":server_proto",
-    ],
-    deps = [
-        ":server_java_proto",
-    ],
-)
-
 java_binary(
     name = "client",
     srcs = [
@@ -65,9 +45,9 @@ java_binary(
         ":engflowapis_java_proto",
         ":eventstore_java_grpc",
         ":notification_queue_java_grpc",
-        ":server_java_grpc_proto",
-        ":server_java_proto",
-        ":server_proto",
+        "//java/com/engflow/notificationqueue/demoserver:server_java_grpc_proto",
+        "//java/com/engflow/notificationqueue/demoserver:server_java_proto",
+        "//java/com/engflow/notificationqueue/demoserver:server_proto",
         "@com_google_protobuf//:any_proto",
         "@com_google_protobuf//java/core",
         "@io_grpc_grpc_java//api",
@@ -78,21 +58,5 @@ java_binary(
         "@maven//:com_google_guava_guava",
         "@maven//:commons_cli_commons_cli",
         "@maven//:io_netty_netty_handler",
-    ],
-)
-
-java_binary(
-    name = "server",
-    srcs = [
-        "demoserver/DemoServer.java",
-    ],
-    main_class = "com.engflow.notificationqueue.demoserver.DemoServer",
-    deps = [
-        ":server_java_grpc_proto",
-        ":server_java_proto",
-        ":server_proto",
-        "@io_grpc_grpc_java//api",
-        "@io_grpc_grpc_java//netty",
-        "@io_grpc_grpc_java//stub",
     ],
 )
