@@ -9,12 +9,16 @@ import com.engflow.notification.v1.NotificationQueueGrpc;
 import com.engflow.notification.v1.PullNotificationRequest;
 import com.engflow.notification.v1.PullNotificationResponse;
 import com.engflow.notification.v1.QueueId;
+import com.engflow.notificationqueue.demoserver.EngFlowRequest;
+import com.engflow.notificationqueue.demoserver.EngFlowResponse;
+import com.engflow.notificationqueue.demoserver.ForwardingGrpc;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 import com.google.protobuf.Any;
 import com.google.protobuf.InvalidProtocolBufferException;
 import io.grpc.ManagedChannel;
 import io.grpc.Metadata;
+import io.grpc.StatusRuntimeException;
 import io.grpc.netty.GrpcSslContexts;
 import io.grpc.netty.NegotiationType;
 import io.grpc.netty.NettyChannelBuilder;
@@ -38,7 +42,9 @@ class Client {
       System.err.println(e);
       System.err.println(" --notification_queue_endpoint");
       System.err.println(" --queue_name");
-      System.err.println("Please provide also authentication credentials");
+      System.err.println(
+          "Please provide also authentication credentials "
+              + "and if you want to forward then add another external server endpoint");
       return;
     }
 
@@ -62,17 +68,31 @@ class Client {
       throw new IllegalStateException(e);
     }
 
+    ManagedChannel forwardChannel = null;
+    if (!Strings.isNullOrEmpty(clientOptions.getOption("forward"))) {
+      try {
+        forwardChannel = createChannel(clientOptions.getOption("forward"), null, null);
+      } catch (IllegalArgumentException e) {
+        System.err.println("Could not open forwarding channel");
+      } catch (IllegalStateException e) {
+        System.err.println("Could not open forwarding channel");
+      } catch (IOException e) {
+        System.err.println("Could not open forwarding channel");
+      }
+    }
     try {
       final Metadata header = new Metadata();
       Metadata.Key<String> userKey =
           Metadata.Key.of("Authorization", Metadata.ASCII_STRING_MARSHALLER);
       header.put(userKey, "Bearer " + clientOptions.getOption("token"));
-      pull(channel, clientOptions.getOption("queue_name"), header);
+      pull(channel, clientOptions.getOption("queue_name"), header, forwardChannel);
     } finally {
       if (channel != null) {
         channel.shutdownNow();
+        forwardChannel.shutdownNow();
         try {
           channel.awaitTermination(10, TimeUnit.SECONDS);
+          forwardChannel.awaitTermination(10, TimeUnit.SECONDS);
         } catch (InterruptedException e) {
           System.out.println("Could not shut down channel within timeout");
         }
@@ -89,18 +109,30 @@ class Client {
    * @param header metadata for token authentication (if needed)
    * @throws InterruptedException
    */
-  private static void pull(ManagedChannel channel, String queueName, Metadata header)
+  private static void pull(
+      ManagedChannel channel, String queueName, Metadata header, ManagedChannel forwardChannel)
       throws InterruptedException {
+
     NotificationQueueGrpc.NotificationQueueStub asyncStub = NotificationQueueGrpc.newStub(channel);
     asyncStub = MetadataUtils.attachHeaders(asyncStub, header);
     final CountDownLatch finishLatch = new CountDownLatch(1);
+    System.out.println("Listening for build events...");
     StreamObserver<PullNotificationRequest> requestObserver =
         asyncStub.pull(
             new StreamObserver<PullNotificationResponse>() {
               @Override
               public void onNext(PullNotificationResponse response) {
                 Notification streamedNotification = response.getNotification().getNotification();
-                System.out.println("Notification: " + streamedNotification);
+                System.out.println("Notification: " + streamedNotification.toString());
+                try {
+                  /** Forward notification data to external server */
+                  forwardToBESStub(
+                      forwardChannel,
+                      streamedNotification.getId().toString(),
+                      streamedNotification.getPayload().toString());
+                } catch (Exception e) {
+                  System.err.println("Could not forward notification to external sever...");
+                }
                 Any notificationContent = streamedNotification.getPayload();
                 try {
                   BuildLifecycleEventNotification lifeCycleEvent =
@@ -116,7 +148,7 @@ class Client {
                        * Fetch the invocation using the grpc {@link EventStoreGrpc} stub using the
                        * acquired invocation id
                        */
-                      getInvocations(channel, invocation, header);
+                      getInvocations(channel, invocation, header, forwardChannel);
                     } catch (InterruptedException e) {
                       System.err.println("Could not get invocation with uuid " + invocation);
                     }
@@ -162,7 +194,8 @@ class Client {
    * @param header metadata for token authentication (if needed)
    * @throws InterruptedException
    */
-  public static void getInvocations(ManagedChannel channel, String invocationId, Metadata header)
+  private static void getInvocations(
+      ManagedChannel channel, String invocationId, Metadata header, ManagedChannel forwardChannel)
       throws InterruptedException {
     EventStoreGrpc.EventStoreStub asyncStub = EventStoreGrpc.newStub(channel);
     asyncStub = MetadataUtils.attachHeaders(asyncStub, header);
@@ -172,6 +205,13 @@ class Client {
           @Override
           public void onNext(StreamedBuildEvent response) {
             System.out.println("Invocation: " + response.toString());
+            String buildEvent = response.getEvent().toString();
+            try {
+              /** Forward invocation data to external server */
+              forwardToBESStub(forwardChannel, invocationId, buildEvent);
+            } catch (Exception e) {
+              System.err.println("Could not forward invocation to external sever...");
+            }
           }
 
           @Override
@@ -184,6 +224,30 @@ class Client {
             System.out.println("Finished pulling invocation");
           }
         });
+  }
+
+  /**
+   * Forwards data to an external grpc stub.
+   *
+   * @param channel a grpc channel for connection
+   * @param id the id of the data to send
+   * @param payload the payload
+   */
+  private static void forwardToBESStub(ManagedChannel channel, String id, String payload) {
+    if (channel == null) {
+      return;
+    }
+    final ForwardingGrpc.ForwardingBlockingStub blockingStub =
+        ForwardingGrpc.newBlockingStub(channel);
+    EngFlowRequest request = EngFlowRequest.newBuilder().setId(id).setPayload(payload).build();
+    EngFlowResponse response;
+    try {
+      response = blockingStub.forwardStream(request);
+      System.out.println("Forwarding: " + response.getMessage());
+    } catch (StatusRuntimeException e) {
+      System.out.println("Could not forward data to external server.");
+      return;
+    }
   }
 
   private static ManagedChannel createChannel(

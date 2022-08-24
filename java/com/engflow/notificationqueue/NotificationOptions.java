@@ -91,5 +91,16 @@ public class NotificationOptions {
             .desc("Token for open access clusters.")
             .build();
     options.addOption(remoteHeader);
+
+    Option forwardSever =
+        Option.builder()
+            .longOpt("forward")
+            .argName("property=value")
+            .hasArgs()
+            .valueSeparator()
+            .numberOfArgs(2)
+            .desc("The external service endpoint in grpc://host:port format.")
+            .build();
+    options.addOption(forwardSever);
   }
 }
