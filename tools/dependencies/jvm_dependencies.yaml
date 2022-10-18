@@ -1,0 +1,31 @@
+options:
+  buildHeader: [ "load(\"@io_bazel_rules_scala//scala:scala_import.bzl\", \"scala_import\")" ]
+  languages: [ "java", "scala:2.12.10" ]
+  resolvers:
+    - id: "mavencentral"
+      type: "default"
+      url: https://repo.maven.apache.org/maven2/
+    - id: "jcenter"
+      type: "default"
+      url: https://jcenter.bintray.com/
+  thirdPartyDirectory: ""
+
+dependencies:
+  com.google.guava:
+    guava:
+      lang: java
+      version: "23.0"
+
+  org.scalactic:
+    scalactic:
+      lang: scala
+      version: "3.0.5"
+
+replacements:
+  org.scala-lang:
+    scala-library:
+      lang: java
+      target: "@io_bazel_rules_scala_scala_library"
+    scala-reflect:
+      lang: java
+      target: "@io_bazel_rules_scala_scala_reflect"

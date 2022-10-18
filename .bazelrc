@@ -1,3 +1,37 @@
+############
+# Python   #
+############
+build --python_path="/usr/local/bin/python3"
+
+# MyPy Aspect
+###############
+# build --aspects @mypy_integration//:mypy.bzl%mypy_aspect
+# build --output_groups=+mypy
+
+############
+# Java     #
+############
+
+############
+# Scala    #
+############
+build --strategy=Scalac=worker
+test --strategy=Scalac=worker
+build --incompatible_java_common_parameters=false
+
+############
+# Other    #
+############
+try-import %workspace%/linting.bazelrc
+
+# Don't hide log output from a test execution, which is annoying UX on test failures.
+test --test_output=all
+
+# Restrict workers from reading files that aren't declared as inputs
+# Note that this uses a different sandboxing mechanism than the actions spawn:
+# https://github.com/bazelbuild/bazel/issues/6111
+build --worker_sandboxing
+
 # Options common for all EngFlow remote configurations.
 build:engflow_common --jobs=8
 build:engflow_common --define=EXECUTOR=remote
@@ -38,3 +72,10 @@ build:engflow_oss --remote_executor=grpcs://oss-cluster.engflow.com
 build:engflow_oss --bes_backend=grpcs://oss-cluster.engflow.com
 build:engflow_oss --bes_lifecycle_events
 build:engflow_oss --bes_results_url=https://oss-cluster.engflow.com/invocation/
+
+build:glass --config=engflow
+build:glass --remote_executor=grpcs://glass.cluster.engflow.com/
+build:glass --bes_backend=grpcs://glass.cluster.engflow.com/
+build:glass --bes_results_url=https://glass.cluster.engflow.com/invocation/
+build:glass --tls_client_certificate=/Users/mikez/Repos/prod/1/clusters/glass/certs/glass-client.crt
+build:glass --tls_client_key=/Users/mikez/Repos/prod/1/clusters/glass/certs/glass-client.key
