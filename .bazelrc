@@ -3,15 +3,6 @@
 ############
 build --python_path="/usr/local/bin/python3"
 
-# MyPy Aspect
-###############
-# build --aspects @mypy_integration//:mypy.bzl%mypy_aspect
-# build --output_groups=+mypy
-
-############
-# Java     #
-############
-
 ############
 # Scala    #
 ############
@@ -79,3 +70,5 @@ build:glass --bes_backend=grpcs://glass.cluster.engflow.com/
 build:glass --bes_results_url=https://glass.cluster.engflow.com/invocation/
 build:glass --tls_client_certificate=/Users/mikez/Repos/prod/1/clusters/glass/certs/glass-client.crt
 build:glass --tls_client_key=/Users/mikez/Repos/prod/1/clusters/glass/certs/glass-client.key
+# build:glass --tls_client_certificate=/home/ec2-user/certs/glass-client.crt
+# build:glass --tls_client_key=/home/ec2-user/certs/glass-client.key
