@@ -19,8 +19,8 @@ http_file(
     name = "ubuntu_20.04_1.3GB",
     sha256 = "28ccdb56450e643bad03bb7bcf7507ce3d8d90e8bf09e38f6bd9ac298a98eaad",
     urls = [
-        "https://mirror.math.princeton.edu/pub/ubuntu-iso/focal/ubuntu-20.04.4-live-server-amd64.iso",
-        "https://mirror.pit.teraswitch.com/ubuntu-releases/focal/ubuntu-20.04.4-live-server-amd64.iso",
+        "https://mirror.math.princeton.edu/pub/ubuntu-iso/ubuntu-20.04.5-live-server-amd64.iso",
+        "https://mirror.pit.teraswitch.com/ubuntu-releases/focal/ubuntu-20.04.5-live-server-amd64.iso",
     ],
 )
 
@@ -130,6 +130,66 @@ compat_repositories()
 load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
 
 ######################
+# PYTHON SUPPORT
+######################
+rules_python_version = "0.13.0"
+
+http_archive(
+    name = "rules_python",
+    sha256 = "8c8fe44ef0a9afc256d1e75ad5f448bb59b81aba149b8958f02f7b3a98f5d9b4",
+    strip_prefix = "rules_python-0.13.0",
+    url = "https://github.com/bazelbuild/rules_python/archive/refs/tags/0.13.0.tar.gz",
+)
+
+load("@rules_python//python:repositories.bzl", "python_register_toolchains")
+
+python_register_toolchains(
+    name = "python39",
+    # Available versions are listed in @rules_python//python:versions.bzl.
+    python_version = "3.9",
+)
+
+load("@python39_resolved_interpreter//:defs.bzl", python_interpreter = "interpreter")
+load("@rules_python//python:pip.bzl", "pip_install")
+
+pip_install(
+    name = "py_deps",
+    python_interpreter_target = python_interpreter,
+    requirements = "//3rdparty:requirements.txt",
+)
+
+# # MYPY SUPPORT
+# mypy_integration_version = "0.2.0"  # Latest @ 26th June 2021
+
+# http_archive(
+#     name = "mypy_integration",
+#     sha256 = "621df076709dc72809add1f5fe187b213fee5f9b92e39eb33851ab13487bd67d",
+#     strip_prefix = "bazel-mypy-integration-{version}".format(version = mypy_integration_version),
+#     urls = [
+#         "https://github.com/thundergolfer/bazel-mypy-integration/archive/refs/tags/{version}.tar.gz".format(version = mypy_integration_version),
+#     ],
+# )
+
+# load(
+#     "@mypy_integration//repositories:repositories.bzl",
+#     mypy_integration_repositories = "repositories",
+# )
+
+# mypy_integration_repositories()
+
+# load("@mypy_integration//:config.bzl", "mypy_configuration")
+
+# mypy_configuration("//tools/typing:mypy.ini")
+
+# load("@mypy_integration//repositories:deps.bzl", mypy_integration_deps = "deps")
+
+# mypy_integration_deps(
+#     "//tools/typing:mypy_version.txt",
+#     python_interpreter_target = python_interpreter,
+# )
+
+
+######################
 # GOLANG SUPPORT
 ######################
 
@@ -208,64 +268,6 @@ load("@maven//:defs.bzl", "pinned_maven_install")
 
 pinned_maven_install()
 
-######################
-# PYTHON SUPPORT
-######################
-# rules_python_version = "0.13.0"
-
-# http_archive(
-#     name = "rules_python",
-#     sha256 = "8c8fe44ef0a9afc256d1e75ad5f448bb59b81aba149b8958f02f7b3a98f5d9b4",
-#     strip_prefix = "rules_python-0.13.0",
-#     url = "https://github.com/bazelbuild/rules_python/archive/refs/tags/0.13.0.tar.gz",
-# )
-
-# load("@rules_python//python:repositories.bzl", "python_register_toolchains")
-
-# python_register_toolchains(
-#     name = "python39",
-#     # Available versions are listed in @rules_python//python:versions.bzl.
-#     python_version = "3.9",
-# )
-
-# load("@python39_resolved_interpreter//:defs.bzl", python_interpreter = "interpreter")
-# load("@rules_python//python:pip.bzl", "pip_install")
-
-# pip_install(
-#     name = "py_deps",
-#     python_interpreter_target = python_interpreter,
-#     requirements = "//3rdparty:requirements.txt",
-# )
-
-# # MYPY SUPPORT
-# mypy_integration_version = "0.2.0"  # Latest @ 26th June 2021
-
-# http_archive(
-#     name = "mypy_integration",
-#     sha256 = "621df076709dc72809add1f5fe187b213fee5f9b92e39eb33851ab13487bd67d",
-#     strip_prefix = "bazel-mypy-integration-{version}".format(version = mypy_integration_version),
-#     urls = [
-#         "https://github.com/thundergolfer/bazel-mypy-integration/archive/refs/tags/{version}.tar.gz".format(version = mypy_integration_version),
-#     ],
-# )
-
-# load(
-#     "@mypy_integration//repositories:repositories.bzl",
-#     mypy_integration_repositories = "repositories",
-# )
-
-# mypy_integration_repositories()
-
-# load("@mypy_integration//:config.bzl", "mypy_configuration")
-
-# mypy_configuration("//tools/typing:mypy.ini")
-
-# load("@mypy_integration//repositories:deps.bzl", mypy_integration_deps = "deps")
-
-# mypy_integration_deps(
-#     "//tools/typing:mypy_version.txt",
-#     python_interpreter_target = python_interpreter,
-# )
 
 ######################
 # SCALA SUPPORT
