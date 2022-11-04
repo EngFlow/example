@@ -15,11 +15,11 @@ http_file(
 )
 
 http_file(
-    name = "ubuntu_20.04_1.3GB",
-    sha256 = "28ccdb56450e643bad03bb7bcf7507ce3d8d90e8bf09e38f6bd9ac298a98eaad",
+    name = "ubuntu_20.05_1.3GB",
+    sha256 = "5035be37a7e9abbdc09f0d257f3e33416c1a0fb322ba860d42d74aa75c3468d4",
     urls = [
-        "https://mirror.math.princeton.edu/pub/ubuntu-iso/focal/ubuntu-20.04.4-live-server-amd64.iso",
-        "https://mirror.pit.teraswitch.com/ubuntu-releases/focal/ubuntu-20.04.4-live-server-amd64.iso",
+        "https://mirror.math.princeton.edu/pub/ubuntu-iso/focal/ubuntu-20.04.5-live-server-amd64.iso",
+        "https://mirror.pit.teraswitch.com/ubuntu-releases/focal/ubuntu-20.04.5-live-server-amd64.iso",
     ],
 )
 
