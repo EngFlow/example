@@ -1,4 +1,4 @@
-package com.hellow;
+package com.hello;
 
 object Main {
   def main(args: Array[String]): Unit = {
