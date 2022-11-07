@@ -1,5 +1,5 @@
 import os
-import csv
+import yaml
 
 # change this based on customer repo path
 repo_path = "/Users/sarahraza/example"
@@ -10,8 +10,16 @@ bazel_target_command = "bazel cquery //java/..."
 # change path for actions as relevant, relative to repo
 bazel_action_command = "bazel aquery //java/..."
 
+
+def writeToFile(dict_file):
+    print(dict_file)
+    with open(r'customer_info.yaml', 'w') as file:
+        yaml.dump(dict_file, file)
+
+
 if __name__ == '__main__':
-    # extract JSON files (for CPUTimes) and InputData from Commits
+    # dictionary with information
+    dict_file = {}
 
     # move to customer project
     os.chdir(repo_path)
@@ -19,11 +27,14 @@ if __name__ == '__main__':
     # get bazel version
     bazel_version = os.popen("bazel --version").read()
     print("bazel_version var", bazel_version)
+    dict_file["bazel version"] = bazel_version.strip()
 
     # get targets
-    bazel_target = os.popen(bazel_target_command).read()
-    print("bazel_target var", bazel_target)
+    # bazel_target = os.popen(bazel_target_command).read()
+    # print("bazel_target var", bazel_target)
 
     # get actions
-    bazel_action = os.popen(bazel_action_command).read()
-    print("bazel_target var", bazel_action)
+    # bazel_action = os.popen(bazel_action_command).read()
+    # print("bazel_target var", bazel_action)
+
+    writeToFile(dict_file)
