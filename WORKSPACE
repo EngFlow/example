@@ -15,7 +15,7 @@ http_file(
 )
 
 http_file(
-    name = "ubuntu_20.05_1.3GB",
+    name = "ubuntu_20.04_1.3GB",
     sha256 = "5035be37a7e9abbdc09f0d257f3e33416c1a0fb322ba860d42d74aa75c3468d4",
     urls = [
         "https://mirror.math.princeton.edu/pub/ubuntu-iso/focal/ubuntu-20.04.5-live-server-amd64.iso",
