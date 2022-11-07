@@ -1,3 +1,5 @@
+workspace(name = "example")
+
 load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_file")
 load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
 load("@bazel_tools//tools/build_defs/repo:git.bzl", "git_repository")
@@ -14,10 +16,10 @@ http_file(
 
 http_file(
     name = "ubuntu_20.04_1.3GB",
-    sha256 = "28ccdb56450e643bad03bb7bcf7507ce3d8d90e8bf09e38f6bd9ac298a98eaad",
+    sha256 = "5035be37a7e9abbdc09f0d257f3e33416c1a0fb322ba860d42d74aa75c3468d4",
     urls = [
-        "https://mirror.math.princeton.edu/pub/ubuntu-iso/focal/ubuntu-20.04.4-live-server-amd64.iso",
-        "https://mirror.pit.teraswitch.com/ubuntu-releases/focal/ubuntu-20.04.4-live-server-amd64.iso",
+        "https://mirror.math.princeton.edu/pub/ubuntu-iso/focal/ubuntu-20.04.5-live-server-amd64.iso",
+        "https://mirror.pit.teraswitch.com/ubuntu-releases/focal/ubuntu-20.04.5-live-server-amd64.iso",
     ],
 )
 
@@ -123,14 +125,42 @@ load("@maven//:compat.bzl", "compat_repositories")
 
 compat_repositories()
 
-rules_go_version = "v0.35.0"
+RULES_SCALA_VERSION = "20220201"
+
+http_archive(
+    name = "io_bazel_rules_scala",
+    sha256 = "77a3b9308a8780fff3f10cdbbe36d55164b85a48123033f5e970fdae262e8eb2",
+    strip_prefix = "rules_scala-%s" % RULES_SCALA_VERSION,
+    type = "zip",
+    url = "https://github.com/bazelbuild/rules_scala/archive/%s.zip" % RULES_SCALA_VERSION,
+)
+
+load("@io_bazel_rules_scala//:scala_config.bzl", "scala_config")
+
+scala_config()
+
+load("@io_bazel_rules_scala//scala:scala.bzl", "scala_repositories")
+
+scala_repositories()
+
+load("@io_bazel_rules_scala//scala:toolchains.bzl", "scala_register_toolchains")
+
+scala_register_toolchains()
+
+load("@io_bazel_rules_scala//testing:scalatest.bzl", "scalatest_repositories", "scalatest_toolchain")
+
+scalatest_repositories()
+
+scalatest_toolchain()
+
+RULES_GO_VERSION = "v0.35.0"
 
 http_archive(
     name = "io_bazel_rules_go",
     sha256 = "69de5c704a05ff37862f7e0f5534d4f479418afc21806c887db544a316f3cb6b",
     urls = [
-        "https://mirror.bazel.build/github.com/bazelbuild/rules_go/releases/download/{version}/rules_go-{version}.tar.gz".format(version = rules_go_version),
-        "https://github.com/bazelbuild/rules_go/releases/download/{version}/rules_go-{version}.tar.gz".format(version = rules_go_version),
+        "https://mirror.bazel.build/github.com/bazelbuild/rules_go/releases/download/{version}/rules_go-{version}.tar.gz".format(version = RULES_GO_VERSION),
+        "https://github.com/bazelbuild/rules_go/releases/download/{version}/rules_go-{version}.tar.gz".format(version = RULES_GO_VERSION),
     ],
 )
 
