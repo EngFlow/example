@@ -39,8 +39,8 @@ UPPER_BOUND = 10
 ) for x in range(1, UPPER_BOUND)]
 
 [genrule(
-    name = "ubuntu_20.05_1.3GB" + str(x),
-    outs = ["ubuntu_20.05_1.3GB" + str(x) + ".iso"],
-    cmd = "cp $(location @ubuntu_20.05_1.3GB//file) $@",
-    tools = ["@ubuntu_20.05_1.3GB//file"],
+    name = "ubuntu_20.04_1.3GB" + str(x),
+    outs = ["ubuntu_20.04_1.3GB" + str(x) + ".iso"],
+    cmd = "cp $(location @ubuntu_20.04_1.3GB//file) $@",
+    tools = ["@ubuntu_20.04_1.3GB//file"],
 ) for x in range(1, 2)]
