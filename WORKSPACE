@@ -126,14 +126,14 @@ load("@maven//:compat.bzl", "compat_repositories")
 compat_repositories()
 
 
-rules_scala_version = "20220201"
+RULES_SCALA_VERSION = "20220201"
 
 http_archive(
     name = "io_bazel_rules_scala",
     sha256 = "77a3b9308a8780fff3f10cdbbe36d55164b85a48123033f5e970fdae262e8eb2",
-    strip_prefix = "rules_scala-%s" % rules_scala_version,
+    strip_prefix = "rules_scala-%s" % RULES_SCALA_VERSION,
     type = "zip",
-    url = "https://github.com/bazelbuild/rules_scala/archive/%s.zip" % rules_scala_version,
+    url = "https://github.com/bazelbuild/rules_scala/archive/%s.zip" % RULES_SCALA_VERSION,
 )
 
 load("@io_bazel_rules_scala//:scala_config.bzl", "scala_config")
