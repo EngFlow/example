@@ -2,7 +2,7 @@ import os
 import yaml
 
 # change this based on customer repo path
-repo_path = "/Users/sarahraza/example"
+repo_path = "/"
 
 # change path for targets as relevant, relative to repo
 bazel_target_command = "bazel cquery //java/..."
@@ -13,7 +13,7 @@ bazel_action_command = "bazel aquery //java/..."
 
 def writeToFile(dict_file):
     print(dict_file)
-    with open(r'customer_info.yaml', 'w') as file:
+    with open(r'scripts/customer_info.yaml', 'w') as file:
         yaml.dump(dict_file, file)
 
 
