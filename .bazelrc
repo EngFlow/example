@@ -19,6 +19,12 @@ build:engflow_common --java_language_version=11
 
 build:without_bytes --experimental_remote_download_outputs=minimal
 
+build:remote_coverage --strategy=CoverageReport=local,remote
+build:remote_coverage --combined_report=lcov
+build:remote_coverage --nocache_test_results
+build:remote_coverage --experimental_split_coverage_postprocessing
+build:remote_coverage --experimental_fetch_all_coverage_outputs
+
 # Options for a private EngFlow cluster.
 # - Change "10.0.0.10:8080" to the actual cluster IP and port.
 # - You'll also need to set flags for your authentication method.

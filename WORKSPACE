@@ -4,6 +4,24 @@ load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_file")
 load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
 load("@bazel_tools//tools/build_defs/repo:git.bzl", "git_repository")
 
+http_archive(
+    name = "rules_python",
+    sha256 = "8c8fe44ef0a9afc256d1e75ad5f448bb59b81aba149b8958f02f7b3a98f5d9b4",
+    strip_prefix = "rules_python-0.13.0",
+    url = "https://github.com/bazelbuild/rules_python/archive/refs/tags/0.13.0.tar.gz",
+)
+
+load("@rules_python//python:pip.bzl", "pip_parse")
+
+pip_parse(
+    name = "coveragepy",
+    requirements = "//python:requirements.txt",
+)
+
+load("@coveragepy//:requirements.bzl", "install_deps")
+
+install_deps()
+
 # Some file dependencies
 http_file(
     name = "emacs",
@@ -167,17 +185,3 @@ load("@io_bazel_rules_go//go:deps.bzl", "go_register_toolchains", "go_rules_depe
 go_rules_dependencies()
 
 go_register_toolchains(version = "1.19.3")
-
-http_archive(
-    name = "io_bazel_rules_kotlin",
-    sha256 = "a57591404423a52bd6b18ebba7979e8cd2243534736c5c94d35c89718ea38f94",
-    urls = ["https://github.com/bazelbuild/rules_kotlin/releases/download/v1.6.0/rules_kotlin_release.tgz"],
-)
-
-load("@io_bazel_rules_kotlin//kotlin:repositories.bzl", "kotlin_repositories")
-
-kotlin_repositories()
-
-load("@io_bazel_rules_kotlin//kotlin:core.bzl", "kt_register_toolchains")
-
-kt_register_toolchains()
