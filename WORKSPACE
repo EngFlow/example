@@ -203,14 +203,3 @@ nodejs_register_toolchains(
 load("@bazel_skylib//:workspace.bzl", "bazel_skylib_workspace")
 
 bazel_skylib_workspace()
-
-load("@aspect_rules_js//npm:npm_import.bzl", "npm_translate_lock")
-
-npm_translate_lock(
-    name = "npm",
-    pnpm_lock = "//typescript:pnpm-lock.yaml",
-)
-
-load("@npm//:repositories.bzl", "npm_repositories")
-
-npm_repositories()

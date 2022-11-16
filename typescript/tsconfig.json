@@ -1,7 +1,6 @@
 {
   "compilerOptions": {
     "declaration": true,
-    "baseUrl": ".",
-    "types": ["node"]
+    "baseUrl": "."
   }
 }

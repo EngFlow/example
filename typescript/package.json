@@ -1,7 +1,6 @@
 {
   "private": true,
   "dependencies": {
-    "@types/node": "18.6.1",
     "typescript": "4.8.2"
   }
 }
