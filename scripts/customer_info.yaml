@@ -1,1 +1,22 @@
+bazel cquery targets: '//java/com/engflow/example:ExampleTest (8a8f93d)
+
+  //java/com/engflow/example:example (94fc984)
+
+  //java/com/engflow/notificationqueue/demoserver:server (94fc984)
+
+  //java/com/engflow/notificationqueue/demoserver:server_java_grpc_proto (94fc984)
+
+  //java/com/engflow/notificationqueue/demoserver:server_java_proto (94fc984)
+
+  //java/com/engflow/notificationqueue/demoserver:server_proto (94fc984)
+
+  //java/com/engflow/notificationqueue:client (94fc984)
+
+  //java/com/engflow/notificationqueue:engflowapis_java_proto (94fc984)
+
+  //java/com/engflow/notificationqueue:eventstore_java_grpc (94fc984)
+
+  //java/com/engflow/notificationqueue:notification_queue_java_grpc (94fc984)
+
+  '
 bazel version: bazel 5.2.0
