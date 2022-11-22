@@ -51,3 +51,10 @@ jobs:
       run: |
         bazel build //typescript/...
         bazel test //typescript/...
+
+    - name: Building //csharp directory
+      run: |
+        bazel build \
+        --host_platform @io_bazel_rules_dotnet//dotnet/toolchain:linux_amd64_3.1.407 \
+        --platforms @io_bazel_rules_dotnet//dotnet/toolchain:linux_amd64_3.1.407 \
+        //csharp/...

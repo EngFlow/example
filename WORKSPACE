@@ -203,3 +203,23 @@ nodejs_register_toolchains(
 load("@bazel_skylib//:workspace.bzl", "bazel_skylib_workspace")
 
 bazel_skylib_workspace()
+
+load("@bazel_tools//tools/build_defs/repo:git.bzl", "git_repository")
+
+git_repository(
+      name = "io_bazel_rules_dotnet",
+      remote = "https://github.com/bazelbuild/rules_dotnet",
+      branch = "master",
+)
+
+load("@io_bazel_rules_dotnet//dotnet:deps.bzl", "dotnet_repositories")
+
+dotnet_repositories()
+
+load("@io_bazel_rules_dotnet//dotnet:defs.bzl", "dotnet_register_toolchains", "dotnet_repositories_nugets")
+
+dotnet_register_toolchains()
+
+dotnet_repositories_nugets()
+
+load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
