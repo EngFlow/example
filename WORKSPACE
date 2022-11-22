@@ -207,9 +207,9 @@ bazel_skylib_workspace()
 load("@bazel_tools//tools/build_defs/repo:git.bzl", "git_repository")
 
 git_repository(
-      name = "io_bazel_rules_dotnet",
-      remote = "https://github.com/bazelbuild/rules_dotnet",
-      branch = "master",
+    name = "io_bazel_rules_dotnet",
+    commit = "0b7ae93fa81b7327a655118da0581db5ebbe0b8d",
+    remote = "https://github.com/bazelbuild/rules_dotnet",
 )
 
 load("@io_bazel_rules_dotnet//dotnet:deps.bzl", "dotnet_repositories")
