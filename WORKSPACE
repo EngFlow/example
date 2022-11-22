@@ -221,5 +221,3 @@ load("@io_bazel_rules_dotnet//dotnet:defs.bzl", "dotnet_register_toolchains", "d
 dotnet_register_toolchains()
 
 dotnet_repositories_nugets()
-
-load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
