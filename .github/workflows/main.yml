@@ -54,16 +54,8 @@ jobs:
 
     - name: Building //csharp directory (Linux)
       if: runner.os == 'Linux'
-      run: |
-        bazel build \
-        --host_platform @io_bazel_rules_dotnet//dotnet/toolchain:linux_amd64_3.1.100 \
-        --platforms @io_bazel_rules_dotnet//dotnet/toolchain:linux_amd64_3.1.100 \
-        //csharp/...
+      run: bazel build //csharp/... --config=linux
 
     - name: Building //csharp directory (macOS)
       if: runner.os == 'macOS'
-      run: |
-        bazel build \
-        --host_platform @io_bazel_rules_dotnet//dotnet/toolchain:darwin_amd64_3.1.100 \
-        --platforms @io_bazel_rules_dotnet//dotnet/toolchain:darwin_amd64_3.1.100 \
-        //csharp/...
+      run: bazel build //csharp/... --config=macos
