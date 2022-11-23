@@ -56,14 +56,14 @@ jobs:
       if: runner.os == 'Linux'
       run: |
         bazel build \
-        --host_platform @io_bazel_rules_dotnet//dotnet/toolchain:linux_amd64_3.1.407 \
-        --platforms @io_bazel_rules_dotnet//dotnet/toolchain:linux_amd64_3.1.407 \
+        --host_platform @io_bazel_rules_dotnet//dotnet/toolchain:linux_amd64_3.1.100 \
+        --platforms @io_bazel_rules_dotnet//dotnet/toolchain:linux_amd64_3.1.100 \
         //csharp/...
 
     - name: Building //csharp directory (macOS)
       if: runner.os == 'macOS'
       run: |
         bazel build \
-        --host_platform @io_bazel_rules_dotnet//dotnet/toolchain:darwin_amd64_3.1.407 \
-        --platforms @io_bazel_rules_dotnet//dotnet/toolchain:darwin_amd64_3.1.407 \
+        --host_platform @io_bazel_rules_dotnet//dotnet/toolchain:darwin_amd64_3.1.100 \
+        --platforms @io_bazel_rules_dotnet//dotnet/toolchain:darwin_amd64_3.1.100 \
         //csharp/...
