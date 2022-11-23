@@ -1,0 +1,64 @@
+GENERAL SUMMARY:
+On a high level, our goal is to improve the customer experience by allowing us to obtain 
+the introduction customer information faster. Through running this script, we will recieve 
+a yaml file that contains the targets, relevant information about actions (number of total 
+actions, set of mnemonics, set of configurations, set of platforms, and set of aspects), the 
+bazel version being used, and the values of the relevant bazel flags. 
+
+RUNNING/EDITING THE SCRIPT: 
+To run the script, 
+1. cd into the scripts folder and then the customer-info folder
+2. run command "python customer_info.py PATH" where PATH = 
+   absolute path to folder with yaml file
+EX: python customer_info.py "/Users/sarahraza/example/scripts/customer-info"
+   
+To customize the script, 
+- Change the file path in bazel_cquery_target_command
+- Change the file path in bazel_action_summary_command 
+- Change the list of relevant flags by editing the relevant_flags list 
+
+DETAILED SUMMARY: 
+Within the script, the following commands are called: 
+- bazel --version
+- bazel cquery [file path]/...
+- bazel aquery [file path]/...
+- bazel config [identifier]
+
+The [file path] for each command can be changed through changing the following class variables:
+- bazel_cquery_target_command
+- bazel_action_summary_command 
+
+The [identifier] is the unique identifier from each target outputted by the bazel cquery command.
+
+The output after running the script is a yaml file in the customer-info folder. The yaml 
+file contains 3 main blocks of information:
+- bazel aquery information which contains 5 sub-blocks of information
+  1. Total number of actions 
+  2. Mnemonics 
+  3. Configurations 
+  4. Execution Platform
+  5. Aspects
+  - Example: 
+    bazel aquery information:
+        - 47 total actions.
+        - 'Mnemonics:  GenProto: 1  TestRunner: 1  GenProtoDescriptorSet: 1  Action: 3  Middleman: 
+          3  FileWrite: 3  TemplateExpand: 3  SymlinkTree: 3  SourceSymlinkManifest: 3  
+          JavaDeployJar: 3  Turbine: 5  Javac: 8  JavaSourceJar: 10'
+        - 'Configurations:  darwin-fastbuild: 47'
+        - 'Execution Platforms:  @local_config_platform//:host: 47'
+        - 'Aspects:  BazelJavaProtoAspect: 3'
+- bazel cquery targets under which there is a list of targets each of which has a unique 
+  identifier at the end between parenthesis 
+  - Example:
+    bazel cquery targets: 
+    - //java/com/engflow/example:ExampleTest (8a8f93d)
+- bazel flag information in which there is the relevant flag information for each identifier
+  - Example: 
+    bazel flag information:
+        8a8f93d:
+            experimental_allow_runtime_deps_on_neverlink: 'true'
+            experimental_limit_android_lint_to_android_constrained_java: 'false'
+            test_timeout: '{short=PT1M, moderate=PT5M, long=PT15M, eternal=PT1H}'
+        94fc984:
+            experimental_allow_runtime_deps_on_neverlink: 'true'
+            experimental_limit_android_lint_to_android_constrained_java: 'false'
