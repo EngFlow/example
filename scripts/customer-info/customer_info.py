@@ -7,9 +7,6 @@ import yaml
 
 # download pylint and add config file from engflow
 
-# to run cd into scripts and run command "python customer_info.py PATH" where path = absolute path to folder with yaml file
-# EX: python customer_info.py "/Users/sarahraza/example/scripts/customer-info"
-
 # change path for targets as relevant, relative to repo
 bazel_cquery_target_command = ["bazel", "cquery", sys.argv[2]]
 
