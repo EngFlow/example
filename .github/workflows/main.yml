@@ -52,10 +52,5 @@ jobs:
         bazel build //typescript/...
         bazel test //typescript/...
 
-    - name: Building //csharp directory (Linux)
-      if: runner.os == 'Linux'
-      run: bazel build //csharp/... --config=linux
-
-    - name: Building //csharp directory (macOS)
-      if: runner.os == 'macOS'
-      run: bazel build //csharp/... --config=macos
+    - name: Building //csharp directory
+      run: bazel build //csharp/...

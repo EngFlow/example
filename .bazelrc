@@ -1,3 +1,4 @@
+build --enable_platform_specific_config
 # Options common for all EngFlow remote configurations.
 build:engflow_common --jobs=8
 build:engflow_common --define=EXECUTOR=remote
@@ -6,7 +7,6 @@ build:engflow_common --experimental_inmemory_dotd_files
 build:engflow_common --experimental_inmemory_jdeps_files
 build:engflow_common --incompatible_strict_action_env=true
 build:engflow_common --remote_timeout=3600
-build --enable_platform_specific_config
 
 build:engflow_common --action_env=BAZEL_DO_NOT_DETECT_CPP_TOOLCHAIN=1
 build:engflow_common --crosstool_top=//remote_config/cc:toolchain
