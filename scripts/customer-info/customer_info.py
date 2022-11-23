@@ -1,4 +1,3 @@
-import json
 import os
 import sys
 import re
@@ -26,13 +25,18 @@ def writeToFile(dict_file):
         yaml.dump(dict_file, file)
 
 def extractFlags(bazel_target):
+    # creates array of all unique identifiers
     ids = set(re.findall(r'\(.*?\)', bazel_target))
+
+    # creates dictionary mapping unique identifiers to fragments containing all flag information
     config_to_flag = {}
     for id in ids:
         config = id[1:-1]
         bazel_specific_query_command = bazel_config_command + config
         config_output = os.popen(bazel_specific_query_command).read()
         config_to_flag[config] = config_output
+
+    # changes dictionary to map from unique identifiers to dictionary containing strings with relevant flag information
     for config, config_output in config_to_flag.items():
         flag_to_val = {}
         for flag in relevant_flags:
@@ -43,6 +47,7 @@ def extractFlags(bazel_target):
                 colon_index = flag_output.find(":")
                 flag_to_val[flag_output[:colon_index]] = flag_output[colon_index+2:]
         config_to_flag[config] = flag_to_val
+
     return config_to_flag
 
 
