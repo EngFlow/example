@@ -1,12 +1,27 @@
-bazel aquery information:
-- 47 total actions.
-- 'Mnemonics:  GenProto: 1  TestRunner: 1  GenProtoDescriptorSet: 1  Action: 3  Middleman:
-  3  FileWrite: 3  TemplateExpand: 3  SymlinkTree: 3  SourceSymlinkManifest: 3  JavaDeployJar:
-  3  Turbine: 5  Javac: 8  JavaSourceJar: 10'
-- 'Configurations:  darwin-fastbuild: 47'
-- 'Execution Platforms:  @local_config_platform//:host: 47'
-- 'Aspects:  BazelJavaProtoAspect: 3'
-bazel cquery targets:
+bazel action information:
+- - 47 total actions.
+- - 'Mnemonics:'
+  - '  GenProto: 1'
+  - '  TestRunner: 1'
+  - '  GenProtoDescriptorSet: 1'
+  - '  Action: 3'
+  - '  Middleman: 3'
+  - '  FileWrite: 3'
+  - '  TemplateExpand: 3'
+  - '  SymlinkTree: 3'
+  - '  SourceSymlinkManifest: 3'
+  - '  JavaDeployJar: 3'
+  - '  Turbine: 5'
+  - '  Javac: 8'
+  - '  JavaSourceJar: 10'
+- - 'Configurations:'
+  - '  darwin-fastbuild: 47'
+- - 'Execution Platforms:'
+  - '  @local_config_platform//:host: 47'
+- - 'Aspects:'
+  - '  BazelJavaProtoAspect: 3'
+  - ''
+bazel targets:
 - //java/com/engflow/example:ExampleTest (8a8f93d)
 - //java/com/engflow/example:example (94fc984)
 - //java/com/engflow/notificationqueue/demoserver:server (94fc984)
@@ -17,7 +32,8 @@ bazel cquery targets:
 - //java/com/engflow/notificationqueue:engflowapis_java_proto (94fc984)
 - //java/com/engflow/notificationqueue:eventstore_java_grpc (94fc984)
 - //java/com/engflow/notificationqueue:notification_queue_java_grpc (94fc984)
-bazel flag information:
+bazel version: bazel 5.2.0
+relevant bazel flags and values:
   8a8f93d:
     experimental_allow_runtime_deps_on_neverlink: 'true'
     experimental_limit_android_lint_to_android_constrained_java: 'false'
@@ -25,4 +41,3 @@ bazel flag information:
   94fc984:
     experimental_allow_runtime_deps_on_neverlink: 'true'
     experimental_limit_android_lint_to_android_constrained_java: 'false'
-bazel version: bazel 5.2.0
