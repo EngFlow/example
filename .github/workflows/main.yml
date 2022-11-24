@@ -36,7 +36,6 @@ jobs:
 
     - name: Building //java directory
       run: |
-        bazel build //java/...
         bazel test //java/...
 
     - name: Building //kotlin directory
@@ -44,12 +43,10 @@ jobs:
 
     - name: Building //scala directory
       run: |
-        bazel build //scala/...
         bazel test //scala/...
 
     - name: Building //typescript directory
       run: |
-        bazel build //typescript/...
         bazel test //typescript/...
 
     - name: Building //csharp directory
