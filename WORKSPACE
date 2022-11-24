@@ -25,36 +25,39 @@ http_file(
 
 http_archive(
     name = "rules_jvm_external",
-    sha256 = "c21ce8b8c4ccac87c809c317def87644cdc3a9dd650c74f41698d761c95175f3",
-    strip_prefix = "rules_jvm_external-1498ac6ccd3ea9cdb84afed65aa257c57abf3e0a",
-    url = "https://github.com/bazelbuild/rules_jvm_external/archive/1498ac6ccd3ea9cdb84afed65aa257c57abf3e0a.zip",
+    sha256 = "179295d042929be29a90b6874a5309231d2f03f129a9554a97e05b9d0bd06adf",
+    strip_prefix = "rules_jvm_external-0b81b4dfed12fc079acf5a879de24a01c01dd9f4",
+    url = "https://github.com/bazelbuild/rules_jvm_external/archive/0b81b4dfed12fc079acf5a879de24a01c01dd9f4.zip",
 )
 
 http_archive(
     name = "com_google_googleapis",
-    sha256 = "25bba87daac3f4f7b9f5cd4632ade645de0d41d9600feccfbe6cbdf0cc8f6ae6",
-    strip_prefix = "googleapis-4f46ddcc9349121b27331e5cb5d18c553696a6c3",
+    sha256 = "c1a2e6affde3110cf2064bdf40fc935364de7c9724dd3505ca68588f803cb4a9",
+    strip_prefix = "googleapis-d1c447b6c522355799cd076c74dee6e484b96cdf",
     urls = [
-        "https://storage.googleapis.com/engflow-tools-public/googleapis-4f46ddcc9349121b27331e5cb5d18c553696a6c3.tar.gz",
-        "https://github.com/googleapis/googleapis/archive/4f46ddcc9349121b27331e5cb5d18c553696a6c3.tar.gz",
+        "https://storage.googleapis.com/engflow-tools-public/googleapis-d1c447b6c522355799cd076c74dee6e484b96cdf.tar.gz",
+        "https://github.com/googleapis/googleapis/archive/d1c447b6c522355799cd076c74dee6e484b96cdf.tar.gz",
     ],
 )
 
 http_archive(
     name = "com_engflow_engflowapis",
-    sha256 = "a04a2d2a978355c85dff8b1018d12a8e0a1e6692add9de716fd4d1b7aa1e2a0d",
-    strip_prefix = "engflowapis-47aa858b498da13e7863356aaef9c6d05da0a7f2",
+    sha256 = "2c4826ea9825b3e3956bba65469020ffff8a2178694c33eba86bf4d97a2a256a",
+    strip_prefix = "engflowapis-b8ecd7487fca4764a393037d5d74f67239694fc0",
     urls = [
-        "https://storage.googleapis.com/engflow-tools-public/engflowapis-47aa858b498da13e7863356aaef9c6d05da0a7f2.zip",
-        "https://github.com/EngFlow/engflowapis/archive/47aa858b498da13e7863356aaef9c6d05da0a7f2.zip",
+        "https://storage.googleapis.com/engflow-tools-public/engflowapis-b8ecd7487fca4764a393037d5d74f67239694fc0.zip",
+        "https://github.com/EngFlow/engflowapis/archive/b8ecd7487fca4764a393037d5d74f67239694fc0.zip",
     ],
 )
 
 http_archive(
     name = "io_grpc_grpc_java",
-    sha256 = "51bac553d269b97214dbd6aee4e65fc616d8ccd414fc12d708e85979ed4c19b4",
-    strip_prefix = "grpc-java-1.45.1",
-    urls = ["https://github.com/grpc/grpc-java/archive/v1.45.1.tar.gz"],
+    sha256 = "da84dd3e39bf647997d57ca2cebbc1d6d643ccdeb16197b36d255a4dd17f13bb",
+    strip_prefix = "grpc-java-775d79b0eb1717f381ebb698f5302db702f6200c",
+    urls = [
+        "https://storage.googleapis.com/engflow-tools-public/grpc-java-775d79b0eb1717f381ebb698f5302db702f6200c.tar.gz",
+        "https://github.com/grpc/grpc-java/archive/775d79b0eb1717f381ebb698f5302db702f6200c.tar.gz",
+    ],
 )
 
 http_archive(
@@ -62,6 +65,7 @@ http_archive(
     sha256 = "e017528fd1c91c5a33f15493e3a398181a9e821a804eb7ff5acdd1d2d6c2b18d",
     strip_prefix = "rules_proto-4.0.0-3.20.0",
     urls = [
+        "https://storage.googleapis.com/engflow-tools-public/rules_proto-4.0.0-3.20.0.tar.gz",
         "https://github.com/bazelbuild/rules_proto/archive/refs/tags/4.0.0-3.20.0.tar.gz",
     ],
 )
@@ -71,7 +75,10 @@ http_archive(
     name = "rules_proto_grpc",
     sha256 = "28724736b7ff49a48cb4b2b8cfa373f89edfcb9e8e492a8d5ab60aa3459314c8",
     strip_prefix = "rules_proto_grpc-4.0.1",
-    urls = ["https://github.com/rules-proto-grpc/rules_proto_grpc/archive/4.0.1.tar.gz"],
+    urls = [
+        "https://storage.googleapis.com/engflow-tools-public/rules_proto_grpc-4.0.1.tar.gz",
+        "https://github.com/rules-proto-grpc/rules_proto_grpc/archive/4.0.1.tar.gz",
+    ],
 )
 
 load("@rules_proto_grpc//java:repositories.bzl", rules_proto_grpc_java_repos = "java_repos")
@@ -87,10 +94,11 @@ rules_proto_toolchains()
 
 http_archive(
     name = "com_google_protobuf",
-    sha256 = "990e47a163b4057f98b899eca591981b5b735872b58f59b9ead9cecabbb21a2a",
-    strip_prefix = "protobuf-21.4",
+    sha256 = "f6db31d70e2e0a3722b9eec50393f3c02ab88769dc682a30d78afc72e3288248",
+    strip_prefix = "protobuf-4ac90bbb69719ebdbf1dd1c8450daa2cf4bbd313",
     urls = [
-        "https://github.com/protocolbuffers/protobuf/archive/v21.4.tar.gz",
+        "https://storage.googleapis.com/engflow-tools-public/protobuf-4ac90bbb69719ebdbf1dd1c8450daa2cf4bbd313.tar.gz",
+        "https://github.com/protocolbuffers/protobuf/archive/4ac90bbb69719ebdbf1dd1c8450daa2cf4bbd313.tar.gz",
     ],
 )
 
@@ -111,7 +119,7 @@ switched_rules_by_language(
 
 maven_install(
     artifacts = IO_GRPC_GRPC_JAVA_ARTIFACTS + [
-        "commons-cli:commons-cli:1.3.1",
+        "commons-cli:commons-cli:1.5.0",
         "com.google.oauth-client:google-oauth-client:1.34.1",
     ],
     generate_compat_repositories = True,
@@ -125,14 +133,15 @@ load("@maven//:compat.bzl", "compat_repositories")
 
 compat_repositories()
 
-RULES_SCALA_VERSION = "20220201"
-
 http_archive(
     name = "io_bazel_rules_scala",
-    sha256 = "77a3b9308a8780fff3f10cdbbe36d55164b85a48123033f5e970fdae262e8eb2",
-    strip_prefix = "rules_scala-%s" % RULES_SCALA_VERSION,
+    sha256 = "ebc2b00d599a73e62743bee5e4b11e5e94f35692b869d49f31b04faec380c16c",
+    strip_prefix = "rules_scala-73f5d1a7da081c9f5160b9ed7ac745388af28e23",
     type = "zip",
-    url = "https://github.com/bazelbuild/rules_scala/archive/%s.zip" % RULES_SCALA_VERSION,
+    urls = [
+        "https://storage.googleapis.com/engflow-tools-public/rules_scala-73f5d1a7da081c9f5160b9ed7ac745388af28e23.zip",
+        "https://github.com/bazelbuild/rules_scala/archive/73f5d1a7da081c9f5160b9ed7ac745388af28e23.zip",
+    ],
 )
 
 load("@io_bazel_rules_scala//:scala_config.bzl", "scala_config")
