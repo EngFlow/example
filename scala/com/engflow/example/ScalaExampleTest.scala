@@ -1,7 +1,8 @@
 package com.engflow.example
-import org.scalatest.FunSuite
+// import org.scalatest.FunSuite
+import org.scalatest.funsuite.AnyFunSuite
 
-class ScalaExampleTest extends FunSuite  {
+class ScalaExampleTest extends AnyFunSuite  {
     test ("engflow scala tests") {
         assert("1" == ScalaExample.fizzbuzz(1))
         assert("2" == ScalaExample.fizzbuzz(2))
