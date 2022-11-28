@@ -73,11 +73,11 @@ http_archive(
 # Loads rules required to compile proto files
 http_archive(
     name = "rules_proto_grpc",
-    sha256 = "28724736b7ff49a48cb4b2b8cfa373f89edfcb9e8e492a8d5ab60aa3459314c8",
-    strip_prefix = "rules_proto_grpc-4.0.1",
+    sha256 = "bbe4db93499f5c9414926e46f9e35016999a4e9f6e3522482d3760dc61011070",
+    strip_prefix = "rules_proto_grpc-4.2.0",
     urls = [
-        "https://storage.googleapis.com/engflow-tools-public/rules_proto_grpc-4.0.1.tar.gz",
-        "https://github.com/rules-proto-grpc/rules_proto_grpc/archive/4.0.1.tar.gz",
+        "https://storage.googleapis.com/engflow-tools-public/4.2.0.tar.gz",
+        "https://github.com/rules-proto-grpc/rules_proto_grpc/archive/4.2.0.tar.gz",
     ],
 )
 
@@ -164,10 +164,10 @@ scalatest_toolchain()
 
 http_archive(
     name = "io_bazel_rules_go",
-    sha256 = "099a9fb96a376ccbbb7d291ed4ecbdfd42f6bc822ab77ae6f1b5cb9e914e94fa",
+    sha256 = "ae013bf35bd23234d1dea46b079f1e05ba74ac0321423830119d3e787ec73483",
     urls = [
-        "https://mirror.bazel.build/github.com/bazelbuild/rules_go/releases/download/v0.35.0/rules_go-v0.35.0.zip",
-        "https://github.com/bazelbuild/rules_go/releases/download/v0.35.0/rules_go-v0.35.0.zip",
+        "https://mirror.bazel.build/github.com/bazelbuild/rules_go/releases/download/v0.36.0/rules_go-v0.36.0.zip",
+        "https://github.com/bazelbuild/rules_go/releases/download/v0.36.0/rules_go-v0.36.0.zip",
     ],
 )
 
@@ -180,7 +180,9 @@ go_register_toolchains(version = "1.19.3")
 http_archive(
     name = "io_bazel_rules_kotlin",
     sha256 = "a57591404423a52bd6b18ebba7979e8cd2243534736c5c94d35c89718ea38f94",
-    urls = ["https://github.com/bazelbuild/rules_kotlin/releases/download/v1.6.0/rules_kotlin_release.tgz"],
+    urls = [
+        "https://github.com/bazelbuild/rules_kotlin/releases/download/v1.6.0/rules_kotlin_release.tgz",
+    ],
 )
 
 load("@io_bazel_rules_kotlin//kotlin:repositories.bzl", "kotlin_repositories")
@@ -193,9 +195,12 @@ kt_register_toolchains()
 
 http_archive(
     name = "aspect_rules_ts",
-    sha256 = "1149d4cf7f210de67e0fc5cd3e8f624de3ee976ac05af4f1484e57a74c12f2dc",
-    strip_prefix = "rules_ts-1.0.0-rc5",
-    url = "https://github.com/aspect-build/rules_ts/archive/refs/tags/v1.0.0-rc5.tar.gz",
+    sha256 = "5b501313118b06093497b6429f124b973f99d1eb5a27a1cc372e5d6836360e9d",
+    strip_prefix = "rules_ts-1.0.2",
+    urls = [
+        "https://storage.googleapis.com/engflow-tools-public/v1.0.2.tar.gz",
+        "https://github.com/aspect-build/rules_ts/archive/refs/tags/v1.0.2.tar.gz",
+    ],
 )
 
 load("@aspect_rules_ts//ts:repositories.bzl", "rules_ts_dependencies")
@@ -215,9 +220,12 @@ bazel_skylib_workspace()
 
 http_archive(
     name = "io_bazel_rules_dotnet",
-    sha256 = "400416de5d5d321fa7ca9e46110373cd39db7ed84ef3a61e1150c5813cb1c99e",
-    strip_prefix = "rules_dotnet-0.0.7",
-    urls = ["https://github.com/bazelbuild/rules_dotnet/archive/refs/tags/0.0.7.zip"],
+    sha256 = "5098268d2950d658a0ab5558fa9faa590866be7ff1b20a97964b37720f8af2c6",
+    strip_prefix = "rules_dotnet-0b7ae93fa81b7327a655118da0581db5ebbe0b8d",
+    urls = [
+        "https://storage.googleapis.com/engflow-tools-public/0b7ae93fa81b7327a655118da0581db5ebbe0b8d.zip",
+        "https://github.com/bazelbuild/rules_dotnet/archive/0b7ae93fa81b7327a655118da0581db5ebbe0b8d.zip",
+    ],
 )
 
 load("@io_bazel_rules_dotnet//dotnet:deps.bzl", "dotnet_repositories")
