@@ -181,7 +181,6 @@ http_archive(
     name = "io_bazel_rules_kotlin",
     sha256 = "a57591404423a52bd6b18ebba7979e8cd2243534736c5c94d35c89718ea38f94",
     urls = [
-        "https://storage.googleapis.com/engflow-tools-public/9e03fd92eebec869b9c092272b421550a3c1c1f5.tar.gz",
         "https://github.com/bazelbuild/rules_kotlin/releases/download/v1.6.0/rules_kotlin_release.tgz",
     ],
 )
