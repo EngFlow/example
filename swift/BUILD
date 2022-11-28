@@ -1,0 +1,6 @@
+load("@build_bazel_rules_swift//swift:swift.bzl", "swift_binary", "swift_library")
+
+swift_binary(
+    name = "swift",
+    srcs = ["main.swift"],
+)
