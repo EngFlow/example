@@ -73,11 +73,11 @@ http_archive(
 # Loads rules required to compile proto files
 http_archive(
     name = "rules_proto_grpc",
-    sha256 = "1d5223a1c7d3b41f07bb43602699dcb852ab01ffc68a55ea031f71ace4fd7daf",
-    strip_prefix = "rules_proto_grpc-58f568397f3707e072c3e94493c380edea04337c",
+    sha256 = "bbe4db93499f5c9414926e46f9e35016999a4e9f6e3522482d3760dc61011070",
+    strip_prefix = "rules_proto_grpc-4.2.0",
     urls = [
-        "https://storage.googleapis.com/engflow-tools-public/58f568397f3707e072c3e94493c380edea04337c.tar.gz",
-        "https://github.com/rules-proto-grpc/rules_proto_grpc/archive/58f568397f3707e072c3e94493c380edea04337c.tar.gz",
+        "https://storage.googleapis.com/engflow-tools-public/4.2.0.tar.gz",
+        "https://github.com/rules-proto-grpc/rules_proto_grpc/archive/4.2.0.tar.gz",
     ],
 )
 
@@ -164,10 +164,10 @@ scalatest_toolchain()
 
 http_archive(
     name = "io_bazel_rules_go",
-    sha256 = "1105a42cfbaf12dba09be6aa3a9c340db1e5b655b07be5ac9cded1ee9ffc0f08",
+    sha256 = "ae013bf35bd23234d1dea46b079f1e05ba74ac0321423830119d3e787ec73483",
     urls = [
-        "https://storage.googleapis.com/engflow-tools-public/79e00373e1a9dc6363ae278a73264b39da44ad55.zip",
-        "https://github.com/bazelbuild/rules_go/archive/79e00373e1a9dc6363ae278a73264b39da44ad55.zip",
+        "https://mirror.bazel.build/github.com/bazelbuild/rules_go/releases/download/v0.36.0/rules_go-v0.36.0.zip",
+        "https://github.com/bazelbuild/rules_go/releases/download/v0.36.0/rules_go-v0.36.0.zip",
     ],
 )
 
@@ -195,11 +195,11 @@ kt_register_toolchains()
 
 http_archive(
     name = "aspect_rules_ts",
-    sha256 = "137cd6b897eb88e6f0f00e70eeaaa5bfcaf29177c6f59d3e2be2aed5c01239fb",
-    strip_prefix = "rules_ts-9e03fd92eebec869b9c092272b421550a3c1c1f5",
+    sha256 = "5b501313118b06093497b6429f124b973f99d1eb5a27a1cc372e5d6836360e9d",
+    strip_prefix = "rules_ts-1.0.2",
     urls = [
-        "https://storage.googleapis.com/engflow-tools-public/9e03fd92eebec869b9c092272b421550a3c1c1f5.tar.gz",
-        "https://github.com/aspect-build/rules_ts/archive/9e03fd92eebec869b9c092272b421550a3c1c1f5.tar.gz",
+        "https://storage.googleapis.com/engflow-tools-public/v1.0.2.tar.gz",
+        "https://github.com/aspect-build/rules_ts/archive/refs/tags/v1.0.2.tar.gz",
     ],
 )
 
