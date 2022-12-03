@@ -1,5 +1,5 @@
 bazel action information:
-- - 47 total actions.
+- 'total_actions: 47'
 - - 'Mnemonics:'
   - '  GenProto: 1'
   - '  TestRunner: 1'
@@ -17,27 +17,27 @@ bazel action information:
 - - 'Configurations:'
   - '  darwin-fastbuild: 47'
 - - 'Execution Platforms:'
-  - '  @local_config_platform//:host: 47'
+  - '  @io_bazel_rules_dotnet//dotnet/toolchain:darwin_amd64_3.1.100: 47'
 - - 'Aspects:'
   - '  BazelJavaProtoAspect: 3'
   - ''
 bazel targets:
-- //java/com/engflow/example:ExampleTest (8a8f93d)
-- //java/com/engflow/example:example (94fc984)
-- //java/com/engflow/notificationqueue/demoserver:server (94fc984)
-- //java/com/engflow/notificationqueue/demoserver:server_java_grpc_proto (94fc984)
-- //java/com/engflow/notificationqueue/demoserver:server_java_proto (94fc984)
-- //java/com/engflow/notificationqueue/demoserver:server_proto (94fc984)
-- //java/com/engflow/notificationqueue:client (94fc984)
-- //java/com/engflow/notificationqueue:engflowapis_java_proto (94fc984)
-- //java/com/engflow/notificationqueue:eventstore_java_grpc (94fc984)
-- //java/com/engflow/notificationqueue:notification_queue_java_grpc (94fc984)
+- //java/com/engflow/example:ExampleTest (d7452c8)
+- //java/com/engflow/example:example (2428b57)
+- //java/com/engflow/notificationqueue/demoserver:server (2428b57)
+- //java/com/engflow/notificationqueue/demoserver:server_java_grpc_proto (2428b57)
+- //java/com/engflow/notificationqueue/demoserver:server_java_proto (2428b57)
+- //java/com/engflow/notificationqueue/demoserver:server_proto (2428b57)
+- //java/com/engflow/notificationqueue:client (2428b57)
+- //java/com/engflow/notificationqueue:engflowapis_java_proto (2428b57)
+- //java/com/engflow/notificationqueue:eventstore_java_grpc (2428b57)
+- //java/com/engflow/notificationqueue:notification_queue_java_grpc (2428b57)
 bazel version: bazel 5.2.0
 relevant bazel flags and values:
-  8a8f93d:
+  2428b57:
+    experimental_allow_runtime_deps_on_neverlink: 'true'
+    experimental_limit_android_lint_to_android_constrained_java: 'false'
+  d7452c8:
     experimental_allow_runtime_deps_on_neverlink: 'true'
     experimental_limit_android_lint_to_android_constrained_java: 'false'
     test_timeout: '{short=PT1M, moderate=PT5M, long=PT15M, eternal=PT1H}'
-  94fc984:
-    experimental_allow_runtime_deps_on_neverlink: 'true'
-    experimental_limit_android_lint_to_android_constrained_java: 'false'
