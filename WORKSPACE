@@ -9,6 +9,7 @@ http_file(
     name = "emacs",
     sha256 = "1439bf7f24e5769f35601dbf332e74dfc07634da6b1e9500af67188a92340a28",
     urls = [
+        "https://storage.googleapis.com/engflow-tools-public/emacs-28.1.tar.gz",
         "https://mirror.its.dal.ca/gnu/emacs/emacs-28.1.tar.gz",
         "https://mirrors.kernel.org/gnu/emacs/emacs-28.1.tar.gz",
     ],
@@ -18,6 +19,7 @@ http_file(
     name = "ubuntu_20.04_1.3GB",
     sha256 = "5035be37a7e9abbdc09f0d257f3e33416c1a0fb322ba860d42d74aa75c3468d4",
     urls = [
+        "https://storage.googleapis.com/engflow-tools-public/ubuntu-20.04.5-live-server-amd64.iso",
         "https://mirror.math.princeton.edu/pub/ubuntu-iso/focal/ubuntu-20.04.5-live-server-amd64.iso",
         "https://mirror.pit.teraswitch.com/ubuntu-releases/focal/ubuntu-20.04.5-live-server-amd64.iso",
     ],
@@ -76,7 +78,7 @@ http_archive(
     sha256 = "bbe4db93499f5c9414926e46f9e35016999a4e9f6e3522482d3760dc61011070",
     strip_prefix = "rules_proto_grpc-4.2.0",
     urls = [
-        "https://storage.googleapis.com/engflow-tools-public/4.2.0.tar.gz",
+        "https://storage.googleapis.com/engflow-tools-public/rules_proto_grpc-4.2.0.tar.gz",
         "https://github.com/rules-proto-grpc/rules_proto_grpc/archive/4.2.0.tar.gz",
     ],
 )
@@ -198,7 +200,7 @@ http_archive(
     sha256 = "5b501313118b06093497b6429f124b973f99d1eb5a27a1cc372e5d6836360e9d",
     strip_prefix = "rules_ts-1.0.2",
     urls = [
-        "https://storage.googleapis.com/engflow-tools-public/v1.0.2.tar.gz",
+        "https://storage.googleapis.com/engflow-tools-public/rules_ts-1.0.2.tar.gz",
         "https://github.com/aspect-build/rules_ts/archive/refs/tags/v1.0.2.tar.gz",
     ],
 )
@@ -223,7 +225,7 @@ http_archive(
     sha256 = "5098268d2950d658a0ab5558fa9faa590866be7ff1b20a97964b37720f8af2c6",
     strip_prefix = "rules_dotnet-0b7ae93fa81b7327a655118da0581db5ebbe0b8d",
     urls = [
-        "https://storage.googleapis.com/engflow-tools-public/0b7ae93fa81b7327a655118da0581db5ebbe0b8d.zip",
+        "https://storage.googleapis.com/engflow-tools-public/rules_dotnet-0b7ae93fa81b7327a655118da0581db5ebbe0b8d.zip",
         "https://github.com/bazelbuild/rules_dotnet/archive/0b7ae93fa81b7327a655118da0581db5ebbe0b8d.zip",
     ],
 )
@@ -237,6 +239,21 @@ load("@io_bazel_rules_dotnet//dotnet:defs.bzl", "dotnet_register_toolchains", "d
 dotnet_register_toolchains()
 
 dotnet_repositories_nugets()
+
+http_archive(
+    name = "rules_perl",
+    sha256 = "8a7a33cb3c81a0677f11b1a9c5384bc9eefaec833913bd313a6494c2783a6046",
+    strip_prefix = "rules_perl-022b8daf2bb4836ac7a50e4a1d8ea056a3e1e403",
+    urls = [
+        "https://storage.googleapis.com/engflow-tools-public/rules_perl-022b8daf2bb4836ac7a50e4a1d8ea056a3e1e403.zip",
+        "https://github.com/bazelbuild/rules_perl/archive/022b8daf2bb4836ac7a50e4a1d8ea056a3e1e403.zip",
+    ],
+)
+
+load("@rules_perl//perl:deps.bzl", "perl_register_toolchains", "perl_rules_dependencies")
+
+perl_rules_dependencies()
+perl_register_toolchains()
 
 http_archive(
     name = "rules_python",
