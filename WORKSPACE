@@ -9,6 +9,7 @@ http_file(
     name = "emacs",
     sha256 = "1439bf7f24e5769f35601dbf332e74dfc07634da6b1e9500af67188a92340a28",
     urls = [
+        "https://storage.googleapis.com/engflow-tools-public/emacs-28.1.tar.gz",
         "https://mirror.its.dal.ca/gnu/emacs/emacs-28.1.tar.gz",
         "https://mirrors.kernel.org/gnu/emacs/emacs-28.1.tar.gz",
     ],
@@ -18,6 +19,7 @@ http_file(
     name = "ubuntu_20.04_1.3GB",
     sha256 = "5035be37a7e9abbdc09f0d257f3e33416c1a0fb322ba860d42d74aa75c3468d4",
     urls = [
+        "https://storage.googleapis.com/engflow-tools-public/ubuntu-20.04.5-live-server-amd64.iso",
         "https://mirror.math.princeton.edu/pub/ubuntu-iso/focal/ubuntu-20.04.5-live-server-amd64.iso",
         "https://mirror.pit.teraswitch.com/ubuntu-releases/focal/ubuntu-20.04.5-live-server-amd64.iso",
     ],
