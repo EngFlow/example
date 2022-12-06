@@ -51,3 +51,6 @@ jobs:
 
     - name: Building //csharp directory
       run: bazel build //csharp/...
+
+    - name: Building //perl directory
+      run: bazel build //perl/...
