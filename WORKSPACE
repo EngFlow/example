@@ -238,10 +238,14 @@ dotnet_register_toolchains()
 
 dotnet_repositories_nugets()
 
-git_repository(
+http_archive(
     name = "rules_perl",
-    remote = "https://github.com/bazelbuild/rules_perl.git",
-    branch = "main",
+    sha256 = "8a7a33cb3c81a0677f11b1a9c5384bc9eefaec833913bd313a6494c2783a6046",
+    strip_prefix = "rules_perl-022b8daf2bb4836ac7a50e4a1d8ea056a3e1e403",
+    urls = [
+        "https://storage.googleapis.com/engflow-tools-public/rules_perl-022b8daf2bb4836ac7a50e4a1d8ea056a3e1e403.zip",
+        "https://github.com/bazelbuild/rules_perl/archive/022b8daf2bb4836ac7a50e4a1d8ea056a3e1e403.zip",
+    ],
 )
 
 load("@rules_perl//perl:deps.bzl", "perl_register_toolchains", "perl_rules_dependencies")
