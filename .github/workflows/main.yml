@@ -51,3 +51,6 @@ jobs:
 
     - name: Building //csharp directory
       run: bazel build //csharp/...
+
+    - name: Building //python directory
+      run: bazel build //python/...
