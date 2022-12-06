@@ -44,19 +44,3 @@ build:engflow_oss --remote_executor=grpcs://oss-cluster.engflow.com
 build:engflow_oss --bes_backend=grpcs://oss-cluster.engflow.com
 build:engflow_oss --bes_lifecycle_events
 build:engflow_oss --bes_results_url=https://oss-cluster.engflow.com/invocation/
-
-build:canary --config=engflow_common
-build:canary --remote_executor=grpcs://eu-central-1.aws.canary.cluster.engflow.com
-build:canary --bes_backend=grpcs://eu-central-1.aws.canary.cluster.engflow.com
-build:canary --bes_lifecycle_events
-build:canary --bes_results_url=https://eu-central-1.aws.canary.cluster.engflow.com/invocation
-build:canary --tls_client_certificate=/home/andres/sources/canary.crt
-build:canary --tls_client_key=/home/andres/sources/canary.key
-
-build:glass --config=engflow_common
-build:glass --remote_executor=grpcs://glass.cluster.engflow.com
-build:glass --bes_backend=grpcs://glass.cluster.engflow.com
-build:glass --bes_lifecycle_events
-build:glass --bes_results_url=https://glass.cluster.engflow.com/invocation
-build:glass --tls_client_certificate=/home/andres/sources/glass.crt
-build:glass --tls_client_key=/home/andres/sources/glass.key
