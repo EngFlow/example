@@ -8,15 +8,9 @@ import yaml
 # download pylint and add config file from engflow
 
 if len(sys.argv) < 3:
-    print("Please provide the following arguments: file path to the customer-info directory and the target to execute. "
+    print("Please provide the following arguments: file path to repo and target. "
           "Check README for further information.")
     quit()
-
-# change path for targets as relevant, relative to repo
-bazel_cquery_target_command = ["bazel", "cquery", sys.argv[2]]
-
-# change path for actions by changing //java/ as relevant, relative to repo
-bazel_action_summary_command = ["bazel", "aquery", sys.argv[2], "--output=summary"]
 
 # add the names of wanted flag values
 # use regular expression instead
@@ -31,8 +25,12 @@ def execute(args):
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
             text=True,
-            check=True
+            check=True,
+            timeout=60
         )
+    except subprocess.TimeoutExpired as error:
+        print("The command '{}' timed out after {} seconds".format(error.cmd, error.timeout), file=sys.stderr)
+        sys.exit(1)
     except subprocess.CalledProcessError as error:
         print("Could not execute os command ", error.returncode, " - ", error, file=sys.stderr)
         sys.exit(1)
@@ -41,8 +39,8 @@ def execute(args):
         sys.exit(1)
     return the_process.stdout, the_process.stderr
 
-def writeToFile(dict_file):
-    path_to_yaml = sys.argv[1] + "/customer_info.yaml"
+def writeToFile(dict_file, path_to_customer_info):
+    path_to_yaml = path_to_customer_info + "/customer_info.yaml"
     with open(path_to_yaml, 'w') as file:
         yaml.dump(dict_file, file)
 
@@ -61,6 +59,7 @@ def extractFlags(bazel_target):
 
     # changes dictionary to map from unique identifiers to dictionary containing strings with relevant flag information
     print("Shortening to relevant flags and saving to file...")
+    new_config_to_flag = {}
     for config, config_output in config_to_flag.items():
         flag_to_val = {}
         for flag in relevant_flags:
@@ -70,19 +69,40 @@ def extractFlags(bazel_target):
             if len(flag_output) != 0:
                 colon_index = flag_output.find(":")
                 flag_to_val[flag_output[:colon_index]] = flag_output[colon_index+2:]
-        config_to_flag[config] = flag_to_val
+        if config in new_config_to_flag:
+            print("current state", new_config_to_flag[config])
+            print("new info", flag_to_val)
+            new_config_to_flag[config] = new_config_to_flag[config].update(flag_to_val)
+        else:
+            new_config_to_flag[config] = flag_to_val
 
-    return config_to_flag
+    return new_config_to_flag
+
+def getPotentialTargets():
+    os.chdir(sys.argv[1])
+    subfolders = [f.name for f in os.scandir(sys.argv[1]) if f.is_dir()]
+    potential_targets = []
+    for folder_name in subfolders:
+        if '.' not in folder_name:
+            potential_targets.append("//"+folder_name+"/...")
+    return potential_targets
 
 
 if __name__ == '__main__':
-    # error if there are not enough arguments
+    potential_targets = getPotentialTargets()
 
-    # dictionary with information
+    # dictionary with all information to put in yaml file
     dict_file = {}
+    # dictionary with all bazel action information
+    dict_bazel_actions = {}
+    # dictionary with all config to flag information
+    dict_flag_information = []
+
+    # path to customer-info directory
+    path_to_customer_info = sys.argv[1] + "/scripts/customer-info"
 
     # move to customer project
-    os.chdir(sys.argv[1])
+    os.chdir(path_to_customer_info)
 
     # get bazel version
     print("Extracting bazel version information...")
@@ -91,28 +111,49 @@ if __name__ == '__main__':
     print("Saving in file...")
     dict_file["bazel version"] = str(stdout_version.strip())
 
-    # get targets
-    # NOTE: these targets will be used to obtain the flags
-    print("Extracting bazel targets...")
-    stdout_target, stderr_target = execute(bazel_cquery_target_command)
-    print("Saving in file...")
-    dict_file["bazel targets"] = stdout_target.split("\n")[:-1]
+    for target in potential_targets:
 
-    # get action information
-    print("Extracting bazel action information based on targets...")
-    stdout_action_summary, stderr_action_summary = execute(bazel_action_summary_command)
-    bazel_action_summary = stdout_action_summary.split("\n\n")
-    formatted_bazel_action_summary = []
-    for info in bazel_action_summary:
-        formatted_bazel_action_summary.append(info.split("\n"))
-    action_string = formatted_bazel_action_summary[0]
-    num_actions = re.findall(r'\d+', action_string[0])
-    formatted_bazel_action_summary[0] = "total_actions: " + num_actions[0]
-    print("Saving in file...")
-    dict_file["bazel action information"] = formatted_bazel_action_summary
+        # get targets
+        # NOTE: these targets will be used to obtain the flags
+        bazel_cquery_target_command = ["bazel", "cquery", target]
+        print("Extracting bazel targets...")
+        try:
+            stdout_target, stderr_target = execute(bazel_cquery_target_command)
+        except SystemExit:
+            continue
 
-    # get flags
-    print("Extracting relevant flag information...")
-    dict_file["relevant bazel flags and values"] = extractFlags(stdout_target)
+        # get action information
+        bazel_action_summary_command = ["bazel", "aquery", target, "--output=summary"]
+        print("Extracting bazel action information based on targets...")
+        try:
+            stdout_action_summary, stderr_action_summary = execute(bazel_action_summary_command)
+            bazel_action_summary = stdout_action_summary.split("\n\n")
+            formatted_bazel_action_summary = []
+            for info in bazel_action_summary:
+                formatted_bazel_action_summary.append(info.split("\n"))
 
-    writeToFile(dict_file)
+            # setting or updating action count to dict
+            num_actions = re.findall(r'\d+', formatted_bazel_action_summary[0][0])
+            dict_bazel_actions.setdefault("total_actions", []).append(int(num_actions[0]))
+
+            # adding other information to dictionary
+            for info in formatted_bazel_action_summary[1:]:
+                dict_bazel_actions.setdefault(info[0], []).append(info[1:])
+        except SystemExit:
+            continue
+
+        # get flags
+        print("Extracting relevant flag information...")
+        new_dict = extractFlags(stdout_target)
+        dict_flag_information.append(new_dict)
+
+        # write targets, action, and flag to main dictionary
+        print("Saving targets in file...")
+        dict_file.setdefault("bazel_targets", []).append(stdout_target.split("\n")[:-1])
+        print("Saving action information in file...")
+        dict_file.setdefault("bazel_action_information", []).append(dict_bazel_actions)
+        print("Saving flag information in file...")
+        dict_file.setdefault("relevant bazel flags and values", []).append(dict_flag_information)
+
+    # write everything to the yaml file
+    writeToFile(dict_file, path_to_customer_info)

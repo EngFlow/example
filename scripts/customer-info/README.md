@@ -10,13 +10,12 @@ To run the script,
 1. Navigate to the ```scripts``` folder and then the ```customer-info``` folder
 2. run command 
    ```
-   python customer_info.py PATH //TARGET
+   python customer_info.py PATH_TO_REPO
    ``` 
-   where ```PATH``` = 
-   absolute path to folder with yaml file and ```TARGET``` = the target to use 
-   for cquery and aquery commands. An example command is below: 
+   where ```PATH_TO_REPO``` = 
+   absolute path to repo
    ```
-   python customer_info.py "/Users/sarahraza/example/scripts/customer-info" "//java/..."
+   python customer_info.py "/Users/sarahraza/example"
    ```
    
 To customize the script,
