@@ -7,8 +7,8 @@ import yaml
 
 # download pylint and add config file from engflow
 
-if len(sys.argv) < 3:
-    print("Please provide the following arguments: file path to repo and target. "
+if len(sys.argv) < 2:
+    print("Please provide the following arguments: file path to repo."
           "Check README for further information.")
     quit()
 
@@ -69,23 +69,25 @@ def extractFlags(bazel_target):
             if len(flag_output) != 0:
                 colon_index = flag_output.find(":")
                 flag_to_val[flag_output[:colon_index]] = flag_output[colon_index+2:]
-        if config in new_config_to_flag:
-            print("current state", new_config_to_flag[config])
-            print("new info", flag_to_val)
-            new_config_to_flag[config] = new_config_to_flag[config].update(flag_to_val)
-        else:
             new_config_to_flag[config] = flag_to_val
 
     return new_config_to_flag
 
 def getPotentialTargets():
     os.chdir(sys.argv[1])
-    subfolders = [f.name for f in os.scandir(sys.argv[1]) if f.is_dir()]
-    potential_targets = []
-    for folder_name in subfolders:
-        if '.' not in folder_name:
-            potential_targets.append("//"+folder_name+"/...")
+    bazel_query_command = ["bazel", "query", "..."]
+    stdout_version, stderr_version = execute(bazel_query_command)
+    all_targets = stdout_version.split('\n')
+    potential_targets = set()
+    for target in all_targets:
+        third_slash_index = target.find("/", 2)
+        colon_index = target.find(":")
+        if third_slash_index > 0:
+            potential_targets.add(target[:third_slash_index] + "/...")
+        elif colon_index > 0:
+            potential_targets.add(target[:colon_index] + "/...")
     return potential_targets
+
 
 
 if __name__ == '__main__':
@@ -138,7 +140,12 @@ if __name__ == '__main__':
 
             # adding other information to dictionary
             for info in formatted_bazel_action_summary[1:]:
-                dict_bazel_actions.setdefault(info[0], []).append(info[1:])
+                if info[0] in dict_bazel_actions:
+                    dict_bazel_actions[info[0]][target] = info[1:]
+                else:
+                    dict_bazel_actions[info[0]] = {}
+                    dict_bazel_actions[info[0]][target] = info[1:]
+
         except SystemExit:
             continue
 

@@ -2,35 +2,69 @@ bazel version: bazel 5.2.0
 bazel_action_information:
 - &id001
   'Aspects:':
-  - - '  BazelJavaProtoAspect: 3'
+    //java/...:
+    - '  BazelJavaProtoAspect: 3'
     - ''
   'Configurations:':
-  - - '  darwin-fastbuild: 43'
-  - - '  darwin-fastbuild: 5'
-  - - '  darwin-fastbuild: 11'
-  - - '  darwin-fastbuild: 47'
-  - - '  darwin-fastbuild: 8'
-  - - '  darwin-fastbuild: 16'
-  - - '  darwin-fastbuild: 8'
-  - - '  darwin-fastbuild: 196'
+    //cpp/...:
+    - '  darwin-fastbuild: 8'
+    //csharp/...:
+    - '  darwin-fastbuild: 196'
+    //docker/...:
+    - '  darwin-fastbuild: 43'
+    //go/...:
+    - '  darwin-fastbuild: 5'
+    //java/...:
+    - '  darwin-fastbuild: 47'
+    //kotlin/...:
+    - '  darwin-fastbuild: 8'
+    //scala/...:
+    - '  darwin-fastbuild: 16'
+    //typescript/...:
+    - '  darwin-fastbuild: 11'
   'Execution Platforms:':
-  - - '  @io_bazel_rules_dotnet//dotnet/toolchain:darwin_amd64_3.1.100: 43'
+    //cpp/...:
+    - '  @io_bazel_rules_dotnet//dotnet/toolchain:darwin_amd64_3.1.100: 8'
     - ''
-  - - '  @io_bazel_rules_dotnet//dotnet/toolchain:darwin_amd64_3.1.100: 5'
+    //csharp/...:
+    - '  @io_bazel_rules_dotnet//dotnet/toolchain:darwin_amd64_3.1.100: 196'
     - ''
-  - - '  @io_bazel_rules_dotnet//dotnet/toolchain:darwin_amd64_3.1.100: 11'
+    //docker/...:
+    - '  @io_bazel_rules_dotnet//dotnet/toolchain:darwin_amd64_3.1.100: 43'
     - ''
-  - - '  @io_bazel_rules_dotnet//dotnet/toolchain:darwin_amd64_3.1.100: 47'
-  - - '  @io_bazel_rules_dotnet//dotnet/toolchain:darwin_amd64_3.1.100: 8'
+    //go/...:
+    - '  @io_bazel_rules_dotnet//dotnet/toolchain:darwin_amd64_3.1.100: 5'
     - ''
-  - - '  @io_bazel_rules_dotnet//dotnet/toolchain:darwin_amd64_3.1.100: 16'
+    //java/...:
+    - '  @io_bazel_rules_dotnet//dotnet/toolchain:darwin_amd64_3.1.100: 47'
+    //kotlin/...:
+    - '  @io_bazel_rules_dotnet//dotnet/toolchain:darwin_amd64_3.1.100: 8'
     - ''
-  - - '  @io_bazel_rules_dotnet//dotnet/toolchain:darwin_amd64_3.1.100: 8'
+    //scala/...:
+    - '  @io_bazel_rules_dotnet//dotnet/toolchain:darwin_amd64_3.1.100: 16'
     - ''
-  - - '  @io_bazel_rules_dotnet//dotnet/toolchain:darwin_amd64_3.1.100: 196'
+    //typescript/...:
+    - '  @io_bazel_rules_dotnet//dotnet/toolchain:darwin_amd64_3.1.100: 11'
     - ''
   'Mnemonics:':
-  - - '  CcStrip: 1'
+    //cpp/...:
+    - '  CcStrip: 1'
+    - '  SymlinkTree: 1'
+    - '  Middleman: 1'
+    - '  CppLink: 1'
+    - '  SourceSymlinkManifest: 1'
+    - '  CppCompile: 1'
+    - '  FileWrite: 2'
+    //csharp/...:
+    - '  SymlinkTree: 1'
+    - '  Middleman: 1'
+    - '  SourceSymlinkManifest: 1'
+    - '  FileWrite: 1'
+    - '  Compile: 1'
+    - '  CopyLauncher: 1'
+    - '  CopyFile: 190'
+    //docker/...:
+    - '  CcStrip: 1'
     - '  TestRunner: 1'
     - '  CppLink: 1'
     - '  CppCompile: 1'
@@ -43,21 +77,14 @@ bazel_action_information:
     - '  Middleman: 7'
     - '  SymlinkTree: 7'
     - '  SourceSymlinkManifest: 7'
-  - - '  SymlinkTree: 1'
+    //go/...:
+    - '  SymlinkTree: 1'
     - '  Middleman: 1'
     - '  SourceSymlinkManifest: 1'
     - '  GoLink: 1'
     - '  GoCompilePkg: 1'
-  - - '  SymlinkTree: 1'
-    - '  Middleman: 1'
-    - '  TestRunner: 1'
-    - '  SourceSymlinkManifest: 1'
-    - '  FileWrite: 1'
-    - '  Genrule: 1'
-    - '  TsProject: 1'
-    - '  TsValidateOptions: 1'
-    - '  CopyFile: 3'
-  - - '  GenProto: 1'
+    //java/...:
+    - '  GenProto: 1'
     - '  TestRunner: 1'
     - '  GenProtoDescriptorSet: 1'
     - '  Action: 3'
@@ -70,7 +97,8 @@ bazel_action_information:
     - '  Turbine: 5'
     - '  Javac: 8'
     - '  JavaSourceJar: 10'
-  - - '  SymlinkTree: 1'
+    //kotlin/...:
+    - '  SymlinkTree: 1'
     - '  Middleman: 1'
     - '  SourceSymlinkManifest: 1'
     - '  TemplateExpand: 1'
@@ -78,7 +106,8 @@ bazel_action_information:
     - '  JdepsMerge: 1'
     - '  KotlinCompile: 1'
     - '  JavaSourceJar: 1'
-  - - '  SymlinkTree: 1'
+    //scala/...:
+    - '  SymlinkTree: 1'
     - '  Middleman: 1'
     - '  TestRunner: 1'
     - '  SourceSymlinkManifest: 1'
@@ -88,29 +117,25 @@ bazel_action_information:
     - '  ScalaDeployJar: 2'
     - '  Scalac: 2'
     - '  FileWrite: 4'
-  - - '  CcStrip: 1'
+    //typescript/...:
     - '  SymlinkTree: 1'
     - '  Middleman: 1'
-    - '  CppLink: 1'
-    - '  SourceSymlinkManifest: 1'
-    - '  CppCompile: 1'
-    - '  FileWrite: 2'
-  - - '  SymlinkTree: 1'
-    - '  Middleman: 1'
+    - '  TestRunner: 1'
     - '  SourceSymlinkManifest: 1'
     - '  FileWrite: 1'
-    - '  Compile: 1'
-    - '  CopyLauncher: 1'
-    - '  CopyFile: 190'
+    - '  Genrule: 1'
+    - '  TsProject: 1'
+    - '  TsValidateOptions: 1'
+    - '  CopyFile: 3'
   total_actions:
+  - 8
   - 43
-  - 5
-  - 11
-  - 47
-  - 8
   - 16
-  - 8
+  - 47
+  - 5
   - 196
+  - 11
+  - 8
 - *id001
 - *id001
 - *id001
@@ -119,6 +144,7 @@ bazel_action_information:
 - *id001
 - *id001
 bazel_targets:
+- - //kotlin:kotlin (2428b57)
 - - //docker/network:docker-network-test (d7452c8)
   - //docker/network:jdk (2428b57)
   - //docker/network:platform (2428b57)
@@ -128,11 +154,8 @@ bazel_targets:
   - //docker/sandbox:hello (2428b57)
   - //docker/sandbox:hello-cc (2428b57)
   - //docker/sandbox:hello-java (2428b57)
-- - //go:go (2428b57)
-- - //typescript:_validate_typescript_options (2428b57)
-  - //typescript:typescript (2428b57)
-  - //typescript:typesctript_test (d7452c8)
-  - //typescript:typesctript_test_0__deps (2428b57)
+- - //scala/com/engflow/example:exampleScala (2428b57)
+  - //scala/com/engflow/example:exampleScalaTest (d7452c8)
 - - //java/com/engflow/example:ExampleTest (d7452c8)
   - //java/com/engflow/example:example (2428b57)
   - //java/com/engflow/notificationqueue/demoserver:server (2428b57)
@@ -143,23 +166,18 @@ bazel_targets:
   - //java/com/engflow/notificationqueue:engflowapis_java_proto (2428b57)
   - //java/com/engflow/notificationqueue:eventstore_java_grpc (2428b57)
   - //java/com/engflow/notificationqueue:notification_queue_java_grpc (2428b57)
-- - //kotlin:kotlin (2428b57)
-- - //scala/com/engflow/example:exampleScala (2428b57)
-  - //scala/com/engflow/example:exampleScalaTest (d7452c8)
-- - //cpp:cpp (2428b57)
+- - //go:go (2428b57)
 - - //csharp:csharp.exe (2428b57)
+- - //typescript:_validate_typescript_options (2428b57)
+  - //typescript:typescript (2428b57)
+  - //typescript:typesctript_test (d7452c8)
+  - //typescript:typesctript_test_0__deps (2428b57)
+- - //cpp:cpp (2428b57)
 relevant bazel flags and values:
 - &id002
   - 2428b57:
       experimental_allow_runtime_deps_on_neverlink: 'true'
       experimental_limit_android_lint_to_android_constrained_java: 'false'
-    d7452c8:
-      experimental_allow_runtime_deps_on_neverlink: 'true'
-      experimental_limit_android_lint_to_android_constrained_java: 'false'
-      test_timeout: '{short=PT1M, moderate=PT5M, long=PT15M, eternal=PT1H}'
-  - 2428b57:
-      experimental_allow_runtime_deps_on_neverlink: 'true'
-      experimental_limit_android_lint_to_android_constrained_java: 'false'
   - 2428b57:
       experimental_allow_runtime_deps_on_neverlink: 'true'
       experimental_limit_android_lint_to_android_constrained_java: 'false'
@@ -177,9 +195,6 @@ relevant bazel flags and values:
   - 2428b57:
       experimental_allow_runtime_deps_on_neverlink: 'true'
       experimental_limit_android_lint_to_android_constrained_java: 'false'
-  - 2428b57:
-      experimental_allow_runtime_deps_on_neverlink: 'true'
-      experimental_limit_android_lint_to_android_constrained_java: 'false'
     d7452c8:
       experimental_allow_runtime_deps_on_neverlink: 'true'
       experimental_limit_android_lint_to_android_constrained_java: 'false'
@@ -187,6 +202,16 @@ relevant bazel flags and values:
   - 2428b57:
       experimental_allow_runtime_deps_on_neverlink: 'true'
       experimental_limit_android_lint_to_android_constrained_java: 'false'
+  - 2428b57:
+      experimental_allow_runtime_deps_on_neverlink: 'true'
+      experimental_limit_android_lint_to_android_constrained_java: 'false'
+  - 2428b57:
+      experimental_allow_runtime_deps_on_neverlink: 'true'
+      experimental_limit_android_lint_to_android_constrained_java: 'false'
+    d7452c8:
+      experimental_allow_runtime_deps_on_neverlink: 'true'
+      experimental_limit_android_lint_to_android_constrained_java: 'false'
+      test_timeout: '{short=PT1M, moderate=PT5M, long=PT15M, eternal=PT1H}'
   - 2428b57:
       experimental_allow_runtime_deps_on_neverlink: 'true'
       experimental_limit_android_lint_to_android_constrained_java: 'false'
