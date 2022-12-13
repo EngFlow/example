@@ -54,3 +54,6 @@ jobs:
 
     - name: Building //perl directory
       run: bazel build //perl/...
+
+    - name: Building //python directory
+      run: bazel build //python/...

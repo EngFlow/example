@@ -254,3 +254,10 @@ load("@rules_perl//perl:deps.bzl", "perl_register_toolchains", "perl_rules_depen
 
 perl_rules_dependencies()
 perl_register_toolchains()
+
+http_archive(
+    name = "rules_python",
+    sha256 = "bc4e59e17c7809a5b373ba359e2c974ed2386c58634819ac5a89c0813c15705c",
+    strip_prefix = "rules_python-0.15.1",
+    url = "https://github.com/bazelbuild/rules_python/archive/refs/tags/0.15.1.tar.gz",
+)
