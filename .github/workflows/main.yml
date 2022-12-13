@@ -41,9 +41,9 @@ jobs:
 #    - name: Building //kotlin directory
 #      run: bazel build //kotlin/...
 
-    - name: Building //scala directory
-      run: |
-        bazel test //scala/...
+#    - name: Building //scala directory
+#      run: |
+#        bazel test //scala/...
 
     - name: Building //typescript directory
       run: |
