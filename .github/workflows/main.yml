@@ -22,24 +22,24 @@ jobs:
     steps:
     - uses: actions/checkout@v3
 
-    - name: Building //cpp directory
-      run: bazel build //cpp/...
-
-    - name: Building //docker directory
-      run: bazel build //docker/...
-
-    - name: Building //genrules directory
-      run: bazel build //genrules/...
-
-    - name: Building //go directory
-      run: bazel build //go/...
-
-    - name: Building //java directory
-      run: |
-        bazel test //java/...
-
-    - name: Building //kotlin directory
-      run: bazel build //kotlin/...
+#    - name: Building //cpp directory
+#      run: bazel build //cpp/...
+#
+#    - name: Building //docker directory
+#      run: bazel build //docker/...
+#
+#    - name: Building //genrules directory
+#      run: bazel build //genrules/...
+#
+#    - name: Building //go directory
+#      run: bazel build //go/...
+#
+#    - name: Building //java directory
+#      run: |
+#        bazel test //java/...
+#
+#    - name: Building //kotlin directory
+#      run: bazel build //kotlin/...
 
     - name: Building //scala directory
       run: |
