@@ -22,14 +22,9 @@ jobs:
     steps:
     - uses: actions/checkout@v3
 
-    - uses: swift-actions/setup-swift@v1
+    - name: Building //cpp directory
+      run: bazel build //cpp/...
 
-    - name: Get swift version
-      run: swift --version # Swift 5.7.2
-
-#    - name: Building //cpp directory
-#      run: bazel build //cpp/...
-#
 #    - name: Building //docker directory
 #      run: bazel build //docker/...
 #
@@ -62,6 +57,7 @@ jobs:
 #
 #    - name: Building //python directory
 #      run: bazel build //python/...
+    - uses: swift-actions/setup-swift@v1
 
     - name: Building //swift directory
       run: |
