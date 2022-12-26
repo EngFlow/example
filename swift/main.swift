@@ -21,6 +21,7 @@ class SwiftTests: XCTestCase {
         XCTAssertEqual(fizzbuzz(i: 4), "4")
         XCTAssertEqual(fizzbuzz(i: 5), "Buzz")
         XCTAssertEqual(fizzbuzz(i: 15), "FizzBuzz")
+        print(fizzbuzz(i: 5))
     }
 
     static var allTests = [

@@ -64,4 +64,4 @@ jobs:
     - name: Building //swift directory
       run: |
         cd swift
-        bazel test --config=clang //...
+        bazel test --config=clang //... --test_output=all
