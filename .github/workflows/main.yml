@@ -22,41 +22,41 @@ jobs:
     steps:
     - uses: actions/checkout@v3
 
-    - name: Building //cpp directory
-      run: bazel build //cpp/...
-
-    - name: Building //docker directory
-      run: bazel build //docker/...
-
-    - name: Building //genrules directory
-      run: bazel build //genrules/...
-
-    - name: Building //go directory
-      run: bazel build //go/...
-
-    - name: Building //java directory
-      run: |
-        bazel test //java/...
-
-    - name: Building //kotlin directory
-      run: bazel build //kotlin/...
-
-    - name: Building //scala directory
-      run: |
-        bazel test //scala/...
-
-    - name: Building //typescript directory
-      run: |
-        bazel test //typescript/...
-
-    - name: Building //csharp directory
-      run: bazel build //csharp/...
-
-    - name: Building //perl directory
-      run: bazel build //perl/...
-
-    - name: Building //python directory
-      run: bazel build //python/...
+#    - name: Building //cpp directory
+#      run: bazel build //cpp/...
+#
+#    - name: Building //docker directory
+#      run: bazel build //docker/...
+#
+#    - name: Building //genrules directory
+#      run: bazel build //genrules/...
+#
+#    - name: Building //go directory
+#      run: bazel build //go/...
+#
+#    - name: Building //java directory
+#      run: |
+#        bazel test //java/...
+#
+#    - name: Building //kotlin directory
+#      run: bazel build //kotlin/...
+#
+#    - name: Building //scala directory
+#      run: |
+#        bazel test //scala/...
+#
+#    - name: Building //typescript directory
+#      run: |
+#        bazel test //typescript/...
+#
+#    - name: Building //csharp directory
+#      run: bazel build //csharp/...
+#
+#    - name: Building //perl directory
+#      run: bazel build //perl/...
+#
+#    - name: Building //python directory
+#      run: bazel build //python/...
 
     - uses: swift-actions/setup-swift@v1
       if: matrix.os == 'ubuntu-20.04'
