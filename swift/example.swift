@@ -7,11 +7,11 @@ class SwiftTests: XCTestCase {
                 return "FizzBuzz";
             }
             return "Fizz";
-        } else if (i % 5 == 0) {
-            return "Buzz";
-        } else {
-            return String(i);
         }
+        if (i % 5 == 0) {
+            return "Buzz";
+        }
+        return String(i);
     }
 
     func test() {
@@ -21,7 +21,6 @@ class SwiftTests: XCTestCase {
         XCTAssertEqual(fizzbuzz(i: 4), "4")
         XCTAssertEqual(fizzbuzz(i: 5), "Buzz")
         XCTAssertEqual(fizzbuzz(i: 15), "FizzBuzz")
-        print(fizzbuzz(i: 5))
     }
 
     static var allTests = [
