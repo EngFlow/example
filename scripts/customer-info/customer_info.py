@@ -40,11 +40,14 @@ def execute(args):
     return the_process.stdout, the_process.stderr
 
 def writeToFile(dict_file, path_to_customer_info):
+    '''Takes in dictionary mapping category of data to value and writes to yaml file'''
     path_to_yaml = path_to_customer_info + "/customer_info.yaml"
     with open(path_to_yaml, 'w') as file:
         yaml.dump(dict_file, file)
 
 def extractFlags(bazel_target):
+    '''Takes in list of targets from cquery and returns flags for the targets'''
+
     # creates array of all unique identifiers
     ids = set(re.findall(r'\(.*?\)', bazel_target))
 
@@ -73,7 +76,8 @@ def extractFlags(bazel_target):
 
     return new_config_to_flag
 
-def getPotentialTargets():
+def getPotentialCommandFilePaths():
+    '''Returns potential file paths as targets to execute bazel commands'''
     os.chdir(sys.argv[1])
     bazel_query_command = ["bazel", "query", "..."]
     stdout_version, stderr_version = execute(bazel_query_command)
@@ -91,7 +95,8 @@ def getPotentialTargets():
 
 
 if __name__ == '__main__':
-    potential_targets = getPotentialTargets()
+    '''Executes bazel commands for each file path, saving targets, action information, and flags to yaml file'''
+    potential_targets = getPotentialCommandFilePaths()
 
     # dictionary with all information to put in yaml file
     dict_file = {}
