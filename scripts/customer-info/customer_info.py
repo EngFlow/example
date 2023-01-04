@@ -26,7 +26,7 @@ def execute(args):
             stderr=subprocess.PIPE,
             text=True,
             check=True,
-            timeout=60
+            timeout=10
         )
     except subprocess.TimeoutExpired as error:
         print("The command '{}' timed out after {} seconds".format(error.cmd, error.timeout), file=sys.stderr)
@@ -51,11 +51,13 @@ def extractFlags(bazel_target):
     # creates array of all unique identifiers
     ids = set(re.findall(r'\(.*?\)', bazel_target))
 
+    print(bazel_target)
+
     # creates dictionary mapping unique identifiers to fragments containing all flag information
     print("Extracting all flags...")
     config_to_flag = {}
     for id in ids:
-        config = id[1:-1]
+        config = id[1:-1] # removes parenthesis
         bazel_specific_config_command = ["bazel", "config", config]
         config_output, stderr_flag = execute(bazel_specific_config_command)
         config_to_flag[config] = config_output
@@ -166,6 +168,10 @@ if __name__ == '__main__':
         dict_file.setdefault("bazel_action_information", []).append(dict_bazel_actions)
         print("Saving flag information in file...")
         dict_file.setdefault("relevant bazel flags and values", []).append(dict_flag_information)
+
+    # sums all the individual action count and saves that value
+    sum_total_actions = sum(dict_file['bazel_action_information'][0]['total_actions'])
+    dict_file['bazel_action_information'][0]['total_actions'] = sum_total_actions
 
     # write everything to the yaml file
     writeToFile(dict_file, path_to_customer_info)

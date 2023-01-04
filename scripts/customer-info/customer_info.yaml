@@ -127,15 +127,7 @@ bazel_action_information:
     - '  TsProject: 1'
     - '  TsValidateOptions: 1'
     - '  CopyFile: 3'
-  total_actions:
-  - 8
-  - 43
-  - 16
-  - 47
-  - 5
-  - 196
-  - 11
-  - 8
+  total_actions: 334
 - *id001
 - *id001
 - *id001
@@ -144,6 +136,10 @@ bazel_action_information:
 - *id001
 - *id001
 bazel_targets:
+- - //typescript:_validate_typescript_options (2428b57)
+  - //typescript:typescript (2428b57)
+  - //typescript:typesctript_test (d7452c8)
+  - //typescript:typesctript_test_0__deps (2428b57)
 - - //kotlin:kotlin (2428b57)
 - - //docker/network:docker-network-test (d7452c8)
   - //docker/network:jdk (2428b57)
@@ -167,17 +163,20 @@ bazel_targets:
   - //java/com/engflow/notificationqueue:eventstore_java_grpc (2428b57)
   - //java/com/engflow/notificationqueue:notification_queue_java_grpc (2428b57)
 - - //go:go (2428b57)
-- - //csharp:csharp.exe (2428b57)
-- - //typescript:_validate_typescript_options (2428b57)
-  - //typescript:typescript (2428b57)
-  - //typescript:typesctript_test (d7452c8)
-  - //typescript:typesctript_test_0__deps (2428b57)
 - - //cpp:cpp (2428b57)
+- - //csharp:csharp.exe (2428b57)
 relevant bazel flags and values:
 - &id002
   - 2428b57:
       experimental_allow_runtime_deps_on_neverlink: 'true'
       experimental_limit_android_lint_to_android_constrained_java: 'false'
+    d7452c8:
+      experimental_allow_runtime_deps_on_neverlink: 'true'
+      experimental_limit_android_lint_to_android_constrained_java: 'false'
+      test_timeout: '{short=PT1M, moderate=PT5M, long=PT15M, eternal=PT1H}'
+  - 2428b57:
+      experimental_allow_runtime_deps_on_neverlink: 'true'
+      experimental_limit_android_lint_to_android_constrained_java: 'false'
   - 2428b57:
       experimental_allow_runtime_deps_on_neverlink: 'true'
       experimental_limit_android_lint_to_android_constrained_java: 'false'
@@ -205,13 +204,6 @@ relevant bazel flags and values:
   - 2428b57:
       experimental_allow_runtime_deps_on_neverlink: 'true'
       experimental_limit_android_lint_to_android_constrained_java: 'false'
-  - 2428b57:
-      experimental_allow_runtime_deps_on_neverlink: 'true'
-      experimental_limit_android_lint_to_android_constrained_java: 'false'
-    d7452c8:
-      experimental_allow_runtime_deps_on_neverlink: 'true'
-      experimental_limit_android_lint_to_android_constrained_java: 'false'
-      test_timeout: '{short=PT1M, moderate=PT5M, long=PT15M, eternal=PT1H}'
   - 2428b57:
       experimental_allow_runtime_deps_on_neverlink: 'true'
       experimental_limit_android_lint_to_android_constrained_java: 'false'
