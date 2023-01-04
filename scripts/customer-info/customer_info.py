@@ -26,7 +26,7 @@ def execute(args):
             stderr=subprocess.PIPE,
             text=True,
             check=True,
-            timeout=10
+            timeout=30
         )
     except subprocess.TimeoutExpired as error:
         print("The command '{}' timed out after {} seconds".format(error.cmd, error.timeout), file=sys.stderr)
