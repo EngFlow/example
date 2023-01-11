@@ -6,8 +6,6 @@ import subprocess
 import yaml
 
 # download pylint and add config file from engflow
-#TODO: reformat bazel targets by config
-#TODO: investigate why flag section is repetitive
 
 if len(sys.argv) < 2:
     print("Please provide the following arguments: file path to repo."
