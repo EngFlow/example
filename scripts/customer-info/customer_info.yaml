@@ -18,6 +18,10 @@ bazel_action_information:
     - '  darwin-fastbuild: 47'
     //kotlin/...:
     - '  darwin-fastbuild: 8'
+    //perl/...:
+    - '  darwin-fastbuild: 4'
+    //python/...:
+    - '  darwin-fastbuild: 6'
     //scala/...:
     - '  darwin-fastbuild: 16'
     //typescript/...:
@@ -39,6 +43,12 @@ bazel_action_information:
     - '  @io_bazel_rules_dotnet//dotnet/toolchain:darwin_amd64_3.1.100: 47'
     //kotlin/...:
     - '  @io_bazel_rules_dotnet//dotnet/toolchain:darwin_amd64_3.1.100: 8'
+    - ''
+    //perl/...:
+    - '  @io_bazel_rules_dotnet//dotnet/toolchain:darwin_amd64_3.1.100: 4'
+    - ''
+    //python/...:
+    - '  @io_bazel_rules_dotnet//dotnet/toolchain:darwin_amd64_3.1.100: 6'
     - ''
     //scala/...:
     - '  @io_bazel_rules_dotnet//dotnet/toolchain:darwin_amd64_3.1.100: 16'
@@ -106,6 +116,17 @@ bazel_action_information:
     - '  JdepsMerge: 1'
     - '  KotlinCompile: 1'
     - '  JavaSourceJar: 1'
+    //perl/...:
+    - '  SymlinkTree: 1'
+    - '  Middleman: 1'
+    - '  SourceSymlinkManifest: 1'
+    - '  TemplateExpand: 1'
+    //python/...:
+    - '  SymlinkTree: 1'
+    - '  Middleman: 1'
+    - '  SourceSymlinkManifest: 1'
+    - '  PythonZipper: 1'
+    - '  TemplateExpand: 2'
     //scala/...:
     - '  SymlinkTree: 1'
     - '  Middleman: 1'
@@ -127,7 +148,9 @@ bazel_action_information:
     - '  TsProject: 1'
     - '  TsValidateOptions: 1'
     - '  CopyFile: 3'
-  total_actions: 334
+  total_actions: 344
+- *id001
+- *id001
 - *id001
 - *id001
 - *id001
@@ -136,37 +159,73 @@ bazel_action_information:
 - *id001
 - *id001
 bazel_targets:
-- - //typescript:_validate_typescript_options (2428b57)
-  - //typescript:typescript (2428b57)
-  - //typescript:typesctript_test (d7452c8)
-  - //typescript:typesctript_test_0__deps (2428b57)
-- - //kotlin:kotlin (2428b57)
-- - //docker/network:docker-network-test (d7452c8)
-  - //docker/network:jdk (2428b57)
-  - //docker/network:platform (2428b57)
-  - //docker/sandbox:dep0 (2428b57)
-  - //docker/sandbox:dep1 (2428b57)
-  - //docker/sandbox:dep2 (2428b57)
-  - //docker/sandbox:hello (2428b57)
-  - //docker/sandbox:hello-cc (2428b57)
-  - //docker/sandbox:hello-java (2428b57)
-- - //scala/com/engflow/example:exampleScala (2428b57)
-  - //scala/com/engflow/example:exampleScalaTest (d7452c8)
-- - //java/com/engflow/example:ExampleTest (d7452c8)
-  - //java/com/engflow/example:example (2428b57)
-  - //java/com/engflow/notificationqueue/demoserver:server (2428b57)
-  - //java/com/engflow/notificationqueue/demoserver:server_java_grpc_proto (2428b57)
-  - //java/com/engflow/notificationqueue/demoserver:server_java_proto (2428b57)
-  - //java/com/engflow/notificationqueue/demoserver:server_proto (2428b57)
-  - //java/com/engflow/notificationqueue:client (2428b57)
-  - //java/com/engflow/notificationqueue:engflowapis_java_proto (2428b57)
-  - //java/com/engflow/notificationqueue:eventstore_java_grpc (2428b57)
-  - //java/com/engflow/notificationqueue:notification_queue_java_grpc (2428b57)
-- - //go:go (2428b57)
-- - //cpp:cpp (2428b57)
-- - //csharp:csharp.exe (2428b57)
-relevant bazel flags and values:
 - &id002
+  2428b57:
+  - //kotlin:kotlin
+  - //docker/network:jdk
+  - //docker/network:platform
+  - //docker/sandbox:dep0
+  - //docker/sandbox:dep1
+  - //docker/sandbox:dep2
+  - //docker/sandbox:hello
+  - //docker/sandbox:hello-cc
+  - //docker/sandbox:hello-java
+  - //go:go
+  - //cpp:cpp
+  - //perl:perl
+  - //python:python
+  - //typescript:_validate_typescript_options
+  - //typescript:typescript
+  - //typescript:typesctript_test_0__deps
+  - //csharp:csharp.exe
+  - //scala/com/engflow/example:exampleScala
+  - //java/com/engflow/example:example
+  - //java/com/engflow/notificationqueue/demoserver:server
+  - //java/com/engflow/notificationqueue/demoserver:server_java_grpc_proto
+  - //java/com/engflow/notificationqueue/demoserver:server_java_proto
+  - //java/com/engflow/notificationqueue/demoserver:server_proto
+  - //java/com/engflow/notificationqueue:client
+  - //java/com/engflow/notificationqueue:engflowapis_java_proto
+  - //java/com/engflow/notificationqueue:eventstore_java_grpc
+  - //java/com/engflow/notificationqueue:notification_queue_java_grpc
+  d7452c8:
+  - //docker/network:docker-network-test
+  - //typescript:typesctript_test
+  - //scala/com/engflow/example:exampleScalaTest
+  - //java/com/engflow/example:ExampleTest
+- *id002
+- *id002
+- *id002
+- *id002
+- *id002
+- *id002
+- *id002
+- *id002
+- *id002
+relevant bazel flags and values:
+- &id003
+  - 2428b57:
+      experimental_allow_runtime_deps_on_neverlink: 'true'
+      experimental_limit_android_lint_to_android_constrained_java: 'false'
+  - 2428b57:
+      experimental_allow_runtime_deps_on_neverlink: 'true'
+      experimental_limit_android_lint_to_android_constrained_java: 'false'
+    d7452c8:
+      experimental_allow_runtime_deps_on_neverlink: 'true'
+      experimental_limit_android_lint_to_android_constrained_java: 'false'
+      test_timeout: '{short=PT1M, moderate=PT5M, long=PT15M, eternal=PT1H}'
+  - 2428b57:
+      experimental_allow_runtime_deps_on_neverlink: 'true'
+      experimental_limit_android_lint_to_android_constrained_java: 'false'
+  - 2428b57:
+      experimental_allow_runtime_deps_on_neverlink: 'true'
+      experimental_limit_android_lint_to_android_constrained_java: 'false'
+  - 2428b57:
+      experimental_allow_runtime_deps_on_neverlink: 'true'
+      experimental_limit_android_lint_to_android_constrained_java: 'false'
+  - 2428b57:
+      experimental_allow_runtime_deps_on_neverlink: 'true'
+      experimental_limit_android_lint_to_android_constrained_java: 'false'
   - 2428b57:
       experimental_allow_runtime_deps_on_neverlink: 'true'
       experimental_limit_android_lint_to_android_constrained_java: 'false'
@@ -191,26 +250,12 @@ relevant bazel flags and values:
       experimental_allow_runtime_deps_on_neverlink: 'true'
       experimental_limit_android_lint_to_android_constrained_java: 'false'
       test_timeout: '{short=PT1M, moderate=PT5M, long=PT15M, eternal=PT1H}'
-  - 2428b57:
-      experimental_allow_runtime_deps_on_neverlink: 'true'
-      experimental_limit_android_lint_to_android_constrained_java: 'false'
-    d7452c8:
-      experimental_allow_runtime_deps_on_neverlink: 'true'
-      experimental_limit_android_lint_to_android_constrained_java: 'false'
-      test_timeout: '{short=PT1M, moderate=PT5M, long=PT15M, eternal=PT1H}'
-  - 2428b57:
-      experimental_allow_runtime_deps_on_neverlink: 'true'
-      experimental_limit_android_lint_to_android_constrained_java: 'false'
-  - 2428b57:
-      experimental_allow_runtime_deps_on_neverlink: 'true'
-      experimental_limit_android_lint_to_android_constrained_java: 'false'
-  - 2428b57:
-      experimental_allow_runtime_deps_on_neverlink: 'true'
-      experimental_limit_android_lint_to_android_constrained_java: 'false'
-- *id002
-- *id002
-- *id002
-- *id002
-- *id002
-- *id002
-- *id002
+- *id003
+- *id003
+- *id003
+- *id003
+- *id003
+- *id003
+- *id003
+- *id003
+- *id003

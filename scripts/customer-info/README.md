@@ -17,6 +17,17 @@ To run the script,
    ```
    python customer_info.py "/Users/sarahraza/example"
    ```
+3. if you want cquery to run with a user option add it to the command
+     ```
+   python customer_info.py PATH_TO_REPO USER_OPTION
+   ``` 
+   where ```PATH_TO_REPO``` = 
+   absolute path to repo
+   where ```USER_OPTION``` = 
+   user option flag to run cquery with 
+   ```
+   python customer_info.py "/Users/sarahraza/example" "--compilation_mode=dbg"
+   ```
    
 To customize the script,
 - Change the list of relevant flags by editing the ```relevant_flags``` variable 

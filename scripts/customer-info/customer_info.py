@@ -6,6 +6,8 @@ import subprocess
 import yaml
 
 # download pylint and add config file from engflow
+#TODO: reformat bazel targets by config
+#TODO: investigate why flag section is repetitive
 
 if len(sys.argv) < 2:
     print("Please provide the following arguments: file path to repo."
@@ -50,8 +52,6 @@ def extractFlags(bazel_target):
 
     # creates array of all unique identifiers
     ids = set(re.findall(r'\(.*?\)', bazel_target))
-
-    print(bazel_target)
 
     # creates dictionary mapping unique identifiers to fragments containing all flag information
     print("Extracting all flags...")
@@ -106,9 +106,16 @@ if __name__ == '__main__':
     dict_bazel_actions = {}
     # dictionary with all config to flag information
     dict_flag_information = []
+    # dictionary with bazel target information
+    targets_dict = {}
 
     # path to customer-info directory
     path_to_customer_info = sys.argv[1] + "/scripts/customer-info"
+
+    # if user option passed in save
+    user_option = ""
+    if len(sys.argv) == 3:
+        user_option = sys.argv[2]
 
     # move to customer project
     os.chdir(path_to_customer_info)
@@ -125,9 +132,17 @@ if __name__ == '__main__':
         # get targets
         # NOTE: these targets will be used to obtain the flags
         bazel_cquery_target_command = ["bazel", "cquery", target]
+        if user_option:
+            bazel_cquery_target_command = ["bazel", "cquery", target, user_option]
         print("Extracting bazel targets...")
         try:
             stdout_target, stderr_target = execute(bazel_cquery_target_command)
+            processed_stdout_target = stdout_target.split("\n")[:-1]
+            for s in processed_stdout_target:
+                parts = s.split(' ')
+                key = parts[-1][1:-1]
+                value = parts[0]
+                targets_dict.setdefault(key, []).append(value)
         except SystemExit:
             continue
 
@@ -163,7 +178,7 @@ if __name__ == '__main__':
 
         # write targets, action, and flag to main dictionary
         print("Saving targets in file...")
-        dict_file.setdefault("bazel_targets", []).append(stdout_target.split("\n")[:-1])
+        dict_file.setdefault("bazel_targets", []).append(targets_dict)
         print("Saving action information in file...")
         dict_file.setdefault("bazel_action_information", []).append(dict_bazel_actions)
         print("Saving flag information in file...")
