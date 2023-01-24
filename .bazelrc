@@ -44,3 +44,5 @@ build:engflow_oss --remote_executor=grpcs://oss-cluster.engflow.com
 build:engflow_oss --bes_backend=grpcs://oss-cluster.engflow.com
 build:engflow_oss --bes_lifecycle_events
 build:engflow_oss --bes_results_url=https://oss-cluster.engflow.com/invocation/
+
+try-import .bazelrc.user
