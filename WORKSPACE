@@ -70,6 +70,15 @@ http_archive(
 )
 
 http_archive(
+    name = "io_bazel_rules_go",
+    sha256 = "dd926a88a564a9246713a9c00b35315f54cbd46b31a26d5d8fb264c07045f05d",
+    urls = [
+        "https://mirror.bazel.build/github.com/bazelbuild/rules_go/releases/download/v0.38.1/rules_go-v0.38.1.zip",
+        "https://github.com/bazelbuild/rules_go/releases/download/v0.38.1/rules_go-v0.38.1.zip",
+    ],
+)
+
+http_archive(
     name = "rules_proto",
     sha256 = "e017528fd1c91c5a33f15493e3a398181a9e821a804eb7ff5acdd1d2d6c2b18d",
     strip_prefix = "rules_proto-4.0.0-3.20.0",
@@ -170,15 +179,6 @@ load("@io_bazel_rules_scala//testing:scalatest.bzl", "scalatest_repositories", "
 scalatest_repositories()
 
 scalatest_toolchain()
-
-http_archive(
-    name = "io_bazel_rules_go",
-    sha256 = "dd926a88a564a9246713a9c00b35315f54cbd46b31a26d5d8fb264c07045f05d",
-    urls = [
-        "https://mirror.bazel.build/github.com/bazelbuild/rules_go/releases/download/v0.38.1/rules_go-v0.38.1.zip",
-        "https://github.com/bazelbuild/rules_go/releases/download/v0.38.1/rules_go-v0.38.1.zip",
-    ],
-)
 
 load("@io_bazel_rules_go//go:deps.bzl", "go_register_toolchains", "go_rules_dependencies")
 
