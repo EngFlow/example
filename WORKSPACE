@@ -252,6 +252,7 @@ http_archive(
 load("@rules_perl//perl:deps.bzl", "perl_register_toolchains", "perl_rules_dependencies")
 
 perl_rules_dependencies()
+
 perl_register_toolchains()
 
 http_archive(
@@ -260,3 +261,23 @@ http_archive(
     strip_prefix = "rules_python-0.15.1",
     url = "https://github.com/bazelbuild/rules_python/archive/refs/tags/0.15.1.tar.gz",
 )
+
+http_archive(
+    name = "build_bazel_rules_swift",
+    sha256 = "32f95dbe6a88eb298aaa790f05065434f32a662c65ec0a6aabdaf6881e4f169f",
+    url = "https://github.com/bazelbuild/rules_swift/releases/download/1.5.0/rules_swift.1.5.0.tar.gz",
+)
+
+load(
+    "@build_bazel_rules_swift//swift:repositories.bzl",
+    "swift_rules_dependencies",
+)
+
+swift_rules_dependencies()
+
+load(
+    "@build_bazel_rules_swift//swift:extras.bzl",
+    "swift_rules_extra_dependencies",
+)
+
+swift_rules_extra_dependencies()
