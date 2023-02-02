@@ -62,6 +62,4 @@ jobs:
       if: matrix.os == 'ubuntu-20.04'
 
     - name: Building //swift directory
-      run: |
-        cd swift
-        bazel test --config=clang //...
+      run: bazel test --config=clang //swift/...
