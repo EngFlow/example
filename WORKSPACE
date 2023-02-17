@@ -180,11 +180,22 @@ scalatest_repositories()
 
 scalatest_toolchain()
 
-load("@io_bazel_rules_go//go:deps.bzl", "go_register_toolchains", "go_rules_dependencies")
+load("@io_bazel_rules_go//go:deps.bzl", "go_download_sdk", "go_register_toolchains", "go_rules_dependencies")
+
+go_download_sdk(
+    name = "go_sdk",
+    goos = "linux",
+    goarch = "amd64",
+    version = "1.20.1",
+    sdks = {
+        "linux_amd64": ("go1.20.1.linux-amd64.tar.gz", "000a5b1fca4f75895f78befeb2eecf10bfff3c428597f3f1e69133b63b911b02"),
+        "darwin_amd64": ("go1.20.1.darwin-amd64.tar.gz", "a300a45e801ab459f3008aae5bb9efbe9a6de9bcd12388f5ca9bbd14f70236de"),
+    },
+)
 
 go_rules_dependencies()
 
-go_register_toolchains(version = "1.20.1")
+go_register_toolchains()
 
 load("@io_bazel_rules_kotlin//kotlin:repositories.bzl", "kotlin_repositories")
 
