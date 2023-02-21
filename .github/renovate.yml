@@ -15,4 +15,4 @@ jobs:
         env:
         with:
           configurationFile: renovate.json
-          token: ${{ secrets.ANDRES_REENOVATE_TOKEN }}
+          token: ${{ secrets.GITHUB_TOKEN }}
