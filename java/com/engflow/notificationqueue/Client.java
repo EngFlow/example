@@ -89,10 +89,14 @@ class Client {
     } finally {
       if (channel != null) {
         channel.shutdownNow();
-        forwardChannel.shutdownNow();
+        if (forwardChannel != null) {
+          forwardChannel.shutdownNow();
+        }
         try {
           channel.awaitTermination(10, TimeUnit.SECONDS);
-          forwardChannel.awaitTermination(10, TimeUnit.SECONDS);
+          if (forwardChannel != null) {
+            forwardChannel.awaitTermination(10, TimeUnit.SECONDS);
+          }
         } catch (InterruptedException e) {
           System.out.println("Could not shut down channel within timeout");
         }
