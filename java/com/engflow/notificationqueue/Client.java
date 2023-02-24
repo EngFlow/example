@@ -69,8 +69,7 @@ class Client {
     }
 
     ManagedChannel forwardChannel = null;
-    Boolean shouldForwared = !Strings.isNullOrEmpty(clientOptions.getOption("forward"));
-    if (shouldForwared) {
+    if (!Strings.isNullOrEmpty(clientOptions.getOption("forward"))) {
       try {
         forwardChannel = createChannel(clientOptions.getOption("forward"), null, null);
       } catch (IllegalArgumentException e) {
@@ -90,12 +89,12 @@ class Client {
     } finally {
       if (channel != null) {
         channel.shutdownNow();
-        if (shouldForwared) {
+        if (forwardChannel != null) {
           forwardChannel.shutdownNow();
         }
         try {
           channel.awaitTermination(10, TimeUnit.SECONDS);
-          if (shouldForwared) {
+          if (forwardChannel != null) {
             forwardChannel.awaitTermination(10, TimeUnit.SECONDS);
           }
         } catch (InterruptedException e) {
