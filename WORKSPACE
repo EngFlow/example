@@ -43,11 +43,11 @@ http_archive(
 
 http_archive(
     name = "com_engflow_engflowapis",
-    sha256 = "2c4826ea9825b3e3956bba65469020ffff8a2178694c33eba86bf4d97a2a256a",
-    strip_prefix = "engflowapis-b8ecd7487fca4764a393037d5d74f67239694fc0",
+    sha256 = "88073a86aa28e6b38dba998b2df7984e176df70044bfadcd663b02273e43c367",
+    strip_prefix = "engflowapis-f7e413890de03f8cfd552180340248db1028d440",
     urls = [
-        "https://storage.googleapis.com/engflow-tools-public/engflowapis-b8ecd7487fca4764a393037d5d74f67239694fc0.zip",
-        "https://github.com/EngFlow/engflowapis/archive/b8ecd7487fca4764a393037d5d74f67239694fc0.zip",
+        "https://storage.googleapis.com/engflow-tools-public/engflowapis-f7e413890de03f8cfd552180340248db1028d440.zip",
+        "https://github.com/EngFlow/engflowapis/archive/f7e413890de03f8cfd552180340248db1028d440.zip",
     ],
 )
 
