@@ -112,11 +112,11 @@ rules_proto_toolchains()
 
 http_archive(
     name = "com_google_protobuf",
-    sha256 = "f6db31d70e2e0a3722b9eec50393f3c02ab88769dc682a30d78afc72e3288248",
-    strip_prefix = "protobuf-4ac90bbb69719ebdbf1dd1c8450daa2cf4bbd313",
+    sha256 = "7c8d517e3c594a01213a7d881f2550cfbe8f4d0e5bfa2a68df5c32d103c5bcd0",
+    strip_prefix = "protobuf-e83848f09288693d0fe9a71824908bb8f621bd63",
     urls = [
-        "https://storage.googleapis.com/engflow-tools-public/protobuf-4ac90bbb69719ebdbf1dd1c8450daa2cf4bbd313.tar.gz",
-        "https://github.com/protocolbuffers/protobuf/archive/4ac90bbb69719ebdbf1dd1c8450daa2cf4bbd313.tar.gz",
+        "https://storage.googleapis.com/engflow-tools-public/protobuf-e83848f09288693d0fe9a71824908bb8f621bd63.tar.gz",
+        "https://github.com/protocolbuffers/protobuf/archive/e83848f09288693d0fe9a71824908bb8f621bd63.tar.gz",
     ],
 )
 
