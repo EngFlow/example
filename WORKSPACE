@@ -118,7 +118,7 @@ http_archive(
         "https://storage.googleapis.com/engflow-tools-public/protobuf-e83848f09288693d0fe9a71824908bb8f621bd63.tar.gz",
         "https://github.com/protocolbuffers/protobuf/archive/e83848f09288693d0fe9a71824908bb8f621bd63.tar.gz",
     ],
-)
+) 
 
 load("@com_google_protobuf//:protobuf_deps.bzl", "protobuf_deps")
 
