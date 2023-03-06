@@ -193,7 +193,7 @@ go_download_sdk(
 
 go_rules_dependencies()
 
-go_register_toolchains(version = "1.20.1")
+go_register_toolchains()
 
 load("@io_bazel_rules_kotlin//kotlin:repositories.bzl", "kotlin_repositories")
 
