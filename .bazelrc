@@ -23,6 +23,8 @@ build:macos --platforms @io_bazel_rules_dotnet//dotnet/toolchain:darwin_amd64_3.
 build:linux --host_platform @io_bazel_rules_dotnet//dotnet/toolchain:linux_amd64_3.1.100
 build:linux --platforms @io_bazel_rules_dotnet//dotnet/toolchain:linux_amd64_3.1.100
 
+build:clang --client_env=CC=clang
+
 build:without_bytes --experimental_remote_download_outputs=minimal
 
 # Options for a private EngFlow cluster.
@@ -44,3 +46,5 @@ build:engflow_oss --remote_executor=grpcs://oss-cluster.engflow.com
 build:engflow_oss --bes_backend=grpcs://oss-cluster.engflow.com
 build:engflow_oss --bes_lifecycle_events
 build:engflow_oss --bes_results_url=https://oss-cluster.engflow.com/invocation/
+
+try-import .bazelrc.user
