@@ -36,7 +36,6 @@ http_archive(
     sha256 = "33d99b8f8b368770c8c2f56e1a421d2b497af15f89334d449ef3c6cccef44f36",
     strip_prefix = "googleapis-00179492fb1d3ceedd9c65b803c6230d59a15d94",
     urls = [
-        "https://storage.googleapis.com/engflow-tools-public/googleapis-00179492fb1d3ceedd9c65b803c6230d59a15d94.tar.gz",
         "https://github.com/googleapis/googleapis/archive/00179492fb1d3ceedd9c65b803c6230d59a15d94.tar.gz",
     ],
 ) 
@@ -46,7 +45,6 @@ http_archive(
     sha256 = "88073a86aa28e6b38dba998b2df7984e176df70044bfadcd663b02273e43c367",
     strip_prefix = "engflowapis-f7e413890de03f8cfd552180340248db1028d440",
     urls = [
-        "https://storage.googleapis.com/engflow-tools-public/engflowapis-f7e413890de03f8cfd552180340248db1028d440.zip",
         "https://github.com/EngFlow/engflowapis/archive/f7e413890de03f8cfd552180340248db1028d440.zip",
     ],
 )
@@ -56,7 +54,6 @@ http_archive(
     sha256 = "da84dd3e39bf647997d57ca2cebbc1d6d643ccdeb16197b36d255a4dd17f13bb",
     strip_prefix = "grpc-java-775d79b0eb1717f381ebb698f5302db702f6200c",
     urls = [
-        "https://storage.googleapis.com/engflow-tools-public/grpc-java-775d79b0eb1717f381ebb698f5302db702f6200c.tar.gz",
         "https://github.com/grpc/grpc-java/archive/775d79b0eb1717f381ebb698f5302db702f6200c.tar.gz",
     ],
 )
@@ -73,7 +70,6 @@ http_archive(
     name = "io_bazel_rules_go",
     sha256 = "dd926a88a564a9246713a9c00b35315f54cbd46b31a26d5d8fb264c07045f05d",
     urls = [
-        "https://mirror.bazel.build/github.com/bazelbuild/rules_go/releases/download/v0.38.1/rules_go-v0.38.1.zip",
         "https://github.com/bazelbuild/rules_go/releases/download/v0.38.1/rules_go-v0.38.1.zip",
     ],
 )
@@ -83,7 +79,6 @@ http_archive(
     sha256 = "e017528fd1c91c5a33f15493e3a398181a9e821a804eb7ff5acdd1d2d6c2b18d",
     strip_prefix = "rules_proto-4.0.0-3.20.0",
     urls = [
-        "https://storage.googleapis.com/engflow-tools-public/rules_proto-4.0.0-3.20.0.tar.gz",
         "https://github.com/bazelbuild/rules_proto/archive/refs/tags/4.0.0-3.20.0.tar.gz",
     ],
 )
@@ -94,7 +89,6 @@ http_archive(
     sha256 = "bbe4db93499f5c9414926e46f9e35016999a4e9f6e3522482d3760dc61011070",
     strip_prefix = "rules_proto_grpc-4.2.0",
     urls = [
-        "https://storage.googleapis.com/engflow-tools-public/rules_proto_grpc-4.2.0.tar.gz",
         "https://github.com/rules-proto-grpc/rules_proto_grpc/archive/4.2.0.tar.gz",
     ],
 )
@@ -115,7 +109,6 @@ http_archive(
     sha256 = "7c8d517e3c594a01213a7d881f2550cfbe8f4d0e5bfa2a68df5c32d103c5bcd0",
     strip_prefix = "protobuf-e83848f09288693d0fe9a71824908bb8f621bd63",
     urls = [
-        "https://storage.googleapis.com/engflow-tools-public/protobuf-e83848f09288693d0fe9a71824908bb8f621bd63.tar.gz",
         "https://github.com/protocolbuffers/protobuf/archive/e83848f09288693d0fe9a71824908bb8f621bd63.tar.gz",
     ],
 ) 
@@ -157,7 +150,6 @@ http_archive(
     strip_prefix = "rules_scala-73f5d1a7da081c9f5160b9ed7ac745388af28e23",
     type = "zip",
     urls = [
-        "https://storage.googleapis.com/engflow-tools-public/rules_scala-73f5d1a7da081c9f5160b9ed7ac745388af28e23.zip",
         "https://github.com/bazelbuild/rules_scala/archive/73f5d1a7da081c9f5160b9ed7ac745388af28e23.zip",
     ],
 )
@@ -199,7 +191,6 @@ http_archive(
     sha256 = "5b501313118b06093497b6429f124b973f99d1eb5a27a1cc372e5d6836360e9d",
     strip_prefix = "rules_ts-1.0.2",
     urls = [
-        "https://storage.googleapis.com/engflow-tools-public/rules_ts-1.0.2.tar.gz",
         "https://github.com/aspect-build/rules_ts/archive/refs/tags/v1.0.2.tar.gz",
     ],
 )
@@ -224,7 +215,6 @@ http_archive(
     sha256 = "5098268d2950d658a0ab5558fa9faa590866be7ff1b20a97964b37720f8af2c6",
     strip_prefix = "rules_dotnet-0b7ae93fa81b7327a655118da0581db5ebbe0b8d",
     urls = [
-        "https://storage.googleapis.com/engflow-tools-public/rules_dotnet-0b7ae93fa81b7327a655118da0581db5ebbe0b8d.zip",
         "https://github.com/bazelbuild/rules_dotnet/archive/0b7ae93fa81b7327a655118da0581db5ebbe0b8d.zip",
     ],
 )
@@ -244,7 +234,6 @@ http_archive(
     sha256 = "8a7a33cb3c81a0677f11b1a9c5384bc9eefaec833913bd313a6494c2783a6046",
     strip_prefix = "rules_perl-022b8daf2bb4836ac7a50e4a1d8ea056a3e1e403",
     urls = [
-        "https://storage.googleapis.com/engflow-tools-public/rules_perl-022b8daf2bb4836ac7a50e4a1d8ea056a3e1e403.zip",
         "https://github.com/bazelbuild/rules_perl/archive/022b8daf2bb4836ac7a50e4a1d8ea056a3e1e403.zip",
     ],
 )
