@@ -188,10 +188,10 @@ kt_register_toolchains()
 
 http_archive(
     name = "aspect_rules_ts",
-    sha256 = "5b501313118b06093497b6429f124b973f99d1eb5a27a1cc372e5d6836360e9d",
-    strip_prefix = "rules_ts-1.0.2",
+    sha256 = "58b6c0ad158fc42883dafa157f1a25cddd65bcd788a772620192ac9ceefa0d78",
+    strip_prefix = "rules_ts-1.3.2",
     urls = [
-        "https://github.com/aspect-build/rules_ts/archive/refs/tags/v1.0.2.tar.gz",
+        "https://github.com/aspect-build/rules_ts/archive/refs/tags/v1.3.2.tar.gz",
     ],
 )
 
