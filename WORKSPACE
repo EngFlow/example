@@ -81,7 +81,7 @@ http_archive(
     urls = [
         "https://github.com/bazelbuild/rules_proto/archive/refs/tags/4.0.0.tar.gz",
     ],
-)
+) 
 
 # Loads rules required to compile proto files
 http_archive(
