@@ -56,7 +56,7 @@ http_archive(
     urls = [
         "https://github.com/grpc/grpc-java/archive/06ec0b93a5d3c63b4ddf47ad6d3a883532eee10a.tar.gz",
     ],
-)
+) 
 
 http_archive(
     name = "io_bazel_rules_kotlin",
