@@ -217,7 +217,7 @@ http_archive(
     urls = [
         "https://github.com/bazelbuild/rules_dotnet/archive/ec73829c3fcdd396e253932b7aa9161c709a4d24.zip",
     ],
-)
+) 
 
 load("@io_bazel_rules_dotnet//dotnet:deps.bzl", "dotnet_repositories")
 
