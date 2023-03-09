@@ -249,7 +249,7 @@ http_archive(
     sha256 = "ffc7b877c95413c82bfd5482c017edcf759a6250d8b24e82f41f3c8b8d9e287e",
     strip_prefix = "rules_python-0.19.0",
     url = "https://github.com/bazelbuild/rules_python/archive/refs/tags/0.19.0.tar.gz",
-)
+) 
 
 http_archive(
     name = "build_bazel_rules_swift",
