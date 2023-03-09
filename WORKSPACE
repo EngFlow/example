@@ -212,10 +212,10 @@ bazel_skylib_workspace()
 
 http_archive(
     name = "io_bazel_rules_dotnet",
-    sha256 = "5098268d2950d658a0ab5558fa9faa590866be7ff1b20a97964b37720f8af2c6",
-    strip_prefix = "rules_dotnet-0b7ae93fa81b7327a655118da0581db5ebbe0b8d",
+    sha256 = "9567eb71d14eb7e95f1aecac612dc2df1eeee14ad861442f65d28b16168e1d0e",
+    strip_prefix = "rules_dotnet-ec73829c3fcdd396e253932b7aa9161c709a4d24",
     urls = [
-        "https://github.com/bazelbuild/rules_dotnet/archive/0b7ae93fa81b7327a655118da0581db5ebbe0b8d.zip",
+        "https://github.com/bazelbuild/rules_dotnet/archive/ec73829c3fcdd396e253932b7aa9161c709a4d24.zip",
     ],
 )
 
