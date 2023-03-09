@@ -246,10 +246,10 @@ perl_register_toolchains()
 
 http_archive(
     name = "rules_python",
-    sha256 = "bc4e59e17c7809a5b373ba359e2c974ed2386c58634819ac5a89c0813c15705c",
-    strip_prefix = "rules_python-0.15.1",
-    url = "https://github.com/bazelbuild/rules_python/archive/refs/tags/0.15.1.tar.gz",
-)
+    sha256 = "ffc7b877c95413c82bfd5482c017edcf759a6250d8b24e82f41f3c8b8d9e287e",
+    strip_prefix = "rules_python-0.19.0",
+    url = "https://github.com/bazelbuild/rules_python/archive/refs/tags/0.19.0.tar.gz",
+) 
 
 http_archive(
     name = "build_bazel_rules_swift",
