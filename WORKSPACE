@@ -51,10 +51,10 @@ http_archive(
 
 http_archive(
     name = "io_grpc_grpc_java",
-    sha256 = "84c732d570a4292108c4c1653467b1d994673c1ed1eb8a65ef35b6b51bf8f62e",
-    strip_prefix = "grpc-java-7ecb909776df53ab8b4163b4ed243b512ccd365d",
+    sha256 = "672fa3a5b2f5286d6512be367c590966390bc6d7f303ccf76282b4a72e50e3b5",
+    strip_prefix = "grpc-java-915c706dec0fa2e847278f94f33166190ec5537a",
     urls = [
-        "https://github.com/grpc/grpc-java/archive/7ecb909776df53ab8b4163b4ed243b512ccd365d.tar.gz",
+        "https://github.com/grpc/grpc-java/archive/915c706dec0fa2e847278f94f33166190ec5537a.tar.gz",
     ],
 )  
 
