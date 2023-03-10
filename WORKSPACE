@@ -33,12 +33,12 @@ http_archive(
 
 http_archive(
     name = "com_google_googleapis",
-    sha256 = "baaac010b6e7573ffc87e7c732a2f816dfffc15a33f28cece1288a14fe672cda",
-    strip_prefix = "googleapis-55445032240dc9cc20f656d45113c76fccad71c2",
+    sha256 = "2d9c9c070c8dbd4e4526e09e93fb9536eb3a7d5268775c6328eb9f72cde015a0",
+    strip_prefix = "googleapis-2bf9cf3d3b353483079c3dd08ba283e77fbcdc69",
     urls = [
-        "https://github.com/googleapis/googleapis/archive/55445032240dc9cc20f656d45113c76fccad71c2.tar.gz",
+        "https://github.com/googleapis/googleapis/archive/2bf9cf3d3b353483079c3dd08ba283e77fbcdc69.tar.gz",
     ],
-)  
+) 
 
 http_archive(
     name = "com_engflow_engflowapis",
@@ -51,12 +51,12 @@ http_archive(
 
 http_archive(
     name = "io_grpc_grpc_java",
-    sha256 = "f40af9a1ee1cb6800648bd6f816ac970a1b9b19687a1b07690accd4f921e390c",
-    strip_prefix = "grpc-java-06ec0b93a5d3c63b4ddf47ad6d3a883532eee10a",
+    sha256 = "84c732d570a4292108c4c1653467b1d994673c1ed1eb8a65ef35b6b51bf8f62e",
+    strip_prefix = "grpc-java-7ecb909776df53ab8b4163b4ed243b512ccd365d",
     urls = [
-        "https://github.com/grpc/grpc-java/archive/06ec0b93a5d3c63b4ddf47ad6d3a883532eee10a.tar.gz",
+        "https://github.com/grpc/grpc-java/archive/7ecb909776df53ab8b4163b4ed243b512ccd365d.tar.gz",
     ],
-) 
+)  
 
 http_archive(
     name = "io_bazel_rules_kotlin",
@@ -106,12 +106,12 @@ rules_proto_toolchains()
 
 http_archive(
     name = "com_google_protobuf",
-    sha256 = "8ebaaf1ccf3596859b298d39664e0215dde2efca5bb60c10aee119c527186800",
-    strip_prefix = "protobuf-6545c67a083903c7c0d34df115a899448fca552d",
+    sha256 = "480c01f68184b20bbfdb06a8005d3a21dba91c6b590df1c0ec9714afe84f863c",
+    strip_prefix = "protobuf-2dd03a570a385dbee141c657e5be0ac33061dfc7",
     urls = [
-        "https://github.com/protocolbuffers/protobuf/archive/6545c67a083903c7c0d34df115a899448fca552d.tar.gz",
+        "https://github.com/protocolbuffers/protobuf/archive/2dd03a570a385dbee141c657e5be0ac33061dfc7.tar.gz",
     ],
-)  
+) 
 
 load("@com_google_protobuf//:protobuf_deps.bzl", "protobuf_deps")
 
@@ -188,12 +188,12 @@ kt_register_toolchains()
 
 http_archive(
     name = "aspect_rules_ts",
-    sha256 = "5b501313118b06093497b6429f124b973f99d1eb5a27a1cc372e5d6836360e9d",
-    strip_prefix = "rules_ts-1.0.2",
+    sha256 = "58b6c0ad158fc42883dafa157f1a25cddd65bcd788a772620192ac9ceefa0d78",
+    strip_prefix = "rules_ts-1.3.2",
     urls = [
-        "https://github.com/aspect-build/rules_ts/archive/refs/tags/v1.0.2.tar.gz",
+        "https://github.com/aspect-build/rules_ts/archive/refs/tags/v1.3.2.tar.gz",
     ],
-)
+) 
 
 load("@aspect_rules_ts//ts:repositories.bzl", "rules_ts_dependencies")
 
@@ -205,6 +205,12 @@ nodejs_register_toolchains(
     name = "node",
     node_version = DEFAULT_NODE_VERSION,
 )
+
+load("@aspect_bazel_lib//lib:repositories.bzl", "register_copy_directory_toolchains", "register_copy_to_directory_toolchains")
+
+register_copy_directory_toolchains()
+
+register_copy_to_directory_toolchains()
 
 load("@bazel_skylib//:workspace.bzl", "bazel_skylib_workspace")
 
@@ -246,10 +252,10 @@ perl_register_toolchains()
 
 http_archive(
     name = "rules_python",
-    sha256 = "bc4e59e17c7809a5b373ba359e2c974ed2386c58634819ac5a89c0813c15705c",
-    strip_prefix = "rules_python-0.15.1",
-    url = "https://github.com/bazelbuild/rules_python/archive/refs/tags/0.15.1.tar.gz",
-)
+    sha256 = "ffc7b877c95413c82bfd5482c017edcf759a6250d8b24e82f41f3c8b8d9e287e",
+    strip_prefix = "rules_python-0.19.0",
+    url = "https://github.com/bazelbuild/rules_python/archive/refs/tags/0.19.0.tar.gz",
+) 
 
 http_archive(
     name = "build_bazel_rules_swift",
