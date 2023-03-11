@@ -4,7 +4,7 @@
       "config:base"
     ],
     "username": "engflow-github-automation",
-    "gitAuthor": "engflow-github-automation <support@engflow.com>",
+    "gitAuthor": "engflow-github-automation <engflow-github-automation@engflow.com>",
     "onboarding": false,
     "enabledManagers": ["bazel", "npm"],
     "vulnerabilityAlerts": {
