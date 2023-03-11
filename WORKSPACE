@@ -33,12 +33,12 @@ http_archive(
 
 http_archive(
     name = "com_google_googleapis",
-    sha256 = "2d9c9c070c8dbd4e4526e09e93fb9536eb3a7d5268775c6328eb9f72cde015a0",
-    strip_prefix = "googleapis-2bf9cf3d3b353483079c3dd08ba283e77fbcdc69",
+    sha256 = "0fd9b5c79b0403fa23caa75a9d4458ddffb78c48c2cdac208976197e2e1c6956",
+    strip_prefix = "googleapis-a1df408f367ac5eb07ae93084a1678b87adbfcc3",
     urls = [
-        "https://github.com/googleapis/googleapis/archive/2bf9cf3d3b353483079c3dd08ba283e77fbcdc69.tar.gz",
+        "https://github.com/googleapis/googleapis/archive/a1df408f367ac5eb07ae93084a1678b87adbfcc3.tar.gz",
     ],
-) 
+)  
 
 http_archive(
     name = "com_engflow_engflowapis",
