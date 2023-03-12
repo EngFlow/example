@@ -1,4 +1,4 @@
-# GENERAL SUMMARY
+# Summary
 On a high level, our goal is to improve the customer experience by allowing us to obtain 
 the introduction customer information faster. Through running this script, we will recieve 
 a yaml file that contains the targets, relevant information about actions (number of total 
