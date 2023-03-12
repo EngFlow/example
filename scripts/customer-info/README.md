@@ -5,7 +5,7 @@ a yaml file that contains the targets, relevant information about actions (numbe
 actions, set of mnemonics, set of configurations, set of platforms, and set of aspects), the 
 bazel version being used, and the values of the relevant bazel flags. 
 
-# RUNNING/EDITING THE SCRIPT 
+## Running and iterating the script 
 To run the script, 
 1. Navigate to the ```scripts``` folder and then the ```customer-info``` folder
 2. run command 
