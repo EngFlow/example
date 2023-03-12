@@ -32,7 +32,7 @@ To run the script,
 To customize the script,
 - Change the list of relevant flags by editing the ```relevant_flags``` variable 
 
-# DETAILED SUMMARY
+## Detailed summary
 Within the script, the following commands are called:
 ```
 bazel --version
