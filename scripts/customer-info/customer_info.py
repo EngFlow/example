@@ -7,6 +7,11 @@ import yaml
 
 # download pylint and add config file from engflow
 
+# adding links for the mnemonics using sourcegraph
+## collect important repos 
+# estimating action sizes based on input or output
+# key words for relevant flags: remote, experimental, incompatible, BES, mnemonic
+
 if len(sys.argv) < 2:
     print("Please provide the following arguments: file path to repo."
           "Check README for further information.")
@@ -14,8 +19,7 @@ if len(sys.argv) < 2:
 
 # add the names of wanted flag values
 # use regular expression instead
-relevant_flags = ["test_timeout", "experimental_allow_runtime_deps_on_neverlink",
-                  "experimental_limit_android_lint_to_android_constrained_java"]
+relevant_flags = ['enable_platform_specific_config', 'experimental_announce_profile_path', 'explicit_java_test_deps', 'nostamp', 'incompatible_strict_action_env', 'verbose_failures', 'experimental_merged_skyframe_analysis_execution', 'experimental_skymeld_ui', 'experimental_remote_mark_tool_inputs', 'compilation_mode', 'compilation_mode', 'compilation_mode', 'incompatible_enable_cc_toolchain_resolution', '-supports_dynamic_linker', 'config', 'config', 'config', 'java_language_version', 'java_runtime_version', 'tool_java_language_version', 'tool_java_runtime_version', 'experimental_one_version_enforcement', '@io_bazel_rules_go//go/config:pure', 'cxxopt', 'host_cxxopt', 'cxxopt', 'host_cxxopt', 'cxxopt', 'host_cxxopt', 'cxxopt', 'host_cxxopt', 'cxxopt', 'host_cxxopt', 'cxxopt', 'host_cxxopt', 'workspace_status_command', 'workspace_status_command', 'workspace_status_command', 'build_tag_filters', 'test_tag_filters', 'experimental_action_listener', 'aspects', 'aspects', 'experimental_action_listener', 'nouse_ijars', 'aspects', 'config', 'keep_going', 'build_tag_filters', 'test_tag_filters', 'config', 'config', 'config', 'test_summary', 'test_output', 'instrumentation_filter', 'combined_report', 'experimental_one_version_enforcement', 'config', 'color', 'curses', 'show_timestamps', 'announce_rc', 'test_output', 'show_progress_rate_limit', 'build_tag_filters', 'test_tag_filters', 'test_env', 'test_env', 'test_env', 'test_env', 'test_env']
 
 def execute(args):
     """ Executes an os command """
