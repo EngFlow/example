@@ -2,10 +2,10 @@ name: CI
 
 on:
   push:
-    branches: [ main ]
-    tags: 'v*'
+    branches: [main]
+    tags: "v*"
   pull_request:
-    branches: [ main ]
+    branches: [main]
 
 # Recommended here: https://github.com/bazelbuild/bazelisk/issues/88#issuecomment-625178467
 env:
@@ -20,46 +20,46 @@ jobs:
       matrix:
         os: [ubuntu-20.04, macos-11]
     steps:
-    - uses: actions/checkout@v3
+      - uses: actions/checkout@v3
 
-    - name: Building //cpp directory
-      run: bazel build //cpp/...
+      - name: Building //cpp directory
+        run: bazel build //cpp/...
 
-    - name: Building //docker directory
-      run: bazel build //docker/...
+      - name: Building //docker directory
+        run: bazel build //docker/...
 
-    - name: Building //genrules directory
-      run: bazel build //genrules/...
+      - name: Building //genrules directory
+        run: bazel build //genrules/...
 
-    - name: Building //go directory
-      run: bazel build //go/...
+      - name: Building //go directory
+        run: bazel build //go/...
 
-    - name: Building //java directory
-      run: |
-        bazel test //java/...
+      - name: Testing //java/com/engflow/example directory
+        run: |
+          bazel test //java/com/engflow/example/...
 
-    - name: Building //kotlin directory
-      run: bazel build //kotlin/...
+      - name: Building //kotlin directory
+        run: bazel build //kotlin/...
 
-    - name: Building //scala directory
-      run: |
-        bazel test //scala/...
+      - name: Testing //scala directory
+        run: |
+          bazel test //scala/...
 
-    - name: Building //typescript directory
-      run: |
-        bazel test //typescript/...
+      - name: Testing //typescript directory
+        run: |
+          bazel test //typescript/...
 
-    - name: Building //csharp directory
-      run: bazel build //csharp/...
+      - name: Building //csharp directory
+        run: bazel build //csharp/...
 
-    - name: Building //perl directory
-      run: bazel build //perl/...
+      - name: Building //perl directory
+        run: bazel build //perl/...
 
-    - name: Building //python directory
-      run: bazel build //python/...
+      - name: Building //python directory
+        run: bazel build //python/...
 
-    - uses: swift-actions/setup-swift@v1
-      if: matrix.os == 'ubuntu-20.04'
+      - uses: swift-actions/setup-swift@v1
+        if: matrix.os == 'ubuntu-20.04'
 
-    - name: Building //swift directory
-      run: bazel test --config=clang //swift/...
+      - name: Testing //swift directory
+        run: bazel test --config=clang //swift/...
