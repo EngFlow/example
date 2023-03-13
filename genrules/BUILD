@@ -24,23 +24,26 @@ UPPER_BOUND = 10
     cmd = "echo 'Hello engflow world' > $@",
 ) for x in range(1, UPPER_BOUND)]
 
-[genrule(
-    name = "gnu-manifesto_PDF_76KB" + str(x),
-    outs = ["gnu-manifesto" + str(x) + ".pdf"],
-    cmd = "cp $(location gnu-manifesto.pdf) $@",
-    tools = ["gnu-manifesto.pdf"],
-) for x in range(1, UPPER_BOUND)]
+# Comment out the following rules if you want to
+# add more load to the build.
+# Be aware that it downloads around 1.4GB.
+# [genrule(
+#     name = "gnu-manifesto_PDF_76KB" + str(x),
+#     outs = ["gnu-manifesto" + str(x) + ".pdf"],
+#     cmd = "cp $(location gnu-manifesto.pdf) $@",
+#     tools = ["gnu-manifesto.pdf"],
+# ) for x in range(1, UPPER_BOUND)]
 
-[genrule(
-    name = "emacs_TARGZ_68MB" + str(x),
-    outs = ["emacs" + str(x) + ".tar.gz"],
-    cmd = "cp $(location @emacs//file) $@",
-    tools = ["@emacs//file"],
-) for x in range(1, UPPER_BOUND)]
+# [genrule(
+#     name = "emacs_TARGZ_68MB" + str(x),
+#     outs = ["emacs" + str(x) + ".tar.gz"],
+#     cmd = "cp $(location @emacs//file) $@",
+#     tools = ["@emacs//file"],
+# ) for x in range(1, UPPER_BOUND)]
 
-[genrule(
-    name = "ubuntu_20.04_1.3GB" + str(x),
-    outs = ["ubuntu_20.04_1.3GB" + str(x) + ".iso"],
-    cmd = "cp $(location @ubuntu_20.04_1.3GB//file) $@",
-    tools = ["@ubuntu_20.04_1.3GB//file"],
-) for x in range(1, 2)]
+# [genrule(
+#     name = "ubuntu_20.04_1.3GB" + str(x),
+#     outs = ["ubuntu_20.04_1.3GB" + str(x) + ".iso"],
+#     cmd = "cp $(location @ubuntu_20.04_1.3GB//file) $@",
+#     tools = ["@ubuntu_20.04_1.3GB//file"],
+# ) for x in range(1, 2)]
