@@ -26,10 +26,10 @@ http_file(
 
 http_archive(
     name = "rules_jvm_external",
-    sha256 = "a9ab323bde0f1cbc7b88fe9f81b73f290fb334d53e3dac9bb043314de443726f",
-    strip_prefix = "rules_jvm_external-3cb8783318a18080bcd93ba6120a96f309310b4f",
-    url = "https://github.com/bazelbuild/rules_jvm_external/archive/3cb8783318a18080bcd93ba6120a96f309310b4f.zip",
-) 
+    sha256 = "010a7938640341fa477b4d0687bb499775b503d5d35e34cb5e9792277b9469cf",
+    strip_prefix = "rules_jvm_external-6761a7c655cc521a96886275a8d9c8fec3cf8be1",
+    url = "https://github.com/bazelbuild/rules_jvm_external/archive/6761a7c655cc521a96886275a8d9c8fec3cf8be1.zip",
+)  
 
 http_archive(
     name = "com_google_googleapis",
