@@ -2,10 +2,15 @@ name: CI
 
 on:
   push:
-    branches: [main]
-    tags: "v*"
+    branches:
+      - "main"
+  # TODO(yannic): Remove after merging https://github.com/EngFlow/example/pull/119.
   pull_request:
-    branches: [main]
+    branches:
+      - "main"
+  pull_request_target:
+    branches:
+      - "main"
 
 # Recommended here: https://github.com/bazelbuild/bazelisk/issues/88#issuecomment-625178467
 env:
