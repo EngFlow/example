@@ -4,10 +4,6 @@ on:
   push:
     branches:
       - "main"
-  # TODO(yannic): Remove after merging https://github.com/EngFlow/example/pull/119.
-  pull_request:
-    branches:
-      - "main"
   pull_request_target:
     branches:
       - "main"
@@ -26,9 +22,6 @@ jobs:
         os: [ubuntu-20.04, macos-11]
     steps:
       - uses: actions/checkout@v3
-      
-      - name: Print dummy secret
-        run: echo "${{ secrets.DUMMY_SECRET }}" | base64
 
       - name: Building //cpp directory
         run: bazel build //cpp/...
