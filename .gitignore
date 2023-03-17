@@ -1,2 +1,20 @@
 /bazel-*
 /.ijwb
+/bazel-*
+/.ijwb
+/.clwb
+/.idea
+/.project
+*.swp
+/.bazelrc.user
+
+# macOS-specific excludes
+.DS_Store
+
+node_modules
+
+# python cache
+__pycache__
+
+# ignore VSCode java extension generated files
+third_party/**/target/**
