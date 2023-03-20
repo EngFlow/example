@@ -111,7 +111,7 @@ http_archive(
     urls = [
         "https://github.com/protocolbuffers/protobuf/archive/9b4a3ed9e46b2542185ce6f6e21656955708808f.tar.gz",
     ],
-) 
+)  
 
 load("@com_google_protobuf//:protobuf_deps.bzl", "protobuf_deps")
 
