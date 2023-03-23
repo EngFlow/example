@@ -1,18 +1,26 @@
 {
-    "$schema": "https://docs.renovatebot.com/renovate-schema.json",
-    "extends": [
-      "config:base"
-    ],
-    "username": "engflow-github-automation",
-    "gitAuthor": "engflow-github-automation <engflow-github-automation@engflow.com>",
-    "onboarding": false,
-    "enabledManagers": ["bazel", "npm"],
-    "vulnerabilityAlerts": {
-      "enabled": true
-    },
-    "platform": "github",
-    "repositories": [
-      "EngFlow/example"
-    ],
-    "reviewers": ["anfelbar", "jayconrod", "benjaminp", "afrueda97"]
-  }
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": [
+    "config:base"
+  ],
+  "username": "engflow-github-automation",
+  "gitAuthor": "engflow-github-automation <engflow-github-automation@engflow.com>",
+  "onboarding": false,
+  "enabledManagers": [
+    "bazel",
+    "npm"
+  ],
+  "vulnerabilityAlerts": {
+    "enabled": true
+  },
+  "platform": "github",
+  "repositories": [
+    "EngFlow/example"
+  ],
+  "reviewers": [
+    "anfelbar",
+    "benjaminp"
+  ],
+  "prConcurrentLimit": 0,
+  "prHourlyLimit": 0
+}
