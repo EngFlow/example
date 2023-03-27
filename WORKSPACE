@@ -29,7 +29,7 @@ http_archive(
     sha256 = "dc099dc44eb4f934c60b843c858123480256fef8f1b2f85857010f4e4a37ae33",
     strip_prefix = "rules_jvm_external-abe16acab3a9251b08dbcb3cb3e51c25f74867a9",
     url = "https://github.com/bazelbuild/rules_jvm_external/archive/abe16acab3a9251b08dbcb3cb3e51c25f74867a9.zip",
-)  
+) 
 
 http_archive(
     name = "com_google_googleapis",
