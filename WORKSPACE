@@ -26,19 +26,19 @@ http_file(
 
 http_archive(
     name = "rules_jvm_external",
-    sha256 = "010a7938640341fa477b4d0687bb499775b503d5d35e34cb5e9792277b9469cf",
-    strip_prefix = "rules_jvm_external-6761a7c655cc521a96886275a8d9c8fec3cf8be1",
-    url = "https://github.com/bazelbuild/rules_jvm_external/archive/6761a7c655cc521a96886275a8d9c8fec3cf8be1.zip",
-)  
+    sha256 = "dc099dc44eb4f934c60b843c858123480256fef8f1b2f85857010f4e4a37ae33",
+    strip_prefix = "rules_jvm_external-abe16acab3a9251b08dbcb3cb3e51c25f74867a9",
+    url = "https://github.com/bazelbuild/rules_jvm_external/archive/abe16acab3a9251b08dbcb3cb3e51c25f74867a9.zip",
+) 
 
 http_archive(
     name = "com_google_googleapis",
-    sha256 = "12192242b02dafddb103e726b1e51b6128069b6a13047781a2ac96b60aa953d9",
-    strip_prefix = "googleapis-247a5dab9ad6b76b6ca9f2aa8626e6eb5403458e",
+    sha256 = "9fd7843ccc7da3f82b04dbd6549d3219aa256aca545f561f33183d201d04ecb0",
+    strip_prefix = "googleapis-3562b6cb373390e07e51888e07916d730befb23c",
     urls = [
-        "https://github.com/googleapis/googleapis/archive/247a5dab9ad6b76b6ca9f2aa8626e6eb5403458e.tar.gz",
+        "https://github.com/googleapis/googleapis/archive/3562b6cb373390e07e51888e07916d730befb23c.tar.gz",
     ],
-)  
+) 
 
 http_archive(
     name = "com_engflow_engflowapis",
@@ -51,12 +51,12 @@ http_archive(
 
 http_archive(
     name = "io_grpc_grpc_java",
-    sha256 = "d9202c5add9f3d6054748f9aa2505de5717717f5649101bf198be0644186081e",
-    strip_prefix = "grpc-java-b09473b0d34f435fe9d2925fa08f3e9079275588",
+    sha256 = "f20c8be4e63a83b144dbf8040ae7f415b9308a3327a61d3fb085463a890e46ca",
+    strip_prefix = "grpc-java-58e2224df9b8f55cf2ecbd298e8fdfed03590426",
     urls = [
-        "https://github.com/grpc/grpc-java/archive/b09473b0d34f435fe9d2925fa08f3e9079275588.tar.gz",
+        "https://github.com/grpc/grpc-java/archive/58e2224df9b8f55cf2ecbd298e8fdfed03590426.tar.gz",
     ],
-)  
+) 
 
 http_archive(
     name = "io_bazel_rules_kotlin",
@@ -106,12 +106,12 @@ rules_proto_toolchains()
 
 http_archive(
     name = "com_google_protobuf",
-    sha256 = "7790656f0d072f7755d7d2dcd53d4873e826283f7390a9fa420cfe7b44c25458",
-    strip_prefix = "protobuf-9b4a3ed9e46b2542185ce6f6e21656955708808f",
+    sha256 = "c77e1bc3b5fd8b8f0b6c603b54cd9006c7c94ebe53ec3780bb5075d5a29bcd6c",
+    strip_prefix = "protobuf-3a871acca05ca4cdf79fc14ea9b701be6fe745f1",
     urls = [
-        "https://github.com/protocolbuffers/protobuf/archive/9b4a3ed9e46b2542185ce6f6e21656955708808f.tar.gz",
+        "https://github.com/protocolbuffers/protobuf/archive/3a871acca05ca4cdf79fc14ea9b701be6fe745f1.tar.gz",
     ],
-)  
+) 
 
 load("@com_google_protobuf//:protobuf_deps.bzl", "protobuf_deps")
 
@@ -146,13 +146,13 @@ compat_repositories()
 
 http_archive(
     name = "io_bazel_rules_scala",
-    sha256 = "54b8880b64214a8b5576e3d05cc357cf6508aeda20c563477d78a72f5b138aee",
-    strip_prefix = "rules_scala-6b5bf4a8a358008d37f6c24c83a4f2fa7663b72f",
+    sha256 = "e001da981f356e1256a31fa066bdb89064a49a153904bc1808fde3ea5abda9de",
+    strip_prefix = "rules_scala-068122a26012e73ef7ef2abefef7b235745f3c55",
     type = "zip",
     urls = [
-        "https://github.com/bazelbuild/rules_scala/archive/6b5bf4a8a358008d37f6c24c83a4f2fa7663b72f.zip",
+        "https://github.com/bazelbuild/rules_scala/archive/068122a26012e73ef7ef2abefef7b235745f3c55.zip",
     ],
-) 
+)  
 
 load("@io_bazel_rules_scala//:scala_config.bzl", "scala_config")
 
@@ -252,16 +252,16 @@ perl_register_toolchains()
 
 http_archive(
     name = "rules_python",
-    sha256 = "ffc7b877c95413c82bfd5482c017edcf759a6250d8b24e82f41f3c8b8d9e287e",
-    strip_prefix = "rules_python-0.19.0",
-    url = "https://github.com/bazelbuild/rules_python/archive/refs/tags/0.19.0.tar.gz",
-) 
+    sha256 = "a644da969b6824cc87f8fe7b18101a8a6c57da5db39caa6566ec6109f37d2141",
+    strip_prefix = "rules_python-0.20.0",
+    url = "https://github.com/bazelbuild/rules_python/archive/refs/tags/0.20.0.tar.gz",
+)  
 
 http_archive(
     name = "build_bazel_rules_swift",
-    sha256 = "d25a3f11829d321e0afb78b17a06902321c27b83376b31e3481f0869c28e1660",
-    url = "https://github.com/bazelbuild/rules_swift/releases/download/1.6.0/rules_swift.1.6.0.tar.gz",
-) 
+    sha256 = "bf2861de6bf75115288468f340b0c4609cc99cc1ccc7668f0f71adfd853eedb3",
+    url = "https://github.com/bazelbuild/rules_swift/releases/download/1.7.1/rules_swift.1.7.1.tar.gz",
+)  
 
 load(
     "@build_bazel_rules_swift//swift:repositories.bzl",
