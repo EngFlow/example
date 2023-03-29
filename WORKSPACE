@@ -33,12 +33,12 @@ http_archive(
 
 http_archive(
     name = "com_google_googleapis",
-    sha256 = "12192242b02dafddb103e726b1e51b6128069b6a13047781a2ac96b60aa953d9",
-    strip_prefix = "googleapis-247a5dab9ad6b76b6ca9f2aa8626e6eb5403458e",
+    sha256 = "9fd7843ccc7da3f82b04dbd6549d3219aa256aca545f561f33183d201d04ecb0",
+    strip_prefix = "googleapis-3562b6cb373390e07e51888e07916d730befb23c",
     urls = [
-        "https://github.com/googleapis/googleapis/archive/247a5dab9ad6b76b6ca9f2aa8626e6eb5403458e.tar.gz",
+        "https://github.com/googleapis/googleapis/archive/3562b6cb373390e07e51888e07916d730befb23c.tar.gz",
     ],
-)  
+) 
 
 http_archive(
     name = "com_engflow_engflowapis",
@@ -106,12 +106,12 @@ rules_proto_toolchains()
 
 http_archive(
     name = "com_google_protobuf",
-    sha256 = "7790656f0d072f7755d7d2dcd53d4873e826283f7390a9fa420cfe7b44c25458",
-    strip_prefix = "protobuf-9b4a3ed9e46b2542185ce6f6e21656955708808f",
+    sha256 = "c77e1bc3b5fd8b8f0b6c603b54cd9006c7c94ebe53ec3780bb5075d5a29bcd6c",
+    strip_prefix = "protobuf-3a871acca05ca4cdf79fc14ea9b701be6fe745f1",
     urls = [
-        "https://github.com/protocolbuffers/protobuf/archive/9b4a3ed9e46b2542185ce6f6e21656955708808f.tar.gz",
+        "https://github.com/protocolbuffers/protobuf/archive/3a871acca05ca4cdf79fc14ea9b701be6fe745f1.tar.gz",
     ],
-)  
+) 
 
 load("@com_google_protobuf//:protobuf_deps.bzl", "protobuf_deps")
 
