@@ -60,7 +60,7 @@ jobs:
       #   run: bazel build //python/...
 
       - uses: swift-actions/setup-swift@v1
-      #  if: matrix.os == 'ubuntu-latest'
+        if: matrix.os == 'ubuntu-latest'
 
       - name: Testing //swift directory
         run: bazel test --config=clang //swift/...
