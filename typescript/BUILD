@@ -9,7 +9,7 @@ ts_project(
 )
 
 build_test(
-    name = "typesctript_test",
+    name = "typescript_test",
     targets = [
         ":typescript",
     ],
