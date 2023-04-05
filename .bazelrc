@@ -18,9 +18,8 @@ build:engflow_common --platforms=//remote_config/config:platform
 build:engflow_common --java_runtime_version=remotejdk_11
 build:engflow_common --java_language_version=11
 
-build:macos --host_platform @io_bazel_rules_dotnet//dotnet/toolchain:darwin_amd64_3.1.100
 build:macos --platforms @io_bazel_rules_dotnet//dotnet/toolchain:darwin_amd64_3.1.100
-build:linux --host_platform @io_bazel_rules_dotnet//dotnet/toolchain:linux_amd64_3.1.100
+build:macos --platforms @io_bazel_rules_dotnet//dotnet/toolchain:darwin_arm64_6.0.101
 build:linux --platforms @io_bazel_rules_dotnet//dotnet/toolchain:linux_amd64_3.1.100
 
 build:clang --client_env=CC=clang
