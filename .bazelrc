@@ -22,6 +22,8 @@ build:macos --platforms @io_bazel_rules_dotnet//dotnet/toolchain:darwin_amd64_3.
 build:macos --platforms @io_bazel_rules_dotnet//dotnet/toolchain:darwin_arm64_6.0.101
 build:linux --platforms @io_bazel_rules_dotnet//dotnet/toolchain:linux_amd64_3.1.100
 
+build:macos --macos_minimum_os=12
+
 build:clang --client_env=CC=clang
 
 build:without_bytes --experimental_remote_download_outputs=minimal

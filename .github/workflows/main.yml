@@ -4,7 +4,7 @@ on:
   push:
     branches:
       - "main"
-  pull_request_target:
+  pull_request:
     branches:
       - "main"
 
@@ -19,7 +19,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-20.04, macos-11]
+        os: [ubuntu-22.04, macos-12]
     steps:
       - uses: actions/checkout@v3
 
@@ -60,7 +60,7 @@ jobs:
         run: bazel build //python/...
 
       - uses: swift-actions/setup-swift@v1
-        if: matrix.os == 'ubuntu-20.04'
+        if: matrix.os == 'ubuntu-22.04'
 
       - name: Testing //swift directory
         run: bazel test --config=clang //swift/...
