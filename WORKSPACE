@@ -26,10 +26,10 @@ http_file(
 
 http_archive(
     name = "rules_jvm_external",
-    sha256 = "dc099dc44eb4f934c60b843c858123480256fef8f1b2f85857010f4e4a37ae33",
-    strip_prefix = "rules_jvm_external-abe16acab3a9251b08dbcb3cb3e51c25f74867a9",
-    url = "https://github.com/bazelbuild/rules_jvm_external/archive/abe16acab3a9251b08dbcb3cb3e51c25f74867a9.zip",
-) 
+    sha256 = "8c3b207722e5f97f1c83311582a6c11df99226e65e2471086e296561e57cc954",
+    strip_prefix = "rules_jvm_external-5.1",
+    url = "https://github.com/bazelbuild/rules_jvm_external/releases/download/5.1/rules_jvm_external-5.1.tar.gz",
+)
 
 http_archive(
     name = "com_google_googleapis",
@@ -38,7 +38,7 @@ http_archive(
     urls = [
         "https://github.com/googleapis/googleapis/archive/3562b6cb373390e07e51888e07916d730befb23c.tar.gz",
     ],
-) 
+)
 
 http_archive(
     name = "com_engflow_engflowapis",
@@ -47,16 +47,16 @@ http_archive(
     urls = [
         "https://github.com/EngFlow/engflowapis/archive/b08f7f7c5fb6df9386ba5ac9e0097be25b3b3983.zip",
     ],
-) 
+)
 
 http_archive(
     name = "io_grpc_grpc_java",
-    sha256 = "f20c8be4e63a83b144dbf8040ae7f415b9308a3327a61d3fb085463a890e46ca",
-    strip_prefix = "grpc-java-58e2224df9b8f55cf2ecbd298e8fdfed03590426",
+    sha256 = "d03b2e88f88b10e32c36aeb7bf644750722da4168f5a242f2eff24f30e3a1a1f",
+    strip_prefix = "grpc-java-1.54.0",
     urls = [
-        "https://github.com/grpc/grpc-java/archive/58e2224df9b8f55cf2ecbd298e8fdfed03590426.tar.gz",
+        "https://github.com/grpc/grpc-java/archive/refs/tags/v1.54.0.zip",
     ],
-) 
+)
 
 http_archive(
     name = "io_bazel_rules_kotlin",
@@ -81,7 +81,7 @@ http_archive(
     urls = [
         "https://github.com/bazelbuild/rules_proto/archive/refs/tags/4.0.0.tar.gz",
     ],
-) 
+)
 
 # Loads rules required to compile proto files
 http_archive(
@@ -91,7 +91,7 @@ http_archive(
     urls = [
         "https://github.com/rules-proto-grpc/rules_proto_grpc/archive/4.3.0.tar.gz",
     ],
-) 
+)
 
 load("@rules_proto_grpc//java:repositories.bzl", rules_proto_grpc_java_repos = "java_repos")
 
@@ -111,7 +111,7 @@ http_archive(
     urls = [
         "https://github.com/protocolbuffers/protobuf/archive/3a871acca05ca4cdf79fc14ea9b701be6fe745f1.tar.gz",
     ],
-) 
+)
 
 load("@com_google_protobuf//:protobuf_deps.bzl", "protobuf_deps")
 
@@ -152,7 +152,7 @@ http_archive(
     urls = [
         "https://github.com/bazelbuild/rules_scala/archive/068122a26012e73ef7ef2abefef7b235745f3c55.zip",
     ],
-)  
+)
 
 load("@io_bazel_rules_scala//:scala_config.bzl", "scala_config")
 
@@ -193,7 +193,7 @@ http_archive(
     urls = [
         "https://github.com/aspect-build/rules_ts/archive/refs/tags/v1.3.3.tar.gz",
     ],
-) 
+)
 
 load("@aspect_rules_ts//ts:repositories.bzl", "rules_ts_dependencies")
 
@@ -242,7 +242,7 @@ http_archive(
     urls = [
         "https://github.com/bazelbuild/rules_perl/archive/7f10dada09fcba1dc79a6a91da2facc25e72bd7d.zip",
     ],
-) 
+)
 
 load("@rules_perl//perl:deps.bzl", "perl_register_toolchains", "perl_rules_dependencies")
 
@@ -255,13 +255,13 @@ http_archive(
     sha256 = "a644da969b6824cc87f8fe7b18101a8a6c57da5db39caa6566ec6109f37d2141",
     strip_prefix = "rules_python-0.20.0",
     url = "https://github.com/bazelbuild/rules_python/archive/refs/tags/0.20.0.tar.gz",
-)  
+)
 
 http_archive(
     name = "build_bazel_rules_swift",
     sha256 = "bf2861de6bf75115288468f340b0c4609cc99cc1ccc7668f0f71adfd853eedb3",
     url = "https://github.com/bazelbuild/rules_swift/releases/download/1.7.1/rules_swift.1.7.1.tar.gz",
-)  
+)
 
 load(
     "@build_bazel_rules_swift//swift:repositories.bzl",
