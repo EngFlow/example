@@ -152,7 +152,7 @@ http_archive(
     urls = [
         "https://github.com/bazelbuild/rules_scala/archive/ce54e00a2406b8401483df61119cf00af8599763.zip",
     ],
-)
+) 
 
 load("@io_bazel_rules_scala//:scala_config.bzl", "scala_config")
 
