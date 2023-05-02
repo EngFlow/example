@@ -146,13 +146,13 @@ compat_repositories()
 
 http_archive(
     name = "io_bazel_rules_scala",
-    sha256 = "e001da981f356e1256a31fa066bdb89064a49a153904bc1808fde3ea5abda9de",
-    strip_prefix = "rules_scala-068122a26012e73ef7ef2abefef7b235745f3c55",
+    sha256 = "1f425972c97c99fa5325f74483b97f881cfe3f3809dbfd22d332cd82220eb4a2",
+    strip_prefix = "rules_scala-ce54e00a2406b8401483df61119cf00af8599763",
     type = "zip",
     urls = [
-        "https://github.com/bazelbuild/rules_scala/archive/068122a26012e73ef7ef2abefef7b235745f3c55.zip",
+        "https://github.com/bazelbuild/rules_scala/archive/ce54e00a2406b8401483df61119cf00af8599763.zip",
     ],
-)
+) 
 
 load("@io_bazel_rules_scala//:scala_config.bzl", "scala_config")
 
