@@ -2,7 +2,7 @@ name: Renovate Dependency Update
 on:
   workflow_dispatch:
   schedule:
-    - cron: "0 12 * * 1" # Run every monday at midday
+    - cron: "0 12 1,15 * *" # Run 1st and 15th of the month
 
 jobs:
   renovate:
