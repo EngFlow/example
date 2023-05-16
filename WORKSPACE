@@ -33,30 +33,30 @@ http_archive(
 
 http_archive(
     name = "com_google_googleapis",
-    sha256 = "3e48e5833fcd2e1fcb8b6a5b7a88e18503b670e8636b868cdb5ac32e00fbdafb",
-    strip_prefix = "googleapis-2da477b6a72168c65fdb4245530cfa702cc4b029",
+    sha256 = "e363d5a08ec8cbea386685b553ff6406b48a8f62dcfecec2f9212b0870e529d6",
+    strip_prefix = "googleapis-ef2e2ea532248d6dc40a56bc6c95cea858ba31b6",
     urls = [
-        "https://github.com/googleapis/googleapis/archive/2da477b6a72168c65fdb4245530cfa702cc4b029.tar.gz",
-    ],
-) 
-
-http_archive(
-    name = "com_engflow_engflowapis",
-    sha256 = "906770920d37f73ff4f4ff518b5c196e49231369cece6ad8c81460db0a38e91e",
-    strip_prefix = "engflowapis-db494c8237e494eae742fefd7f167d26bdac2676",
-    urls = [
-        "https://github.com/EngFlow/engflowapis/archive/db494c8237e494eae742fefd7f167d26bdac2676.zip",
+        "https://github.com/googleapis/googleapis/archive/ef2e2ea532248d6dc40a56bc6c95cea858ba31b6.tar.gz",
     ],
 )
 
 http_archive(
-    name = "io_grpc_grpc_java",
-    sha256 = "78bf175f9a8fa23cda724bbef52ad9d0d555cdd1122bcb06484b91174f931239",
-    strip_prefix = "grpc-java-1.54.1",
+    name = "com_engflow_engflowapis",
+    sha256 = "02388d7778cf07a91dc6cd0e58f74ed11da84051bc79045153119c2b97765dc0",
+    strip_prefix = "engflowapis-c445959a3b016b67974d98abe84327decb8c74f5",
     urls = [
-        "https://github.com/grpc/grpc-java/archive/refs/tags/v1.54.1.zip",
+        "https://github.com/EngFlow/engflowapis/archive/c445959a3b016b67974d98abe84327decb8c74f5.zip",
     ],
 ) 
+
+http_archive(
+    name = "io_grpc_grpc_java",
+    sha256 = "6121a57fc1cfc5d4d26d1514692291179022051ffb8dd5c2f5d486ed1faf3b5b",
+    strip_prefix = "grpc-java-1.55.0",
+    urls = [
+        "https://github.com/grpc/grpc-java/archive/refs/tags/v1.55.0.zip",
+    ],
+)
 
 http_archive(
     name = "io_bazel_rules_kotlin",
@@ -86,12 +86,12 @@ http_archive(
 # Loads rules required to compile proto files
 http_archive(
     name = "rules_proto_grpc",
-    sha256 = "fb7fc7a3c19a92b2f15ed7c4ffb2983e956625c1436f57a3430b897ba9864059",
-    strip_prefix = "rules_proto_grpc-4.3.0",
+    sha256 = "b244cbede34638ad0e1aec0769f62b8348c7ed71f431a027e252a07d6adba3d6",
+    strip_prefix = "rules_proto_grpc-4.4.0",
     urls = [
-        "https://github.com/rules-proto-grpc/rules_proto_grpc/archive/4.3.0.tar.gz",
+        "https://github.com/rules-proto-grpc/rules_proto_grpc/archive/4.4.0.tar.gz",
     ],
-)
+) 
 
 load("@rules_proto_grpc//java:repositories.bzl", rules_proto_grpc_java_repos = "java_repos")
 
@@ -106,12 +106,12 @@ rules_proto_toolchains()
 
 http_archive(
     name = "com_google_protobuf",
-    sha256 = "99c25aae9cd7e6d50724d4a55bfeb40edcec87cf93b965d2b18fbc757364cfbf",
-    strip_prefix = "protobuf-0339e176cfea4cd25bf29915b8eeca08dce5530e",
+    sha256 = "745718a90504d6e5ef83aacdbea244ceabfb9dde69747953215f800e07311cfa",
+    strip_prefix = "protobuf-e6adc6d3cd80496f3393b0475ffaa52fa71e9365",
     urls = [
-        "https://github.com/protocolbuffers/protobuf/archive/0339e176cfea4cd25bf29915b8eeca08dce5530e.tar.gz",
+        "https://github.com/protocolbuffers/protobuf/archive/e6adc6d3cd80496f3393b0475ffaa52fa71e9365.tar.gz",
     ],
-) 
+)
 
 load("@com_google_protobuf//:protobuf_deps.bzl", "protobuf_deps")
 
