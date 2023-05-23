@@ -1,4 +1,3 @@
-build --enable_platform_specific_config
 # Options common for all EngFlow remote configurations.
 build:engflow_common --jobs=8
 build:engflow_common --define=EXECUTOR=remote
