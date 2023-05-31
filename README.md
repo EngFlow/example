@@ -44,3 +44,10 @@ build:remote --tls_client_key=/path/to/credentials/cert.key
 ```
 
 Your remote machines must count with the appropriated toolchains.
+
+
+## `engflowapis` execution
+
+A detailed example of `EngFlow` APIs consumption is presented in [java/com/engflow/notificationqueue/][1].
+
+[1]: java/com/engflow/notificationqueue/README.md
