@@ -14,7 +14,7 @@ build and test software with the EngFlow Remote Execution service.
   `bazel build //...`
 - Build `swift` example with  
   
-  `CC=clang bazel build //swift/...` 
+  `bazel build //swift/... --config=clang` 
   
   make sure `clang` is in your `PATH`.
 
@@ -42,8 +42,6 @@ build:remote --bes_lifecycle_events
 build:remote --tls_client_certificate=/path/to/credentials/cert.crt
 build:remote --tls_client_key=/path/to/credentials/cert.key
 ```
-
-Your remote machines must count with the appropriated toolchains.
 
 
 ## `engflowapis` execution
