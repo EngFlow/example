@@ -5,7 +5,7 @@ ts_project(
     name = "typescript",
     srcs = ["main.ts"],
     declaration = True,
-    out_dir = "."
+    out_dir = ".",
 )
 
 build_test(

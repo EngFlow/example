@@ -63,4 +63,4 @@ jobs:
         if: matrix.os == 'ubuntu-22.04'
 
       - name: Testing //swift directory
-        run: bazel test --config=clang //swift/...
+        run: bazel test --config=clang //swift:tests
