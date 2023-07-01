@@ -42,12 +42,12 @@ http_archive(
 
 http_archive(
     name = "com_engflow_engflowapis",
-    sha256 = "02388d7778cf07a91dc6cd0e58f74ed11da84051bc79045153119c2b97765dc0",
-    strip_prefix = "engflowapis-c445959a3b016b67974d98abe84327decb8c74f5",
+    sha256 = "ed9c33ebb97ffdaace6cb00f9515135573d935a63c9b0f40f66f71c91deaedfb",
+    strip_prefix = "engflowapis-ca1150ce59f1bfcc50931d855f2c17df058f4117",
     urls = [
-        "https://github.com/EngFlow/engflowapis/archive/c445959a3b016b67974d98abe84327decb8c74f5.zip",
+        "https://github.com/EngFlow/engflowapis/archive/ca1150ce59f1bfcc50931d855f2c17df058f4117.zip",
     ],
-) 
+)
 
 http_archive(
     name = "io_grpc_grpc_java",
