@@ -193,7 +193,7 @@ http_archive(
     urls = [
         "https://github.com/aspect-build/rules_ts/archive/refs/tags/v1.4.4.tar.gz",
     ],
-) 
+)
 
 load("@aspect_rules_ts//ts:repositories.bzl", "rules_ts_dependencies")
 
