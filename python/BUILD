@@ -14,7 +14,7 @@ py_binary(
     deps = [":hello"],
 )
 
-# Supports sharding and test filtering out of the box: try
+# Supports sharding, fast-failing and test filtering out of the box: try
 #   bazel test //python:hello_absl_test --test_filter="HelloTest.test_hello" --test_output=all
 # `--test_filter` values are as in https://docs.python.org/3/library/unittest.html#cmdoption-unittest-k
 py_test(
@@ -27,7 +27,7 @@ py_test(
     ],
 )
 
-# This wrapper supports sharding and test filtering: try
+# This wrapper supports sharding, fast-failing and test filtering: try
 #   bazel test //python:hello_pytest_test --test_filter="not test_hello" --test_output=all
 # This corresponds to Pytest's `-k` flag: see https://docs.pytest.org/en/latest/reference/reference.html#command-line-flags
 pytest_test(

@@ -27,6 +27,11 @@ if __name__ == "__main__":
     if test_filter:
         extra_args.extend(["-k", test_filter])
 
+    # Support `--test_runner_fail_fast` on the command line.
+    fail_fast = os.environ.get("TESTBRIDGE_TEST_RUNNER_FAIL_FAST")
+    if fail_fast:
+        extra_args.extend(["--maxfail=1"])
+
     exit_code = pytest.main(sys.argv + extra_args)
     if exit_code == pytest.ExitCode.NO_TESTS_COLLECTED:
         # Pytest usually fails when no tests are found, but we accept this for
