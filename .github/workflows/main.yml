@@ -59,7 +59,7 @@ jobs:
       - name: Building //python directory
         run: |
           bazel run //python:requirements.update
-          bazel build //python/...
+          bazel test //python/...
 
       - uses: swift-actions/setup-swift@v1
         if: matrix.os == 'ubuntu-22.04'
