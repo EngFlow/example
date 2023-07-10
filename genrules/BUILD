@@ -16,7 +16,7 @@
 # on the user's input.
 # This can be used for stress testing your build infrastructure.
 # Change the upper bound of the range and enjoy!
-UPPER_BOUND = 10
+UPPER_BOUND = 2
 
 [genrule(
     name = "foo_TXT_4KB_" + str(x),
@@ -54,3 +54,9 @@ UPPER_BOUND = 10
     tags = ["manual"],
     tools = ["@ubuntu_20.04_1.3GB//file"],
 ) for x in range(1, 2)]
+
+genrule(
+    name = "etc_hosts",
+    outs = ["engflow.txt"],
+    cmd = "cat /etc/hosts && echo -e \"EngFlow\" >> /etc/hosts && cat /etc/hosts && touch $(location engflow.txt)",
+)
