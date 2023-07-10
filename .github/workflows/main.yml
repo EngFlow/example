@@ -56,7 +56,7 @@ jobs:
       - name: Building //perl directory
         run: bazel build //perl/...
 
-      - name: Building //python directory
+      - name: Testing //python directory
         run: |
           bazel run //python:requirements.update
           bazel test //python/...
