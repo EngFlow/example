@@ -56,8 +56,10 @@ jobs:
       - name: Building //perl directory
         run: bazel build //perl/...
 
-      - name: Building //python directory
-        run: bazel build //python/...
+      - name: Testing //python directory
+        run: |
+          bazel run //python:requirements.update
+          bazel test //python/...
 
       - uses: swift-actions/setup-swift@v1
         if: matrix.os == 'ubuntu-22.04'

@@ -257,6 +257,25 @@ http_archive(
     url = "https://github.com/bazelbuild/rules_python/archive/refs/tags/0.23.1.tar.gz",
 ) 
 
+load("@rules_python//python:pip.bzl", "pip_parse")
+
+pip_parse(
+    name = "pip_deps",
+    requirements_lock = "//python:requirements_lock.txt",
+)
+
+load("@pip_deps//:requirements.bzl", "install_deps")
+
+install_deps()
+
+# Abseil Python can be imported through pip_import, but it has native Bazel support too.
+http_archive(
+    name = "io_abseil_py",
+    sha256 = "0fb3a4916a157eb48124ef309231cecdfdd96ff54adf1660b39c0d4a9790a2c0",
+    strip_prefix = "abseil-py-1.4.0",
+    url = "https://github.com/abseil/abseil-py/archive/refs/tags/v1.4.0.tar.gz",
+)
+
 http_archive(
     name = "build_bazel_rules_swift",
     sha256 = "bf2861de6bf75115288468f340b0c4609cc99cc1ccc7668f0f71adfd853eedb3",
