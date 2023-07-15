@@ -33,28 +33,28 @@ http_archive(
 
 http_archive(
     name = "com_google_googleapis",
-    sha256 = "e363d5a08ec8cbea386685b553ff6406b48a8f62dcfecec2f9212b0870e529d6",
-    strip_prefix = "googleapis-ef2e2ea532248d6dc40a56bc6c95cea858ba31b6",
+    sha256 = "597dc234ebff1827c2db15e564f33b4e5910c98a45d1eb4c522cc059e45a74a9",
+    strip_prefix = "googleapis-511319c6af9172bf12de3e80672b8109c49efd29",
     urls = [
-        "https://github.com/googleapis/googleapis/archive/ef2e2ea532248d6dc40a56bc6c95cea858ba31b6.tar.gz",
-    ],
-)
-
-http_archive(
-    name = "com_engflow_engflowapis",
-    sha256 = "02388d7778cf07a91dc6cd0e58f74ed11da84051bc79045153119c2b97765dc0",
-    strip_prefix = "engflowapis-c445959a3b016b67974d98abe84327decb8c74f5",
-    urls = [
-        "https://github.com/EngFlow/engflowapis/archive/c445959a3b016b67974d98abe84327decb8c74f5.zip",
+        "https://github.com/googleapis/googleapis/archive/511319c6af9172bf12de3e80672b8109c49efd29.tar.gz",
     ],
 ) 
 
 http_archive(
-    name = "io_grpc_grpc_java",
-    sha256 = "6121a57fc1cfc5d4d26d1514692291179022051ffb8dd5c2f5d486ed1faf3b5b",
-    strip_prefix = "grpc-java-1.55.0",
+    name = "com_engflow_engflowapis",
+    sha256 = "ed9c33ebb97ffdaace6cb00f9515135573d935a63c9b0f40f66f71c91deaedfb",
+    strip_prefix = "engflowapis-ca1150ce59f1bfcc50931d855f2c17df058f4117",
     urls = [
-        "https://github.com/grpc/grpc-java/archive/refs/tags/v1.55.0.zip",
+        "https://github.com/EngFlow/engflowapis/archive/ca1150ce59f1bfcc50931d855f2c17df058f4117.zip",
+    ],
+)
+
+http_archive(
+    name = "io_grpc_grpc_java",
+    sha256 = "b8fb7ae4824fb5a5ae6e6fa26ffe2ad7ab48406fdeee54e8965a3b5948dd957e",
+    strip_prefix = "grpc-java-1.56.1",
+    urls = [
+        "https://github.com/grpc/grpc-java/archive/refs/tags/v1.56.1.zip",
     ],
 )
 
@@ -68,11 +68,11 @@ http_archive(
 
 http_archive(
     name = "io_bazel_rules_go",
-    sha256 = "6dc2da7ab4cf5d7bfc7c949776b1b7c733f05e56edc4bcd9022bb249d2e2a996",
+    sha256 = "51dc53293afe317d2696d4d6433a4c33feedb7748a9e352072e2ec3c0dafd2c6",
     urls = [
-        "https://github.com/bazelbuild/rules_go/releases/download/v0.39.1/rules_go-v0.39.1.zip",
+        "https://github.com/bazelbuild/rules_go/releases/download/v0.40.1/rules_go-v0.40.1.zip",
     ],
-) 
+)
 
 http_archive(
     name = "rules_proto",
@@ -106,12 +106,12 @@ rules_proto_toolchains()
 
 http_archive(
     name = "com_google_protobuf",
-    sha256 = "745718a90504d6e5ef83aacdbea244ceabfb9dde69747953215f800e07311cfa",
-    strip_prefix = "protobuf-e6adc6d3cd80496f3393b0475ffaa52fa71e9365",
+    sha256 = "3f6e061e7378690aff8b995ce4bd20b15b8aeb0b225dd54b6ddfb9b4e85fedcc",
+    strip_prefix = "protobuf-194d18566bb5977ce688bc9d6ddd6dc352385c1c",
     urls = [
-        "https://github.com/protocolbuffers/protobuf/archive/e6adc6d3cd80496f3393b0475ffaa52fa71e9365.tar.gz",
+        "https://github.com/protocolbuffers/protobuf/archive/194d18566bb5977ce688bc9d6ddd6dc352385c1c.tar.gz",
     ],
-)
+) 
 
 load("@com_google_protobuf//:protobuf_deps.bzl", "protobuf_deps")
 
@@ -188,12 +188,12 @@ kt_register_toolchains()
 
 http_archive(
     name = "aspect_rules_ts",
-    sha256 = "ace5b609603d9b5b875d56c9c07182357c4ee495030f40dcefb10d443ba8c208",
-    strip_prefix = "rules_ts-1.4.0",
+    sha256 = "2bf5e2398713561ddaaaed8385dd6cee1bb21fe7856a5aac57b9e99ebf0291e2",
+    strip_prefix = "rules_ts-1.4.4",
     urls = [
-        "https://github.com/aspect-build/rules_ts/archive/refs/tags/v1.4.0.tar.gz",
+        "https://github.com/aspect-build/rules_ts/archive/refs/tags/v1.4.4.tar.gz",
     ],
-) 
+)
 
 load("@aspect_rules_ts//ts:repositories.bzl", "rules_ts_dependencies")
 
@@ -252,9 +252,28 @@ perl_register_toolchains()
 
 http_archive(
     name = "rules_python",
-    sha256 = "94750828b18044533e98a129003b6a68001204038dc4749f40b195b24c38f49f",
-    strip_prefix = "rules_python-0.21.0",
-    url = "https://github.com/bazelbuild/rules_python/archive/refs/tags/0.21.0.tar.gz",
+    sha256 = "84aec9e21cc56fbc7f1335035a71c850d1b9b5cc6ff497306f84cced9a769841",
+    strip_prefix = "rules_python-0.23.1",
+    url = "https://github.com/bazelbuild/rules_python/archive/refs/tags/0.23.1.tar.gz",
+) 
+
+load("@rules_python//python:pip.bzl", "pip_parse")
+
+pip_parse(
+    name = "pip_deps",
+    requirements_lock = "//python:requirements_lock.txt",
+)
+
+load("@pip_deps//:requirements.bzl", "install_deps")
+
+install_deps()
+
+# Abseil Python can be imported through pip_import, but it has native Bazel support too.
+http_archive(
+    name = "io_abseil_py",
+    sha256 = "0fb3a4916a157eb48124ef309231cecdfdd96ff54adf1660b39c0d4a9790a2c0",
+    strip_prefix = "abseil-py-1.4.0",
+    url = "https://github.com/abseil/abseil-py/archive/refs/tags/v1.4.0.tar.gz",
 )
 
 http_archive(
