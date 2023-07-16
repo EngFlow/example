@@ -37,7 +37,7 @@ build and test software with the EngFlow Remote Execution service.
 
 ## Remote execution
 
-Make sure to include `--remote_executor` and `--bes_backend`, in your `remote` configuration, as well as access credentials if needed. For instance,
+Make sure to include `--remote_executor` and `--bes_backend`, in the `remote` configuration of your `.bazelrc.user` file , as well as access credentials if needed. For instance,
 
 ```bzl
 build:remote --remote_executor=grpcs://${CLUSTER_ENDPOINT}/
