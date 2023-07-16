@@ -57,7 +57,7 @@ build:remote --tls_client_key=/path/to/credentials/cert.key
   
   for `cpp`,  `csharp`, `docker`, `genrules`, `go`, `java`, `kotlin`, `perl`, `python`, `scala` or `typescript` or build them all with  
   
-  `bazel run //python:requirements.update && bazel build //... --config=opal  --enable_platform_specific_config`.
+  `bazel run //python:requirements.update && bazel build //... --config=remote  --enable_platform_specific_config`.
 - `swift` example does not build remotely yet.
 
 ### Testing on remote
