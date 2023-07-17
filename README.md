@@ -3,6 +3,11 @@
 This repository contains examples in various languages that demonstrate how to
 build and test software with the EngFlow Remote Execution service.
 
+## Prerequisites
+
+- In order to build and test `//python`, you need to install the dependencies listed in `python/requirements.txt`. To do so, execute `bazel run //python:requirements.update` before testing.
+- In order to run `//swift` test you need `clang` compiler. Make sure the binary is in your `PATH`. 
+
 ## Local execution
 ### Building locally
 
@@ -15,9 +20,7 @@ build and test software with the EngFlow Remote Execution service.
   `bazel build //...`
 - Build `swift` example with  
   
-  `bazel build //swift:test --config=clang` 
-  
-  make sure `clang` is in your `PATH`.
+  `bazel build //swift:test --config=clang`.
 
 ### Testing locally
 
@@ -33,7 +36,7 @@ build and test software with the EngFlow Remote Execution service.
 
 - Test `python` example with
 
-  `bazel run //python:requirements.update && bazel test //python/...`
+  `bazel test //python/...`
 
 ## Remote execution
 
@@ -57,7 +60,7 @@ build:remote --tls_client_key=/path/to/credentials/cert.key
   
   for `cpp`,  `csharp`, `docker`, `genrules`, `go`, `java`, `kotlin`, `perl`, `python`, `scala` or `typescript` or build them all with  
   
-  `bazel run //python:requirements.update && bazel build //... --config=remote  --enable_platform_specific_config`.
+  `bazel build //... --config=remote  --enable_platform_specific_config`.
 - `swift` example does not build remotely yet.
 
 ### Testing on remote
@@ -70,7 +73,7 @@ build:remote --tls_client_key=/path/to/credentials/cert.key
 
 - Test `python` example with
 
-  `bazel run //python:requirements.update && bazel test //python/... --config=remote`
+  `bazel test //python/... --config=remote`
 
 
 ## `engflowapis` execution
