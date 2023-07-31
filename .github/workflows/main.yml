@@ -19,7 +19,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-22.04, macos-12]
+        os: [ubuntu-22.04, macos-12, windows-2019]
     steps:
       - uses: actions/checkout@v3
 
@@ -62,7 +62,8 @@ jobs:
           bazel test //python/...
 
       - uses: swift-actions/setup-swift@v1
-        if: matrix.os == 'ubuntu-22.04'
+        if: matrix.os == 'macos-latest'
 
       - name: Testing //swift directory
         run: bazel test --config=clang //swift:tests
+        if: matrix.os == 'macos-latest'

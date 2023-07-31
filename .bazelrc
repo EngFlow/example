@@ -1,4 +1,9 @@
+
+startup --windows_enable_symlinks
+
 build --enable_platform_specific_config
+build --enable_runfiles
+
 # Options common for all EngFlow remote configurations.
 build:engflow_common --jobs=8
 build:engflow_common --define=EXECUTOR=remote
@@ -25,6 +30,13 @@ build:linux --platforms @io_bazel_rules_dotnet//dotnet/toolchain:linux_amd64_3.1
 build:macos --macos_minimum_os=12
 
 build:clang --client_env=CC=clang
+
+build:windows --java_runtime_version=remotejdk_11
+build:windows --tool_java_runtime_version=remotejdk_11
+build:windows --host_platform=@io_bazel_rules_dotnet//dotnet/toolchain:windows_amd64_6.0.101
+
+build:linux --java_runtime_version=remotejdk_11
+build:linux --tool_java_runtime_version=remotejdk_11
 
 build:without_bytes --experimental_remote_download_outputs=minimal
 

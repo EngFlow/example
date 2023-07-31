@@ -38,7 +38,7 @@ http_archive(
     urls = [
         "https://github.com/googleapis/googleapis/archive/511319c6af9172bf12de3e80672b8109c49efd29.tar.gz",
     ],
-) 
+)
 
 http_archive(
     name = "com_engflow_engflowapis",
@@ -91,7 +91,7 @@ http_archive(
     urls = [
         "https://github.com/rules-proto-grpc/rules_proto_grpc/archive/4.4.0.tar.gz",
     ],
-) 
+)
 
 load("@rules_proto_grpc//java:repositories.bzl", rules_proto_grpc_java_repos = "java_repos")
 
@@ -111,7 +111,7 @@ http_archive(
     urls = [
         "https://github.com/protocolbuffers/protobuf/archive/194d18566bb5977ce688bc9d6ddd6dc352385c1c.tar.gz",
     ],
-) 
+)
 
 load("@com_google_protobuf//:protobuf_deps.bzl", "protobuf_deps")
 
@@ -146,13 +146,10 @@ compat_repositories()
 
 http_archive(
     name = "io_bazel_rules_scala",
-    sha256 = "1f425972c97c99fa5325f74483b97f881cfe3f3809dbfd22d332cd82220eb4a2",
-    strip_prefix = "rules_scala-ce54e00a2406b8401483df61119cf00af8599763",
-    type = "zip",
-    urls = [
-        "https://github.com/bazelbuild/rules_scala/archive/ce54e00a2406b8401483df61119cf00af8599763.zip",
-    ],
-) 
+    sha256 = "d39aceb39808da3ee5d84f8d6e460be0568e946da71698fc1414fc696765200a",
+    strip_prefix = "rules_scala-6.0.0",
+    url = "https://github.com/bazelbuild/rules_scala/releases/download/v6.0.0/rules_scala-v6.0.0.tar.gz",
+)
 
 load("@io_bazel_rules_scala//:scala_config.bzl", "scala_config")
 
@@ -255,7 +252,7 @@ http_archive(
     sha256 = "84aec9e21cc56fbc7f1335035a71c850d1b9b5cc6ff497306f84cced9a769841",
     strip_prefix = "rules_python-0.23.1",
     url = "https://github.com/bazelbuild/rules_python/archive/refs/tags/0.23.1.tar.gz",
-) 
+)
 
 load("@rules_python//python:pip.bzl", "pip_parse")
 
