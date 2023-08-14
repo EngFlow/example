@@ -72,7 +72,7 @@ http_archive(
     urls = [
         "https://github.com/bazelbuild/rules_go/releases/download/v0.41.0/rules_go-v0.41.0.zip",
     ],
-)
+) 
 
 http_archive(
     name = "rules_proto",
