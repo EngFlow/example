@@ -5,7 +5,7 @@ build and test software with the EngFlow Remote Execution service.
 
 ## Prerequisites
 
-- In order to build and test `//python`, you need to install the dependencies listed in `python/requirements.txt`. To do so, execute `bazel run //python:requirements.update` before testing.
+- In order to build and test `//python`, Bazel needs to install the dependencies listed in `python/requirements.txt`. To make this repository work across platforms, we do not check in a lock file; execute `bazel run //python:requirements.update` to generate it before building and testing `//python`.
 - In order to run `//swift` test you need `clang` compiler. Make sure the binary is in your `PATH`. 
 
 ## Local execution
