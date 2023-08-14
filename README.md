@@ -69,11 +69,7 @@ build:remote --tls_client_key=/path/to/credentials/cert.key
 
   `bazel test //${DIRECTORY}/... --config=remote`  
 
-  for `java`, `scala` and `typescript`.
-
-- Test `python` example with
-
-  `bazel test //python/... --config=remote`
+  for `java`, `python`, `scala` and `typescript`.
 
 
 ## `engflowapis` execution
