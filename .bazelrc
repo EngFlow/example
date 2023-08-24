@@ -20,8 +20,8 @@ build:linux --host_platform=//remote_config/config:linux_amd64
 build:linux --platforms=//remote_config/config:linux_amd64
 build:linux --platforms=@io_bazel_rules_dotnet//dotnet/toolchain:linux_amd64_3.1.100
 
-build:macos --platforms=@io_bazel_rules_dotnet//dotnet/toolchain:darwin_amd64_3.1.100
-build:macos --platforms=@io_bazel_rules_dotnet//dotnet/toolchain:darwin_arm64_6.0.101
+build:macos --host_platform=//platform/macos_arm64
+build:macos --platforms=//platform/macos_arm64
 build:macos --macos_minimum_os=12
 
 build:windows --extra_execution_platforms=//platform/windows_amd64
