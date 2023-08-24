@@ -8,6 +8,12 @@ on:
     branches:
       - "main"
 
+# Cancel pending jobs on push.
+# https://docs.github.com/en/actions/using-workflows/workflow-syntax-for-github-actions#example-using-concurrency-to-cancel-any-in-progress-job-or-run
+concurrency:
+  group: ${{ github.workflow }}.${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
 # Recommended here: https://github.com/bazelbuild/bazelisk/issues/88#issuecomment-625178467
 env:
   BAZELISK_GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -15,11 +21,37 @@ env:
 
 jobs:
   test-matrix:
-    runs-on: ${{ matrix.os }}
+    runs-on:
+      - self-hosted
+      - "os=${{ matrix.os }}"
+      - "arch=${{ matrix.arch }}"
+      - "os_distribution=${{ matrix.os_distribution }}"
+      - "os_version=${{ matrix.os_version }}"
+      - "revision=${{ matrix.revision }}"
+    timeout-minutes: 5
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-22.04, macos-12]
+        include:
+          - os: linux
+            arch: x64
+            os_distribution: debian
+            os_version: 11
+            revision: 9d1b5ce956bea2e76b0bc4525ed6c59b5777f4bc
+
+          - os: macos
+            arch: x64
+            os_distribution: monterey
+            os_version: "12"
+            revision: 9d1b5ce956bea2e76b0bc4525ed6c59b5777f4bc
+
+          # TODO
+          # - os: windows
+          #   arch: x64
+          #   os_distribution: server
+          #   os_version: "2019"
+          #   revision: 9d1b5ce956bea2e76b0bc4525ed6c59b5777f4bc
+
     steps:
       - uses: actions/checkout@v3
 
