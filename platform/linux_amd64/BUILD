@@ -1,60 +1,42 @@
-# Copyright 2016 The Bazel Authors. All rights reserved.
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#    http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
-
-# This becomes the BUILD file for @local_config_cc// under non-BSD unixes.
-
 load(":cc_toolchain_config.bzl", "cc_toolchain_config")
-load(":stub_cc_toolchain_config.bzl", "stub_cc_toolchain_config")
 load("@rules_cc//cc:defs.bzl", "cc_toolchain", "cc_toolchain_suite")
 
 package(default_visibility = ["//visibility:public"])
 
-licenses(["notice"])  # Apache 2.0
-
-cc_library(
-    name = "malloc",
+platform(
+    name = "linux_amd64",
+    constraint_values = [
+        "@platforms//os:linux",
+        "@platforms//cpu:x86_64",
+        "@bazel_tools//tools/cpp:clang",
+        "@io_bazel_rules_go//go/toolchain:cgo_off",
+        "@io_bazel_rules_dotnet//dotnet/toolchain:6.0.101",
+    ],
+    exec_properties = {
+        "container-image": "docker://gcr.io/bazel-public/ubuntu2004-java11@sha256:69a78f121230c6d5cbfe2f4af8ce65481aa3f2acaaaf8e899df335f1ac1b35b5",
+        "OSFamily": "Linux",
+    },
 )
 
-filegroup(
-    name = "empty",
-    srcs = [],
+toolchain(
+    name = "cc-toolchain",
+    exec_compatible_with = [
+        "@platforms//os:linux",
+        "@platforms//cpu:x86_64",
+    ],
+    target_compatible_with = [
+        "@platforms//os:linux",
+        "@platforms//cpu:x86_64",
+    ],
+    toolchain = ":cc-compiler-k8",
+    toolchain_type = "@bazel_tools//tools/cpp:toolchain_type",
 )
 
-filegroup(
-    name = "cc_wrapper",
-    srcs = ["cc_wrapper.sh"],
-)
-
-filegroup(
-    name = "compiler_deps",
-    srcs = glob(
-        ["extra_tools/**"],
-        allow_empty = True,
-    ) + [":builtin_include_directory_paths"],
-)
-
-# This is the entry point for --crosstool_top.  Toolchains are found
-# by lopping off the name of --crosstool_top and searching for
-# the "${CPU}" entry in the toolchains attribute.
 cc_toolchain_suite(
     name = "toolchain",
     toolchains = {
         "k8|clang": ":cc-compiler-k8",
         "k8": ":cc-compiler-k8",
-        "armeabi-v7a|compiler": ":cc-compiler-armeabi-v7a",
-        "armeabi-v7a": ":cc-compiler-armeabi-v7a",
-        "darwin_arm64": ":cc-compiler-darwin_arm64",
     },
 )
 
@@ -150,43 +132,14 @@ cc_toolchain_config(
     ],
 )
 
-# Android tooling requires a default toolchain for the armeabi-v7a cpu.
-cc_toolchain(
-    name = "cc-compiler-armeabi-v7a",
-    all_files = ":empty",
-    ar_files = ":empty",
-    as_files = ":empty",
-    compiler_files = ":empty",
-    dwp_files = ":empty",
-    linker_files = ":empty",
-    objcopy_files = ":empty",
-    strip_files = ":empty",
-    supports_param_files = 1,
-    toolchain_config = ":stub_armeabi-v7a",
-    toolchain_identifier = "stub_armeabi-v7a",
+filegroup(
+    name = "compiler_deps",
+    srcs = glob(
+        ["extra_tools/**"],
+        allow_empty = True,
+    ) + [":builtin_include_directory_paths"],
 )
 
-stub_cc_toolchain_config(
-    name = "stub_armeabi-v7a",
-    cpu_name = "armeabi-v7a",
-)
-
-cc_toolchain(
-    name = "cc-compiler-darwin_arm64",
-    all_files = ":empty",
-    ar_files = ":empty",
-    as_files = ":empty",
-    compiler_files = ":empty",
-    dwp_files = ":empty",
-    linker_files = ":empty",
-    objcopy_files = ":empty",
-    strip_files = ":empty",
-    supports_param_files = 1,
-    toolchain_config = ":stub_darwin_arm64",
-    toolchain_identifier = "stub_darwin_arm64",
-)
-
-stub_cc_toolchain_config(
-    name = "stub_darwin_arm64",
-    cpu_name = "darwin_arm64",
+filegroup(
+    name = "empty",
 )

@@ -12,13 +12,15 @@ build:engflow_common --java_runtime_version=remotejdk_11
 build:engflow_common --java_language_version=11
 build:engflow_common --remote_download_toplevel
 
-build:linux --crosstool_top=//remote_config/cc:toolchain
+build:linux --extra_execution_platforms=//platform/linux_amd64
+build:linux --host_platform=//platform/linux_amd64
+build:linux --platforms=//platform/linux_amd64
+build:linux --crosstool_top=//platform/linux_amd64:toolchain
+build:linux --host_crosstool_top=//platform/linux_amd64:toolchain
 build:linux --cpu=k8
-build:linux --extra_execution_platforms=//remote_config/config:linux_amd64
-build:linux --extra_toolchains=//remote_config/config:cc-toolchain
-build:linux --host_platform=//remote_config/config:linux_amd64
-build:linux --platforms=//remote_config/config:linux_amd64
-build:linux --platforms=@io_bazel_rules_dotnet//dotnet/toolchain:linux_amd64_3.1.100
+build:linux --host_cpu=k8
+build:linux --compiler=clang
+build:linux --host_compiler=clang
 
 build:macos --host_platform=//platform/macos_arm64
 build:macos --platforms=//platform/macos_arm64
