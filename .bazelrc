@@ -7,26 +7,34 @@ build:engflow_common --experimental_inmemory_dotd_files
 build:engflow_common --experimental_inmemory_jdeps_files
 build:engflow_common --incompatible_strict_action_env=true
 build:engflow_common --remote_timeout=3600
-
 build:engflow_common --action_env=BAZEL_DO_NOT_DETECT_CPP_TOOLCHAIN=1
-build:engflow_common --crosstool_top=//remote_config/cc:toolchain
-build:engflow_common --cpu=k8
-build:engflow_common --extra_execution_platforms=//remote_config/config:platform
-build:engflow_common --extra_toolchains=//remote_config/config:cc-toolchain
-build:engflow_common --host_platform=//remote_config/config:platform
-build:engflow_common --platforms=//remote_config/config:platform
 build:engflow_common --java_runtime_version=remotejdk_11
 build:engflow_common --java_language_version=11
+build:engflow_common --remote_download_toplevel
 
-build:macos --platforms @io_bazel_rules_dotnet//dotnet/toolchain:darwin_amd64_3.1.100
-build:macos --platforms @io_bazel_rules_dotnet//dotnet/toolchain:darwin_arm64_6.0.101
-build:linux --platforms @io_bazel_rules_dotnet//dotnet/toolchain:linux_amd64_3.1.100
+build:linux --crosstool_top=//remote_config/cc:toolchain
+build:linux --cpu=k8
+build:linux --extra_execution_platforms=//remote_config/config:linux_amd64
+build:linux --extra_toolchains=//remote_config/config:cc-toolchain
+build:linux --host_platform=//remote_config/config:linux_amd64
+build:linux --platforms=//remote_config/config:linux_amd64
+build:linux --platforms=@io_bazel_rules_dotnet//dotnet/toolchain:linux_amd64_3.1.100
 
+build:macos --platforms=@io_bazel_rules_dotnet//dotnet/toolchain:darwin_amd64_3.1.100
+build:macos --platforms=@io_bazel_rules_dotnet//dotnet/toolchain:darwin_arm64_6.0.101
 build:macos --macos_minimum_os=12
 
-build:clang --client_env=CC=clang
+build:windows --extra_execution_platforms=//platform/windows_amd64
+build:windows --host_platform=//platform/windows_amd64
+build:windows --platforms=//platform/windows_amd64
+build:windows --crosstool_top=//platform/windows_amd64:toolchain
+build:windows --host_crosstool_top=//platform/windows_amd64:toolchain
+build:windows --cpu=x64_windows
+build:windows --host_cpu=x64_windows
+build:windows --compiler=clang
+build:windows --host_compiler=clang
 
-build:without_bytes --experimental_remote_download_outputs=minimal
+build:clang --client_env=CC=clang
 
 # Options for a private EngFlow cluster.
 # - Change "10.0.0.10:8080" to the actual cluster IP and port.

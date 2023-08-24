@@ -1,7 +1,6 @@
 workspace(name = "example")
 
-load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_file")
-load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
+load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive", "http_file")
 
 # Some file dependencies
 http_file(
@@ -56,7 +55,7 @@ http_archive(
     urls = [
         "https://github.com/grpc/grpc-java/archive/refs/tags/v1.57.0.zip",
     ],
-) 
+)
 
 http_archive(
     name = "io_bazel_rules_kotlin",
@@ -72,7 +71,7 @@ http_archive(
     urls = [
         "https://github.com/bazelbuild/rules_go/releases/download/v0.41.0/rules_go-v0.41.0.zip",
     ],
-) 
+)
 
 http_archive(
     name = "rules_proto",
@@ -91,7 +90,7 @@ http_archive(
     urls = [
         "https://github.com/rules-proto-grpc/rules_proto_grpc/archive/4.4.0.tar.gz",
     ],
-) 
+)
 
 load("@rules_proto_grpc//java:repositories.bzl", rules_proto_grpc_java_repos = "java_repos")
 
@@ -152,7 +151,7 @@ http_archive(
     urls = [
         "https://github.com/bazelbuild/rules_scala/archive/ce54e00a2406b8401483df61119cf00af8599763.zip",
     ],
-) 
+)
 
 load("@io_bazel_rules_scala//:scala_config.bzl", "scala_config")
 
@@ -176,7 +175,7 @@ load("@io_bazel_rules_go//go:deps.bzl", "go_register_toolchains", "go_rules_depe
 
 go_rules_dependencies()
 
-go_register_toolchains(version = "1.20.5")
+go_register_toolchains(version = "1.21.0")
 
 load("@io_bazel_rules_kotlin//kotlin:repositories.bzl", "kotlin_repositories")
 
@@ -193,7 +192,7 @@ http_archive(
     urls = [
         "https://github.com/aspect-build/rules_ts/archive/refs/tags/v1.4.5.tar.gz",
     ],
-) 
+)
 
 load("@aspect_rules_ts//ts:repositories.bzl", "rules_ts_dependencies")
 
@@ -242,7 +241,7 @@ http_archive(
     urls = [
         "https://github.com/bazelbuild/rules_perl/archive/d458b41dd15a086721dcf663317f2c121bba8984.zip",
     ],
-) 
+)
 
 load("@rules_perl//perl:deps.bzl", "perl_register_toolchains", "perl_rules_dependencies")
 
