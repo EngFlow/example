@@ -20,6 +20,7 @@ build:ci --test_output=summary
 build:ci --show_progress_rate_limit=2.0
 build:ci --nobuild_runfile_links
 build:ci --keep_going
+build:ci --experimental_credential_helper=opal.cluster.engflow.com=%workspace%/infra/bazel_credential_helper.sh
 
 # Additional clang toolchain options for automatically configured toolchains.
 build:clang --cxxopt="-std=c++14"

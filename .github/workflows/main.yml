@@ -18,6 +18,7 @@ concurrency:
 env:
   BAZELISK_GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
   GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+  OPAL_RPC_CREDENTIALS: ${{ secrets.OPAL_RPC_CREDENTIALS }}
 
 jobs:
   test-matrix:
@@ -76,4 +77,4 @@ jobs:
           ARCH: ${{ matrix.arch }}
           OS: ${{ matrix.os }}
           REMOTE_EXECUTION: ${{ matrix.remote_execution }}
-        run: python3 test-all.py
+        run: python3 infra/test-all.py

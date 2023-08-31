@@ -1,14 +1,15 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 import os
 import subprocess
 import sys
 
 def main():
-    for key in ("ARCH", "OS", "REMOTE_EXECUTION"):
+    for key in ("ARCH", "OPAL_RPC_CREDENTIALS", "OS", "REMOTE_EXECUTION"):
         if not os.getenv(key):
             sys.stderr.write(f"{key} not set\n")
             sys.exit(1)
+
     os_arch = os.getenv("OS") + "_" + os.getenv("ARCH")
     flags = ["--config=ci"]
     if os.getenv("REMOTE_EXECUTION") == "true":
