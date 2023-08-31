@@ -2,6 +2,12 @@ workspace(name = "example")
 
 load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive", "http_file")
 
+http_archive(
+    name = "build_bazel_apple_support",
+    sha256 = "45d6bbad5316c9c300878bf7fffc4ffde13d620484c9184708c917e20b8b63ff",
+    url = "https://storage.googleapis.com/engflow-tools-public/github.com/bazelbuild/apple_support/releases/download/1.8.1/apple_support.1.8.1.tar.gz",
+)
+
 # Some file dependencies
 http_file(
     name = "emacs",
@@ -81,6 +87,14 @@ http_archive(
         "https://github.com/bazelbuild/rules_proto/archive/refs/tags/4.0.0.tar.gz",
     ],
 )
+
+## Indirect dependencies
+load(
+    "@build_bazel_apple_support//lib:repositories.bzl",
+    "apple_support_dependencies",
+)
+
+apple_support_dependencies()
 
 # Loads rules required to compile proto files
 http_archive(

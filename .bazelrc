@@ -1,4 +1,3 @@
-build --enable_platform_specific_config
 # Options common for all EngFlow remote configurations.
 build:engflow_common --jobs=8
 build:engflow_common --define=EXECUTOR=remote
@@ -12,50 +11,72 @@ build:engflow_common --java_runtime_version=remotejdk_11
 build:engflow_common --java_language_version=11
 build:engflow_common --remote_download_toplevel
 
-build:linux --extra_execution_platforms=//platform/linux_amd64
-build:linux --host_platform=//platform/linux_amd64
-build:linux --platforms=//platform/linux_amd64
-build:linux --crosstool_top=//platform/linux_amd64:toolchain
-build:linux --host_crosstool_top=//platform/linux_amd64:toolchain
-build:linux --cpu=k8
-build:linux --host_cpu=k8
-build:linux --compiler=clang
-build:linux --host_compiler=clang
+build:clang --cxxopt="-std=c++14"
+build:clang --host_cxxopt="-std=c++14"
+build:clang --cxxopt="-fno-exceptions"
+build:clang --host_cxxopt="-fno-exceptions"
+build:clang --cxxopt="-fvisibility=hidden"
+build:clang --host_cxxopt="-fvisibility=hidden"
+build:clang --cxxopt="-Werror=reorder"
+build:clang --host_cxxopt="-Werror=reorder"
+build:clang --cxxopt="-Werror=unused-function"
+build:clang --host_cxxopt="-Werror=unused-function"
+build:clang --cxxopt="-Werror=return-type"
+build:clang --host_cxxopt="-Werror=return-type"
+build:clang --copt="-Werror=sign-compare"
+build:clang --cxxopt="-Werror=sign-compare"
+build:clang --host_copt="-Werror=sign-compare"
+build:clang --host_cxxopt="-Werror=sign-compare"
 
-build:macos --host_platform=//platform/macos_arm64
-build:macos --platforms=//platform/macos_arm64
-build:macos --macos_minimum_os=12
+build:remote_linux_amd64 --extra_execution_platforms=//platform/linux_amd64
+build:remote_linux_amd64 --host_platform=//platform/linux_amd64
+build:remote_linux_amd64 --platforms=//platform/linux_amd64
+build:remote_linux_amd64 --crosstool_top=//platform/linux_amd64:toolchain
+build:remote_linux_amd64 --host_crosstool_top=//platform/linux_amd64:toolchain
+build:remote_linux_amd64 --cpu=k8
+build:remote_linux_amd64 --host_cpu=k8
+build:remote_linux_amd64 --compiler=clang
+build:remote_linux_amd64 --host_compiler=clang
 
-build:windows --extra_execution_platforms=//platform/windows_amd64
-build:windows --host_platform=//platform/windows_amd64
-build:windows --platforms=//platform/windows_amd64
-build:windows --crosstool_top=//platform/windows_amd64:toolchain
-build:windows --host_crosstool_top=//platform/windows_amd64:toolchain
-build:windows --cpu=x64_windows
-build:windows --host_cpu=x64_windows
-build:windows --compiler=clang
-build:windows --host_compiler=clang
+build:remote_macos_amd64 --config=clang
+build:remote_macos_amd64 --host_platform=//platform/macos_amd64
+build:remote_macos_amd64 --platforms=//platform/macos_amd64
+build:remote_macos_amd64 --macos_minimum_os=12
+build:remote_macos_amd64 --action_env=BAZEL_DO_NOT_DETECT_CPP_TOOLCHAIN=1
+build:remote_macos_amd64 --host_action_env=BAZEL_DO_NOT_DETECT_CPP_TOOLCHAIN=1
+build:remote_macos_amd64 --apple_crosstool_top=@local_config_apple_cc//:toolchain
+build:remote_macos_amd64 --crosstool_top=@local_config_apple_cc//:toolchain
+build:remote_macos_amd64 --host_crosstool_top=@local_config_apple_cc//:toolchain
 
-build:clang --client_env=CC=clang
+build:remote_windows_amd64 --extra_execution_platforms=//platform/windows_amd64
+build:remote_windows_amd64 --host_platform=//platform/windows_amd64
+build:remote_windows_amd64 --platforms=//platform/windows_amd64
+build:remote_windows_amd64 --crosstool_top=//platform/windows_amd64:toolchain
+build:remote_windows_amd64 --host_crosstool_top=//platform/windows_amd64:toolchain
+build:remote_windows_amd64 --cpu=x64_windows
+build:remote_windows_amd64 --host_cpu=x64_windows
+build:remote_windows_amd64 --compiler=clang
+build:remote_windows_amd64 --host_compiler=clang
 
-# Options for a private EngFlow cluster.
-# - Change "10.0.0.10:8080" to the actual cluster IP and port.
-# - You'll also need to set flags for your authentication method.
-#   For example, if your cluster uses mTLS authentication, you could add
-#   the flags below (with correct paths), either here or in ~/.bazelrc:
-# build:engflow --tls_client_certificate=/path/to/client.crt
-# build:engflow --tls_client_key=/path/to/client.key
-build:engflow --config=engflow_common
-build:engflow --remote_executor=grpcs://10.0.0.10:8080
-build:engflow --bes_backend=grpcs://10.0.0.10:8080
-build:engflow --bes_lifecycle_events
-build:engflow --bes_results_url=https://10.0.0.10:8080/invocation/
+# Options for private EngFlow clusters.
+# To use on your own cluster, change the URLs to your own endpoint.
+build:opal --config=engflow_common
+build:opal --remote_executor=grpcs://opal.cluster.engflow.com
+build:opal --bes_backend=grpcs://opal.cluster.engflow.com
+build:opal --bes_lifecycle_events
+build:opal --bes_results_url=https://opal.cluster.engflow.com/invocation/
 
-# Options for the open source cluster.
-build:engflow_oss --config=engflow_common
-build:engflow_oss --remote_executor=grpcs://oss-cluster.engflow.com
-build:engflow_oss --bes_backend=grpcs://oss-cluster.engflow.com
-build:engflow_oss --bes_lifecycle_events
-build:engflow_oss --bes_results_url=https://oss-cluster.engflow.com/invocation/
+build:magnesite --config=engflow_common
+build:magnesite --remote_executor=grpcs://magnesite.cluster.engflow.com
+build:magnesite --bes_backend=grpcs://magnesite.cluster.engflow.com
+build:magnesite --bes_lifecycle_events
+build:magnesite --bes_results_url=https://oss-cluster.engflow.com/invocation/
 
+# To authenticate with the clusters above, create a .bazelrc.user file.
+# This file is not checked into Git because it refers to local file system paths.
+#
+# It must contain (for example):
+#
+#     build:opal --tls_client_certificate=/home/example/.engflow/opal/engflow.crt
+#     build:opal --tls_client_key=/home/example/.engflow/opal/engflow.key
 try-import .bazelrc.user
