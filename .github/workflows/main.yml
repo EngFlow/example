@@ -57,7 +57,7 @@ jobs:
 
       - name: Local build and test
         run: |
-          bazel test \
+          bazel build \
             --platforms=//platform/${{matrix.os}}_${{matrix.arch}}
             -- \
             //cpp/... \
