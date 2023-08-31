@@ -76,4 +76,4 @@ jobs:
           ARCH: ${{ matrix.arch }}
           OS: ${{ matrix.os }}
           REMOTE_EXECUTION: ${{ matrix.remote_execution }}
-        run: python test-all.py
+        run: python3 test-all.py
