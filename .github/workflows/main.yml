@@ -55,9 +55,11 @@ jobs:
     steps:
       - uses: actions/checkout@v3
 
-      - name: Build and test
+      - name: Local build and test
         run: |
-          bazel test -- \
+          bazel test \
+            --platforms=//platform/${{matrix.os}}_${{matrix.arch}}
+            -- \
             //cpp/... \
             //docker/... \
             //genrules/... \
@@ -70,6 +72,3 @@ jobs:
             //perl/... \
             //python/... \
             //swift/...
-
-      - name: Testing //swift directory
-        run: bazel test --config=clang //swift:tests

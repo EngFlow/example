@@ -4,7 +4,7 @@ load("@rules_cc//cc:defs.bzl", "cc_toolchain", "cc_toolchain_suite")
 package(default_visibility = ["//visibility:public"])
 
 platform(
-    name = "linux_amd64",
+    name = "linux_x64",
     constraint_values = [
         "@platforms//os:linux",
         "@platforms//cpu:x86_64",
