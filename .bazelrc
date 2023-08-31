@@ -73,22 +73,22 @@ build:remote_windows_x64 --host_compiler=clang
 # Options for private EngFlow clusters.
 # To use on your own cluster, change the URLs to your own endpoint.
 build:opal --config=engflow_common
+build:opal --config=opal_bes
+build:opal --config=opal_auth
 build:opal --remote_executor=grpcs://opal.cluster.engflow.com
-build:opal --bes_backend=grpcs://opal.cluster.engflow.com
-build:opal --bes_lifecycle_events
-build:opal --bes_results_url=https://opal.cluster.engflow.com/invocation/
 
-build:magnesite --config=engflow_common
-build:magnesite --remote_executor=grpcs://magnesite.cluster.engflow.com
-build:magnesite --bes_backend=grpcs://magnesite.cluster.engflow.com
-build:magnesite --bes_lifecycle_events
-build:magnesite --bes_results_url=https://oss-cluster.engflow.com/invocation/
+build:opal_bes --bes_backend=grpcs://opal.cluster.engflow.com
+build:opal_bes --bes_lifecycle_events
+build:opal_bes --bes_results_url=https://opal.cluster.engflow.com/invocation/
 
 # To authenticate with the clusters above, create a .bazelrc.user file.
 # This file is not checked into Git because it refers to local file system paths.
 #
 # It must contain (for example):
 #
-#     build:opal --tls_client_certificate=/home/example/.engflow/opal/engflow.crt
-#     build:opal --tls_client_key=/home/example/.engflow/opal/engflow.key
+#     build:opal_auth --tls_client_certificate=/home/example/.engflow/opal/engflow.crt
+#     build:opal_auth --tls_client_key=/home/example/.engflow/opal/engflow.key
+#
+# You can obtain an mTLS certificate by visiting the cluster's "Getting Started"
+# page, after logging in.
 try-import .bazelrc.user

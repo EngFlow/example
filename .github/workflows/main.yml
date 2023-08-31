@@ -38,12 +38,28 @@ jobs:
             os_distribution: debian
             os_version: 11
             revision: 9d1b5ce956bea2e76b0bc4525ed6c59b5777f4bc
+            remote_execution: 'false'
+
+          - os: linux
+            arch: x64
+            os_distribution: debian
+            os_version: 11
+            revision: 9d1b5ce956bea2e76b0bc4525ed6c59b5777f4bc
+            remote_execution: 'true'
 
           - os: macos
             arch: x64
             os_distribution: monterey
             os_version: "12"
             revision: 9d1b5ce956bea2e76b0bc4525ed6c59b5777f4bc
+            remote_execution: 'false'
+
+          - os: macos
+            arch: x64
+            os_distribution: monterey
+            os_version: "12"
+            revision: 9d1b5ce956bea2e76b0bc4525ed6c59b5777f4bc
+            remote_execution: 'true'
 
           # TODO
           # - os: windows
@@ -55,21 +71,9 @@ jobs:
     steps:
       - uses: actions/checkout@v3
 
-      - name: Local build and test
-        run: |
-          bazel test \
-            --config=ci \
-            --platforms=//platform/${{matrix.os}}_${{matrix.arch}} \
-            -- \
-            //cpp/... \
-            //docker/... \
-            //genrules/... \
-            //go/... \
-            //java/... \
-            //kotlin/... \
-            //scala/... \
-            //typescript/... \
-            //csharp/... \
-            //perl/... \
-            //python/... \
-            //swift/...
+      - name: Build and test
+        env:
+          ARCH: ${{ matrix.arch }}
+          OS: ${{ matrix.os }}
+          REMOTE_EXECUTION: ${{ matrix.remote_execution }}
+        run: python test-all.py
