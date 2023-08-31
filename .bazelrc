@@ -1,4 +1,9 @@
 build --enable_platform_specific_config
+
+# Strongly recommended for any remote builds. Safe to enable for any build.
+build --grpc_keepalive_time=30s
+build --nolegacy_important_outputs
+
 # Options common for all EngFlow remote configurations.
 build:engflow_common --jobs=8
 build:engflow_common --define=EXECUTOR=remote
