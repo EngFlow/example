@@ -11,6 +11,17 @@ build:engflow_common --java_runtime_version=remotejdk_11
 build:engflow_common --java_language_version=11
 build:engflow_common --remote_download_toplevel
 
+# Options for continuous testing.
+build:ci --color=yes
+build:ci --curses=yes
+build:ci --show_timestamps
+build:ci --announce_rc
+build:ci --test_output=summary
+build:ci --show_progress_rate_limit=2.0
+build:ci --nobuild_runfile_links
+build:ci --keep_going
+
+# Additional clang toolchain options for automatically configured toolchains.
 build:clang --cxxopt="-std=c++14"
 build:clang --host_cxxopt="-std=c++14"
 build:clang --cxxopt="-fno-exceptions"
@@ -28,35 +39,36 @@ build:clang --cxxopt="-Werror=sign-compare"
 build:clang --host_copt="-Werror=sign-compare"
 build:clang --host_cxxopt="-Werror=sign-compare"
 
-build:remote_linux_amd64 --extra_execution_platforms=//platform/linux_amd64
-build:remote_linux_amd64 --host_platform=//platform/linux_amd64
-build:remote_linux_amd64 --platforms=//platform/linux_amd64
-build:remote_linux_amd64 --crosstool_top=//platform/linux_amd64:toolchain
-build:remote_linux_amd64 --host_crosstool_top=//platform/linux_amd64:toolchain
-build:remote_linux_amd64 --cpu=k8
-build:remote_linux_amd64 --host_cpu=k8
-build:remote_linux_amd64 --compiler=clang
-build:remote_linux_amd64 --host_compiler=clang
+# Platform-specific options for each supported platform.
+build:remote_linux_x64 --extra_execution_platforms=//platform/linux_x64
+build:remote_linux_x64 --host_platform=//platform/linux_x64
+build:remote_linux_x64 --platforms=//platform/linux_x64
+build:remote_linux_x64 --crosstool_top=//platform/linux_x64:toolchain
+build:remote_linux_x64 --host_crosstool_top=//platform/linux_x64:toolchain
+build:remote_linux_x64 --cpu=k8
+build:remote_linux_x64 --host_cpu=k8
+build:remote_linux_x64 --compiler=clang
+build:remote_linux_x64 --host_compiler=clang
 
-build:remote_macos_amd64 --config=clang
-build:remote_macos_amd64 --host_platform=//platform/macos_amd64
-build:remote_macos_amd64 --platforms=//platform/macos_amd64
-build:remote_macos_amd64 --macos_minimum_os=12
-build:remote_macos_amd64 --action_env=BAZEL_DO_NOT_DETECT_CPP_TOOLCHAIN=1
-build:remote_macos_amd64 --host_action_env=BAZEL_DO_NOT_DETECT_CPP_TOOLCHAIN=1
-build:remote_macos_amd64 --apple_crosstool_top=@local_config_apple_cc//:toolchain
-build:remote_macos_amd64 --crosstool_top=@local_config_apple_cc//:toolchain
-build:remote_macos_amd64 --host_crosstool_top=@local_config_apple_cc//:toolchain
+build:remote_macos_x64 --config=clang
+build:remote_macos_x64 --host_platform=//platform/macos_x64
+build:remote_macos_x64 --platforms=//platform/macos_x64
+build:remote_macos_x64 --macos_minimum_os=12
+build:remote_macos_x64 --action_env=BAZEL_DO_NOT_DETECT_CPP_TOOLCHAIN=1
+build:remote_macos_x64 --host_action_env=BAZEL_DO_NOT_DETECT_CPP_TOOLCHAIN=1
+build:remote_macos_x64 --apple_crosstool_top=@local_config_apple_cc//:toolchain
+build:remote_macos_x64 --crosstool_top=@local_config_apple_cc//:toolchain
+build:remote_macos_x64 --host_crosstool_top=@local_config_apple_cc//:toolchain
 
-build:remote_windows_amd64 --extra_execution_platforms=//platform/windows_amd64
-build:remote_windows_amd64 --host_platform=//platform/windows_amd64
-build:remote_windows_amd64 --platforms=//platform/windows_amd64
-build:remote_windows_amd64 --crosstool_top=//platform/windows_amd64:toolchain
-build:remote_windows_amd64 --host_crosstool_top=//platform/windows_amd64:toolchain
-build:remote_windows_amd64 --cpu=x64_windows
-build:remote_windows_amd64 --host_cpu=x64_windows
-build:remote_windows_amd64 --compiler=clang
-build:remote_windows_amd64 --host_compiler=clang
+build:remote_windows_x64 --extra_execution_platforms=//platform/windows_x64
+build:remote_windows_x64 --host_platform=//platform/windows_x64
+build:remote_windows_x64 --platforms=//platform/windows_x64
+build:remote_windows_x64 --crosstool_top=//platform/windows_x64:toolchain
+build:remote_windows_x64 --host_crosstool_top=//platform/windows_x64:toolchain
+build:remote_windows_x64 --cpu=x64_windows
+build:remote_windows_x64 --host_cpu=x64_windows
+build:remote_windows_x64 --compiler=clang
+build:remote_windows_x64 --host_compiler=clang
 
 # Options for private EngFlow clusters.
 # To use on your own cluster, change the URLs to your own endpoint.
