@@ -1,45 +1,75 @@
-build --enable_platform_specific_config
 # Options common for all EngFlow remote configurations.
-build:engflow_common --jobs=8
+build:engflow_common --jobs=100
 build:engflow_common --define=EXECUTOR=remote
 build:engflow_common --disk_cache=
 build:engflow_common --experimental_inmemory_dotd_files
 build:engflow_common --experimental_inmemory_jdeps_files
 build:engflow_common --incompatible_strict_action_env=true
 build:engflow_common --remote_timeout=3600
-
 build:engflow_common --action_env=BAZEL_DO_NOT_DETECT_CPP_TOOLCHAIN=1
 build:engflow_common --java_runtime_version=remotejdk_11
 build:engflow_common --java_language_version=11
+build:engflow_common --remote_download_toplevel
 
-build:macos --platforms @io_bazel_rules_dotnet//dotnet/toolchain:darwin_amd64_3.1.100
-build:macos --platforms @io_bazel_rules_dotnet//dotnet/toolchain:darwin_arm64_6.0.101
-build:linux --platforms @io_bazel_rules_dotnet//dotnet/toolchain:linux_amd64_3.1.100
+# Options for continuous testing.
+build:ci --color=yes
+build:ci --curses=yes
+build:ci --show_timestamps
+build:ci --announce_rc
+build:ci --test_output=summary
+build:ci --show_progress_rate_limit=2.0
+build:ci --nobuild_runfile_links
+build:ci --keep_going
 
-build:macos --macos_minimum_os=12
+# Additional clang toolchain options for automatically configured toolchains.
+build:clang --cxxopt="-std=c++14"
+build:clang --host_cxxopt="-std=c++14"
+build:clang --cxxopt="-fno-exceptions"
+build:clang --host_cxxopt="-fno-exceptions"
+build:clang --cxxopt="-fvisibility=hidden"
+build:clang --host_cxxopt="-fvisibility=hidden"
 
-build:clang --client_env=CC=clang
+# Platform-specific options for each supported platform.
+build:remote_linux_x64 --extra_execution_platforms=//platform/linux_x64
+build:remote_linux_x64 --host_platform=//platform/linux_x64
+build:remote_linux_x64 --platforms=//platform/linux_x64
+build:remote_linux_x64 --crosstool_top=//platform/linux_x64:toolchain
+build:remote_linux_x64 --host_crosstool_top=//platform/linux_x64:toolchain
+build:remote_linux_x64 --cpu=k8
+build:remote_linux_x64 --host_cpu=k8
+build:remote_linux_x64 --compiler=clang
+build:remote_linux_x64 --host_compiler=clang
 
-build:without_bytes --experimental_remote_download_outputs=minimal
+build:remote_macos_x64 --config=clang
+build:remote_macos_x64 --host_platform=//platform/macos_x64
+build:remote_macos_x64 --platforms=//platform/macos_x64
+build:remote_macos_x64 --macos_minimum_os=12
+build:remote_macos_x64 --action_env=BAZEL_DO_NOT_DETECT_CPP_TOOLCHAIN=1
+build:remote_macos_x64 --host_action_env=BAZEL_DO_NOT_DETECT_CPP_TOOLCHAIN=1
+build:remote_macos_x64 --apple_crosstool_top=@local_config_apple_cc//:toolchain
+build:remote_macos_x64 --crosstool_top=@local_config_apple_cc//:toolchain
+build:remote_macos_x64 --host_crosstool_top=@local_config_apple_cc//:toolchain
 
-# Options for a private EngFlow cluster.
-# - Change "10.0.0.10:8080" to the actual cluster IP and port.
-# - You'll also need to set flags for your authentication method.
-#   For example, if your cluster uses mTLS authentication, you could add
-#   the flags below (with correct paths), either here or in ~/.bazelrc:
-# build:engflow --tls_client_certificate=/path/to/client.crt
-# build:engflow --tls_client_key=/path/to/client.key
-build:engflow --config=engflow_common
-build:engflow --remote_executor=grpcs://10.0.0.10:8080
-build:engflow --bes_backend=grpcs://10.0.0.10:8080
-build:engflow --bes_lifecycle_events
-build:engflow --bes_results_url=https://10.0.0.10:8080/invocation/
+# Options for private EngFlow clusters.
+# To use on your own cluster, change the URLs to your own endpoint.
+build:opal --config=engflow_common
+build:opal --config=opal_bes
+build:opal --config=opal_auth
+build:opal --remote_executor=grpcs://opal.cluster.engflow.com
 
-# Options for the open source cluster.
-build:engflow_oss --config=engflow_common
-build:engflow_oss --remote_executor=grpcs://oss-cluster.engflow.com
-build:engflow_oss --bes_backend=grpcs://oss-cluster.engflow.com
-build:engflow_oss --bes_lifecycle_events
-build:engflow_oss --bes_results_url=https://oss-cluster.engflow.com/invocation/
+build:opal_bes --config=opal_auth
+build:opal_bes --bes_backend=grpcs://opal.cluster.engflow.com
+build:opal_bes --bes_lifecycle_events
+build:opal_bes --bes_results_url=https://opal.cluster.engflow.com/invocation/
 
+# To authenticate with the clusters above, create a .bazelrc.user file.
+# This file is not checked into Git because it refers to local file system paths.
+#
+# It could contain (for example for mTLS authentication):
+#
+#     build:opal_auth --tls_client_certificate=/home/example/.engflow/opal/engflow.crt
+#     build:opal_auth --tls_client_key=/home/example/.engflow/opal/engflow.key
+#
+# You can obtain an mTLS certificate by visiting the cluster's "Getting Started"
+# page, after logging in.
 try-import .bazelrc.user
