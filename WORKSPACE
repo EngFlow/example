@@ -47,7 +47,7 @@ http_archive(
     urls = [
         "https://github.com/EngFlow/engflowapis/archive/8560252302582b7d5b5b880d8d0b38d52400473e.zip",
     ],
-) 
+)
 
 http_archive(
     name = "io_grpc_grpc_java",
