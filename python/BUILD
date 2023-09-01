@@ -34,6 +34,7 @@ pytest_test(
     name = "hello_pytest_test",
     srcs = ["hello_pytest_test.py"],
     shard_count = 2,
+    tags = ["no-remote-exec"],
     deps = [":hello"],
 )
 
