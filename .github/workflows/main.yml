@@ -39,12 +39,26 @@ jobs:
             revision: 9d1b5ce956bea2e76b0bc4525ed6c59b5777f4bc
             remote_execution: 'false'
 
+          - os: linux
+            arch: x64
+            os_distribution: debian
+            os_version: 11
+            revision: 9d1b5ce956bea2e76b0bc4525ed6c59b5777f4bc
+            remote_execution: 'true'
+
           - os: macos
             arch: x64
             os_distribution: monterey
             os_version: "12"
             revision: 9d1b5ce956bea2e76b0bc4525ed6c59b5777f4bc
             remote_execution: 'false'
+
+          - os: macos
+            arch: x64
+            os_distribution: monterey
+            os_version: "12"
+            revision: 9d1b5ce956bea2e76b0bc4525ed6c59b5777f4bc
+            remote_execution: 'true'
 
     steps:
       - uses: actions/checkout@v3
