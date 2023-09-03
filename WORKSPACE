@@ -270,10 +270,20 @@ http_archive(
     url = "https://github.com/bazelbuild/rules_python/archive/refs/tags/0.25.0.tar.gz",
 )
 
+load("@rules_python//python:repositories.bzl", "python_register_toolchains")
+
+python_register_toolchains(
+    name = "python_3_10",
+    python_version = "3.10.8",
+)
+
+load("@python_3_10//:defs.bzl", python_3_10 = "interpreter")
+
 load("@rules_python//python:pip.bzl", "pip_parse")
 
 pip_parse(
     name = "pip_deps",
+    python_interpreter_target = python_3_10,
     requirements_lock = "//python:requirements_lock.txt",
 )
 
