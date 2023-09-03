@@ -16,8 +16,6 @@ def main():
         flags += [
             "--config=remote_" + os_arch,
             "--config=opal",
-            "--build_tag_filters=-todo-pe1188-remote-incompatible",
-            "--test_tag_filters=-todo-pe1188-remote-incompatible",
         ]
     else:
         flags += [
