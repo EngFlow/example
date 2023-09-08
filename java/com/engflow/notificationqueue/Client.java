@@ -1,14 +1,14 @@
 package com.engflow.notificationqueue;
 
-import com.engflow.eventstore.v1.BuildLifecycleEventNotification;
-import com.engflow.eventstore.v1.EventStoreGrpc;
-import com.engflow.eventstore.v1.GetInvocationRequest;
-import com.engflow.eventstore.v1.StreamedBuildEvent;
-import com.engflow.notification.v1.Notification;
-import com.engflow.notification.v1.NotificationQueueGrpc;
-import com.engflow.notification.v1.PullNotificationRequest;
-import com.engflow.notification.v1.PullNotificationResponse;
-import com.engflow.notification.v1.QueueId;
+import com.engflow.eventstore.v1.proto.BuildLifecycleEventNotification;
+import com.engflow.eventstore.v1.proto.EventStoreGrpc;
+import com.engflow.eventstore.v1.proto.GetInvocationRequest;
+import com.engflow.eventstore.v1.proto.StreamedBuildEvent;
+import com.engflow.notification.v1.proto.Notification;
+import com.engflow.notification.v1.proto.NotificationQueueGrpc;
+import com.engflow.notification.v1.proto.PullNotificationRequest;
+import com.engflow.notification.v1.proto.PullNotificationResponse;
+import com.engflow.notification.v1.proto.QueueId;
 import com.engflow.notificationqueue.demoserver.EngFlowRequest;
 import com.engflow.notificationqueue.demoserver.EngFlowResponse;
 import com.engflow.notificationqueue.demoserver.ForwardingGrpc;
