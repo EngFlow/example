@@ -1,7 +1,12 @@
 workspace(name = "example")
 
-load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_file")
-load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
+load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive", "http_file")
+
+http_archive(
+    name = "build_bazel_apple_support",
+    sha256 = "45d6bbad5316c9c300878bf7fffc4ffde13d620484c9184708c917e20b8b63ff",
+    url = "https://storage.googleapis.com/engflow-tools-public/github.com/bazelbuild/apple_support/releases/download/1.8.1/apple_support.1.8.1.tar.gz",
+)
 
 # Some file dependencies
 http_file(
@@ -38,7 +43,7 @@ http_archive(
     urls = [
         "https://github.com/googleapis/googleapis/archive/25f99371444ea7fd0dc1523ca6925e91cc48a664.tar.gz",
     ],
-) 
+)
 
 http_archive(
     name = "com_engflow_engflowapis",
@@ -56,7 +61,7 @@ http_archive(
     urls = [
         "https://github.com/grpc/grpc-java/archive/refs/tags/v1.57.0.zip",
     ],
-) 
+)
 
 http_archive(
     name = "io_bazel_rules_kotlin",
@@ -72,7 +77,7 @@ http_archive(
     urls = [
         "https://github.com/bazelbuild/rules_go/releases/download/v0.41.0/rules_go-v0.41.0.zip",
     ],
-) 
+)
 
 http_archive(
     name = "rules_proto",
@@ -83,6 +88,14 @@ http_archive(
     ],
 )
 
+# Support for macOS remote execution.
+load(
+    "@build_bazel_apple_support//lib:repositories.bzl",
+    "apple_support_dependencies",
+)
+
+apple_support_dependencies()
+
 # Loads rules required to compile proto files
 http_archive(
     name = "rules_proto_grpc",
@@ -91,7 +104,7 @@ http_archive(
     urls = [
         "https://github.com/rules-proto-grpc/rules_proto_grpc/archive/4.4.0.tar.gz",
     ],
-) 
+)
 
 load("@rules_proto_grpc//java:repositories.bzl", rules_proto_grpc_java_repos = "java_repos")
 
@@ -111,7 +124,7 @@ http_archive(
     urls = [
         "https://github.com/protocolbuffers/protobuf/archive/12d4f418a7311ed4d381bf82caead11d03ae7911.tar.gz",
     ],
-) 
+)
 
 load("@com_google_protobuf//:protobuf_deps.bzl", "protobuf_deps")
 
@@ -152,7 +165,7 @@ http_archive(
     urls = [
         "https://github.com/bazelbuild/rules_scala/archive/ce54e00a2406b8401483df61119cf00af8599763.zip",
     ],
-) 
+)
 
 load("@io_bazel_rules_scala//:scala_config.bzl", "scala_config")
 
@@ -193,7 +206,7 @@ http_archive(
     urls = [
         "https://github.com/aspect-build/rules_ts/archive/refs/tags/v1.4.5.tar.gz",
     ],
-) 
+)
 
 load("@aspect_rules_ts//ts:repositories.bzl", "rules_ts_dependencies")
 
@@ -242,7 +255,7 @@ http_archive(
     urls = [
         "https://github.com/bazelbuild/rules_perl/archive/d458b41dd15a086721dcf663317f2c121bba8984.zip",
     ],
-) 
+)
 
 load("@rules_perl//perl:deps.bzl", "perl_register_toolchains", "perl_rules_dependencies")
 
@@ -255,7 +268,7 @@ http_archive(
     sha256 = "5868e73107a8e85d8f323806e60cad7283f34b32163ea6ff1020cf27abef6036",
     strip_prefix = "rules_python-0.25.0",
     url = "https://github.com/bazelbuild/rules_python/archive/refs/tags/0.25.0.tar.gz",
-) 
+)
 
 load("@rules_python//python:pip.bzl", "pip_parse")
 
