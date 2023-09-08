@@ -5,64 +5,61 @@ on:
     branches:
       - "main"
   pull_request:
-    branches:
-      - "main"
+
+# Cancel pending jobs on push.
+# https://docs.github.com/en/actions/using-workflows/workflow-syntax-for-github-actions#example-using-concurrency-to-cancel-any-in-progress-job-or-run
+concurrency:
+  group: ${{ github.workflow }}.${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 # Recommended here: https://github.com/bazelbuild/bazelisk/issues/88#issuecomment-625178467
 env:
   BAZELISK_GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
   GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+  OPAL_RPC_CREDENTIALS: ${{ secrets.OPAL_RPC_CREDENTIALS }}
 
 jobs:
   test-matrix:
-    runs-on: ${{ matrix.os }}
+    runs-on:
+      - self-hosted
+      - "os=${{ matrix.os }}"
+      - "arch=${{ matrix.arch }}"
+      - "os_distribution=${{ matrix.os_distribution }}"
+      - "os_version=${{ matrix.os_version }}"
+      - "revision=${{ matrix.revision }}"
+    timeout-minutes: 10
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-22.04, macos-12]
+        include:
+          - os: linux
+            arch: x64
+            os_distribution: debian
+            os_version: 11
+            revision: 9d1b5ce956bea2e76b0bc4525ed6c59b5777f4bc
+            remote_execution: 'false'
+
+          - os: macos
+            arch: x64
+            os_distribution: monterey
+            os_version: "12"
+            revision: 9d1b5ce956bea2e76b0bc4525ed6c59b5777f4bc
+            remote_execution: 'false'
+
     steps:
       - uses: actions/checkout@v3
 
-      - name: Building //cpp directory
-        run: bazel build //cpp/...
+      - name: Set up authentication
+        shell: bash
+        run: cp infra/bazelrc .bazelrc.user
 
-      - name: Building //docker directory
-        run: bazel build //docker/...
+      - name: Generate python requirements lock
+        shell: bash
+        run: bazel run //python:requirements.update
 
-      - name: Building //genrules directory
-        run: bazel build //genrules/...
-
-      - name: Building //go directory
-        run: bazel build //go/...
-
-      - name: Testing //java directory
-        run: bazel test //java/...
-
-      - name: Building //kotlin directory
-        run: bazel build //kotlin/...
-
-      - name: Testing //scala directory
-        run: |
-          bazel test //scala/...
-
-      - name: Testing //typescript directory
-        run: |
-          bazel test //typescript/...
-
-      # TODO(PE-1127): disabled briefly, fixed in #226.
-      # - name: Building //csharp directory
-      #   run: bazel build //csharp/...
-
-      - name: Building //perl directory
-        run: bazel build //perl/...
-
-      - name: Testing //python directory
-        run: |
-          bazel run //python:requirements.update
-          bazel test //python/...
-
-      - uses: swift-actions/setup-swift@v1
-        if: matrix.os == 'ubuntu-22.04'
-
-      - name: Testing //swift directory
-        run: bazel test --config=clang //swift:tests
+      - name: Build and test
+        env:
+          ARCH: ${{ matrix.arch }}
+          OS: ${{ matrix.os }}
+          REMOTE_EXECUTION: ${{ matrix.remote_execution }}
+        run: python3 infra/test-all.py
