@@ -6,18 +6,18 @@ java_proto_library(
     name = "engflowapis_java_proto",
     visibility = ["//visibility:public"],
     deps = [
-        "@com_engflow_engflowapis//engflow/eventstore/v1:build_event_proto",
-        "@com_engflow_engflowapis//engflow/eventstore/v1:eventstore_proto",
-        "@com_engflow_engflowapis//engflow/eventstore/v1:notifications_proto",
-        "@com_engflow_engflowapis//engflow/notification/v1:notification_proto",
-        "@com_engflow_engflowapis//engflow/notification/v1:notification_queue_proto",
+        "@com_engflow_engflowapis//engflow/eventstore/v1:build_event",
+        "@com_engflow_engflowapis//engflow/eventstore/v1:eventstore",
+        "@com_engflow_engflowapis//engflow/eventstore/v1:notifications",
+        "@com_engflow_engflowapis//engflow/notification/v1:notification",
+        "@com_engflow_engflowapis//engflow/notification/v1:notification_queue",
     ],
 )
 
 java_grpc_library(
     name = "notification_queue_java_grpc",
     srcs = [
-        "@com_engflow_engflowapis//engflow/notification/v1:notification_queue_proto",
+        "@com_engflow_engflowapis//engflow/notification/v1:notification_queue",
     ],
     deps = [
         ":engflowapis_java_proto",
@@ -27,7 +27,7 @@ java_grpc_library(
 java_grpc_library(
     name = "eventstore_java_grpc",
     srcs = [
-        "@com_engflow_engflowapis//engflow/eventstore/v1:eventstore_proto",
+        "@com_engflow_engflowapis//engflow/eventstore/v1:eventstore",
     ],
     deps = [
         ":engflowapis_java_proto",
