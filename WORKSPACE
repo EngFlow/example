@@ -258,10 +258,10 @@ dotnet_repositories_nugets()
 
 http_archive(
     name = "rules_perl",
-    sha256 = "d8ca5b2aacf91e1eacc3c6b90e833efa8537ece7c746aa9ccfbab1fc354abbb4",
-    strip_prefix = "rules_perl-d458b41dd15a086721dcf663317f2c121bba8984",
+    sha256 = "f1450b5e76ecb81340e2ff50f83b066bebb1fa78dd78bf5d7ece4f3d6d82b5be",
+    strip_prefix = "rules_perl-366b6aa76b12056a9e0cc23364686f25dcc41702",
     urls = [
-        "https://github.com/bazelbuild/rules_perl/archive/d458b41dd15a086721dcf663317f2c121bba8984.zip",
+        "https://github.com/bazelbuild/rules_perl/archive/366b6aa76b12056a9e0cc23364686f25dcc41702.zip",
     ],
 )
 
