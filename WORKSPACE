@@ -297,7 +297,7 @@ http_archive(
     sha256 = "2ab7ce101db02d7a1de48f8157cbd978f00a19bad44828fd213aa69fe352497d",
     strip_prefix = "abseil-py-2.0.0",
     url = "https://github.com/abseil/abseil-py/archive/refs/tags/v2.0.0.tar.gz",
-)
+) 
 
 http_archive(
     name = "build_bazel_rules_swift",
