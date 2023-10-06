@@ -112,7 +112,7 @@ http_archive(
     urls = [
         "https://github.com/rules-proto-grpc/rules_proto_grpc/archive/4.5.0.tar.gz",
     ],
-)
+) 
 
 load("@rules_proto_grpc//java:repositories.bzl", rules_proto_grpc_java_repos = "java_repos")
 
