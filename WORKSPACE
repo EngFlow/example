@@ -107,12 +107,12 @@ apple_support_dependencies()
 # Loads rules required to compile proto files
 http_archive(
     name = "rules_proto_grpc",
-    sha256 = "b244cbede34638ad0e1aec0769f62b8348c7ed71f431a027e252a07d6adba3d6",
-    strip_prefix = "rules_proto_grpc-4.4.0",
+    sha256 = "f87d885ebfd6a1bdf02b4c4ba5bf6fb333f90d54561e4d520a8413c8d1fb7beb",
+    strip_prefix = "rules_proto_grpc-4.5.0",
     urls = [
-        "https://github.com/rules-proto-grpc/rules_proto_grpc/archive/4.4.0.tar.gz",
+        "https://github.com/rules-proto-grpc/rules_proto_grpc/archive/4.5.0.tar.gz",
     ],
-)
+) 
 
 load("@rules_proto_grpc//java:repositories.bzl", rules_proto_grpc_java_repos = "java_repos")
 
