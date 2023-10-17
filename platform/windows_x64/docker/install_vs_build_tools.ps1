@@ -1,9 +1,10 @@
-$ErrorActionPreference="stop"
+$ErrorActionPreference = "Stop"
 if ($env:SCRIPT_DEBUG -ne "") {
-  $VerbosePreference="continue"
+  $VerbosePreference = "continue"
 }
+$InformationPreference = "Continue"
 # Don't show download progress because invoke-webrequest is slowed down by that. https://stackoverflow.com/a/43477248
-$global:ProgressPreference="SilentlyContinue"
+$global:ProgressPreference = "SilentlyContinue"
 
 Write-Verbose "Installing VS Buildtools (needed for Bazel)..."
 Invoke-WebRequest -Uri "https://storage.googleapis.com/engflow-tools-public/vs_buildtools__859897378.1616711895.exe" -OutFile "c:/vs_buildtools__859897378.1616711895.exe"
