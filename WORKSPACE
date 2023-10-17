@@ -51,7 +51,7 @@ http_archive(
     urls = [
         "https://github.com/googleapis/googleapis/archive/522f79ca64f61da52731d51f7ead8696a2a3c61a.tar.gz",
     ],
-) 
+)
 
 http_archive(
     name = "com_engflow_engflowapis",
@@ -60,7 +60,7 @@ http_archive(
     urls = [
         "https://github.com/EngFlow/engflowapis/archive/0300f7885c4404d26ff494a329a5f2a3fcf67342.zip",
     ],
-) 
+)
 
 http_archive(
     name = "io_grpc_grpc_java",
@@ -77,7 +77,7 @@ http_archive(
     urls = [
         "https://github.com/bazelbuild/rules_kotlin/releases/download/v1.8.1/rules_kotlin_release.tgz",
     ],
-) 
+)
 
 http_archive(
     name = "io_bazel_rules_go",
@@ -85,7 +85,16 @@ http_archive(
     urls = [
         "https://github.com/bazelbuild/rules_go/releases/download/v0.42.0/rules_go-v0.42.0.zip",
     ],
-) 
+)
+
+http_archive(
+    name = "bazel_gazelle",
+    sha256 = "d3fa66a39028e97d76f9e2db8f1b0c11c099e8e01bf363a923074784e451f809",
+    urls = [
+        "https://mirror.bazel.build/github.com/bazelbuild/bazel-gazelle/releases/download/v0.33.0/bazel-gazelle-v0.33.0.tar.gz",
+        "https://github.com/bazelbuild/bazel-gazelle/releases/download/v0.33.0/bazel-gazelle-v0.33.0.tar.gz",
+    ],
+)
 
 http_archive(
     name = "rules_proto",
@@ -112,7 +121,7 @@ http_archive(
     urls = [
         "https://github.com/rules-proto-grpc/rules_proto_grpc/archive/4.5.0.tar.gz",
     ],
-) 
+)
 
 load("@rules_proto_grpc//java:repositories.bzl", rules_proto_grpc_java_repos = "java_repos")
 
@@ -132,7 +141,7 @@ http_archive(
     urls = [
         "https://github.com/protocolbuffers/protobuf/archive/376ba2f8bc5273e3c461f39a73bcc6504d70e2f4.tar.gz",
     ],
-) 
+)
 
 load("@com_google_protobuf//:protobuf_deps.bzl", "protobuf_deps")
 
@@ -194,10 +203,17 @@ scalatest_repositories()
 scalatest_toolchain()
 
 load("@io_bazel_rules_go//go:deps.bzl", "go_register_toolchains", "go_rules_dependencies")
+load("@bazel_gazelle//:deps.bzl", "gazelle_dependencies")
+load(":deps.bzl", "go_dependencies")
+
+# gazelle:repository_macro deps.bzl%go_dependencies
+go_dependencies()
 
 go_rules_dependencies()
 
-go_register_toolchains(version = "1.20.5")
+go_register_toolchains(version = "1.21.2")
+
+gazelle_dependencies()
 
 load("@io_bazel_rules_kotlin//kotlin:repositories.bzl", "kotlin_repositories")
 
@@ -263,7 +279,7 @@ http_archive(
     urls = [
         "https://github.com/bazelbuild/rules_perl/archive/366b6aa76b12056a9e0cc23364686f25dcc41702.zip",
     ],
-) 
+)
 
 load("@rules_perl//perl:deps.bzl", "perl_register_toolchains", "perl_rules_dependencies")
 
@@ -297,7 +313,7 @@ http_archive(
     sha256 = "2ab7ce101db02d7a1de48f8157cbd978f00a19bad44828fd213aa69fe352497d",
     strip_prefix = "abseil-py-2.0.0",
     url = "https://github.com/abseil/abseil-py/archive/refs/tags/v2.0.0.tar.gz",
-) 
+)
 
 http_archive(
     name = "build_bazel_rules_swift",
