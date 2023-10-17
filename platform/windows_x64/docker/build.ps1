@@ -7,15 +7,15 @@ $global:ProgressPreference = "SilentlyContinue"
 Set-StrictMode -Version latest
 
 # This script builds a Docker container image for EngFlow workers.
-# It contains everything needed byremote actions in our repository.
+# It contains everything needed by remote actions in our repository.
 # Nearly all of the logic is in either Dockerfile or a handful of
-# scripts it calls that are shared with other Packer builds. This script
+# scripts it calls that are shared with other image builds. This script
 # just puts Dockerfile together with those scripts in a temporary directory,
 # then invokes 'docker build'.
 
 # Verify that this script was run from the repository root.
-if (-not (Test-Path "platform/windows_x64/docker/build.ps1")) {
-  Write-Error "Run this script from the engflow repository root directory."
+if (-not (Test-Path "platform/windows_x64/docker/build.ps1" -Type Leaf) -or -not (Test-Path "WORKSPACE" -Type Leaf)) {
+  Write-Error "Run this script from the repository root directory."
 }
 
 # Create a temporary directory and copy files there.
@@ -56,7 +56,7 @@ Copy-Item 'bazel-bin/infra/msvc_filter_showincludes/msvc_filter_showincludes_/ms
 Write-Verbose "Building docker image..."
 Set-Location $buildDir
 docker build `
-  --tag engflow_worker `
+  --tag engflow-container-image `
   --memory '4GB' `
   .
 Set-Location $repoRootDir
