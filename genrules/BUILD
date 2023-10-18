@@ -21,7 +21,8 @@ UPPER_BOUND = 10
 [genrule(
     name = "foo_TXT_4KB_" + str(x),
     outs = ["foo_text" + str(x) + ".txt"],
-    cmd = "echo 'Hello engflow world' > $@",
+    cmd_bash = "echo 'Hello engflow world from bash' > $@",
+    cmd_ps = "Set-Content -Path $@ -Value 'Hello engflow world from powershell'",
 ) for x in range(1, UPPER_BOUND)]
 
 # Explicitlt specify the following target if
