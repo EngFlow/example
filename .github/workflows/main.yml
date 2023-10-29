@@ -38,28 +38,28 @@ jobs:
             arch: x64
             os_distribution: debian
             os_version: 11
-            revision: 97fc167a8b71a10065fd219e77c0742e85423c4a
+            revision: baea3aba770c2d5784bafb1b9279942f1c3e7aad
             remote_execution: 'false'
 
           - os: linux
             arch: x64
             os_distribution: debian
             os_version: 11
-            revision: 97fc167a8b71a10065fd219e77c0742e85423c4a
+            revision: baea3aba770c2d5784bafb1b9279942f1c3e7aad
             remote_execution: 'true'
 
           - os: macos
             arch: x64
             os_distribution: monterey
             os_version: "12"
-            revision: 97fc167a8b71a10065fd219e77c0742e85423c4a
+            revision: baea3aba770c2d5784bafb1b9279942f1c3e7aad
             remote_execution: 'false'
 
           - os: macos
             arch: x64
             os_distribution: monterey
             os_version: "12"
-            revision: 97fc167a8b71a10065fd219e77c0742e85423c4a
+            revision: baea3aba770c2d5784bafb1b9279942f1c3e7aad
             remote_execution: 'true'
 
     steps:
