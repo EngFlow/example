@@ -77,7 +77,7 @@ http_archive(
     urls = [
         "https://github.com/bazelbuild/rules_kotlin/releases/download/v1.9.0/rules_kotlin_release.tgz",
     ],
-)
+) 
 
 http_archive(
     name = "io_bazel_rules_go",
