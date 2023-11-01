@@ -8,7 +8,7 @@ http_archive(
     sha256 = "9d04041ac92a0985e344235f5d946f71ac543f1b1565f2cdbc9a2aaee8adf55b",
     strip_prefix = "rules_python-0.26.0",
     url = "https://github.com/bazelbuild/rules_python/archive/refs/tags/0.26.0.tar.gz",
-)
+) 
 
 http_archive(
     name = "build_bazel_apple_support",
