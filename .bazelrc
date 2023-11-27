@@ -50,17 +50,55 @@ build:remote_macos_x64 --apple_crosstool_top=@local_config_apple_cc//:toolchain
 build:remote_macos_x64 --crosstool_top=@local_config_apple_cc//:toolchain
 build:remote_macos_x64 --host_crosstool_top=@local_config_apple_cc//:toolchain
 
-build:remote_windows_x64 --host_platform=//platform/windows_x64
-build:remote_windows_x64 --platforms=//platform/windows_x64
-build:remote_windows_x64 --host_crosstool_top=//platform/windows_x64:toolchain
-build:remote_windows_x64 --crosstool_top=//platform/windows_x64:toolchain
-build:remote_windows_x64 --host_cpu=x64_windows
-build:remote_windows_x64 --cpu=x64_windows
-build:remote_windows_x64 --host_compiler=msvc
-build:remote_windows_x64 --compiler=msvc
-build:remote_windows_x64 --action_env=BAZEL_DO_NOT_DETECT_CPP_TOOLCHAIN=1
-build:remote_windows_x64 --extra_execution_platforms=//platform/windows_x64
-build:remote_windows_x64 --extra_toolchains=//platform/windows_x64:cc-toolchain
+build:remote_windows_x64_msvc --host_platform=//platform/windows_x64:windows_x64_msvc
+build:remote_windows_x64_msvc --platforms=//platform/windows_x64:windows_x64_msvc
+build:remote_windows_x64_msvc --host_crosstool_top=//platform/windows_x64:toolchain
+build:remote_windows_x64_msvc --crosstool_top=//platform/windows_x64:toolchain
+build:remote_windows_x64_msvc --host_cpu=x64_windows
+build:remote_windows_x64_msvc --cpu=x64_windows
+build:remote_windows_x64_msvc --host_compiler=msvc
+build:remote_windows_x64_msvc --compiler=msvc
+build:remote_windows_x64_msvc --action_env=BAZEL_DO_NOT_DETECT_CPP_TOOLCHAIN=1
+build:remote_windows_x64_msvc --extra_execution_platforms=//platform/windows_x64:windows_x64_msvc
+build:remote_windows_x64_msvc --extra_toolchains=//platform/windows_x64:cc-toolchain-x64_windows
+
+build:remote_windows_x64_clang --host_platform=//platform/windows_x64:windows_x64_clang
+build:remote_windows_x64_clang --platforms=//platform/windows_x64:windows_x64_clang
+build:remote_windows_x64_clang --host_crosstool_top=//platform/windows_x64:toolchain
+build:remote_windows_x64_clang --crosstool_top=//platform/windows_x64:toolchain
+build:remote_windows_x64_clang --host_cpu=x64_windows
+build:remote_windows_x64_clang --cpu=x64_windows
+build:remote_windows_x64_clang --host_compiler=clang
+build:remote_windows_x64_clang --compiler=clang
+build:remote_windows_x64_clang --action_env=BAZEL_DO_NOT_DETECT_CPP_TOOLCHAIN=1
+build:remote_windows_x64_clang --extra_execution_platforms=//platform/windows_x64:windows_x64_clang
+build:remote_windows_x64_clang --extra_toolchains=//platform/windows_x64:cc-toolchain-x64_windows-clang-cl
+
+build:remote_windows_x64_msys --host_platform=//platform/windows_x64:windows_x64_msys
+build:remote_windows_x64_msys --platforms=//platform/windows_x64:windows_x64_msys
+build:remote_windows_x64_msys --host_crosstool_top=//platform/windows_x64:toolchain
+build:remote_windows_x64_msys --crosstool_top=//platform/windows_x64:toolchain
+build:remote_windows_x64_msys --host_cpu=x64_windows
+build:remote_windows_x64_msys --cpu=x64_windows
+build:remote_windows_x64_msys --host_compiler=gcc
+build:remote_windows_x64_msys --compiler=gcc
+build:remote_windows_x64_msys --action_env=BAZEL_DO_NOT_DETECT_CPP_TOOLCHAIN=1
+build:remote_windows_x64_msys --extra_execution_platforms=//platform/windows_x64:windows_x64_msys
+build:remote_windows_x64_msys --extra_toolchains=//platform/windows_x64:cc-toolchain-x64_windows_msys
+
+build:remote_windows_x64_mingw_gcc --host_platform=//platform/windows_x64:windows_x64_mingw
+build:remote_windows_x64_mingw_gcc --platforms=//platform/windows_x64:windows_x64_mingw
+build:remote_windows_x64_mingw_gcc --host_crosstool_top=//platform/windows_x64:toolchain
+build:remote_windows_x64_mingw_gcc --crosstool_top=//platform/windows_x64:toolchain
+build:remote_windows_x64_mingw_gcc --host_cpu=x64_windows
+build:remote_windows_x64_mingw_gcc --cpu=x64_windows
+build:remote_windows_x64_mingw_gcc --host_compiler=mingw-gcc
+build:remote_windows_x64_mingw_gcc --compiler=mingw-gcc
+build:remote_windows_x64_mingw_gcc --action_env=BAZEL_DO_NOT_DETECT_CPP_TOOLCHAIN=1
+build:remote_windows_x64_mingw_gcc --extra_execution_platforms=//platform/windows_x64:windows_x64_mingw
+build:remote_windows_x64_mingw_gcc --extra_toolchains=//platform/windows_x64:cc-toolchain-x64_windows_msys
+
+
 
 # Options for private EngFlow clusters.
 # To use on your own cluster, change the URLs to your own endpoint.
@@ -73,6 +111,16 @@ build:opal_bes --config=opal_auth
 build:opal_bes --bes_backend=grpcs://opal.cluster.engflow.com
 build:opal_bes --bes_lifecycle_events
 build:opal_bes --bes_results_url=https://opal.cluster.engflow.com/invocation/
+
+build:magnesite --config=engflow_common
+build:magnesite --config=magnesite_bes
+build:magnesite --config=magnesite_auth
+build:magnesite --remote_executor=grpcs://magnesite.cluster.engflow.com
+
+build:magnesite_bes --config=magnesite_auth
+build:magnesite_bes --bes_backend=grpcs://magnesite.cluster.engflow.com
+build:magnesite_bes --bes_lifecycle_events
+build:magnesite_bes --bes_results_url=https://magnesite.cluster.engflow.com/invocation/
 
 # To authenticate with the clusters above, create a .bazelrc.user file.
 # This file is not checked into Git because it refers to local file system paths.
