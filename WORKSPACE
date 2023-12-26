@@ -136,10 +136,10 @@ rules_proto_toolchains()
 
 http_archive(
     name = "com_google_protobuf",
-    sha256 = "cbe64ec20ae26e2ecb9551f5daa387ae630e2b25b25f664fce471e8a619f6916",
-    strip_prefix = "protobuf-a9bb9c5181d6b20cfe168839eda0c39600ad2bb2",
+    sha256 = "49b229e720917b17c78d35f7bb93b7cf2930343444f2a4cba55b57973d2caa74",
+    strip_prefix = "protobuf-da56def7c2461804d613a522df32799ca7a54f62",
     urls = [
-        "https://github.com/protocolbuffers/protobuf/archive/a9bb9c5181d6b20cfe168839eda0c39600ad2bb2.tar.gz",
+        "https://github.com/protocolbuffers/protobuf/archive/da56def7c2461804d613a522df32799ca7a54f62.tar.gz",
     ],
 )
 
