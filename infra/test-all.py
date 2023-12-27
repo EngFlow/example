@@ -21,6 +21,7 @@ def main():
         flags += [
             "--platforms=//platform/" + os_arch,
             "--config=opal_bes",
+            "--config=opal_auth",
         ]
 
     targets = [
