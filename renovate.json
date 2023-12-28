@@ -17,10 +17,6 @@
   "repositories": [
     "EngFlow/example"
   ],
-  "reviewers": [
-    "anfelbar",
-    "benjaminp"
-  ],
   "prConcurrentLimit": 0,
   "prHourlyLimit": 0
 }
