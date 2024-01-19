@@ -9,8 +9,9 @@ build:engflow_common --remote_timeout=3600
 build:engflow_common --action_env=BAZEL_DO_NOT_DETECT_CPP_TOOLCHAIN=1
 build:engflow_common --java_runtime_version=remotejdk_11
 build:engflow_common --java_language_version=11
-build:engflow_common --grpc_keepalive_timeout=30s
-build:engflow_common --nolegacy_important_outputs
+build:engflow_common --grpc_keepalive_time=30s
+build:engflow_common --legacy_important_outputs=false
+build:engflow_common --remote_download_minimal
 
 # Options for continuous testing.
 build:ci --color=yes
