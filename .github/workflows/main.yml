@@ -62,6 +62,13 @@ jobs:
             revision: d04e89854b3931f4aaced77aa3a2fcad5834b3a6
             remote_execution: 'true'
 
+          - os: windows
+            arch: x64
+            os_distribution: server
+            os_version: "2022"
+            revision: d04e89854b3931f4aaced77aa3a2fcad5834b3a6
+            remote_execution: 'true'
+
     steps:
       - uses: actions/checkout@v3
 
