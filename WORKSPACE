@@ -5,15 +5,24 @@ load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive", "http_file"
 # Place this first so this version prevails.
 http_archive(
     name = "rules_python",
-    sha256 = "5868e73107a8e85d8f323806e60cad7283f34b32163ea6ff1020cf27abef6036",
-    strip_prefix = "rules_python-0.25.0",
-    url = "https://github.com/bazelbuild/rules_python/archive/refs/tags/0.25.0.tar.gz",
+    sha256 = "d71d2c67e0bce986e1c5a7731b4693226867c45bfe0b7c5e0067228a536fc580",
+    strip_prefix = "rules_python-0.29.0",
+    url = "https://github.com/bazelbuild/rules_python/releases/download/0.29.0/rules_python-0.29.0.tar.gz",
+)
+
+http_archive(
+    name = "com_google_protobuf",
+    sha256 = "476b9decae67fcbe2ead3c5b97004fe7029e5c5db63e8712b1dcaf14f02182c6",
+    strip_prefix = "protobuf-0b237199c562dad168d5c992bba8a0d7c9d23e00",
+    urls = [
+        "https://github.com/protocolbuffers/protobuf/archive/0b237199c562dad168d5c992bba8a0d7c9d23e00.tar.gz",
+    ],
 )
 
 http_archive(
     name = "build_bazel_apple_support",
-    sha256 = "45d6bbad5316c9c300878bf7fffc4ffde13d620484c9184708c917e20b8b63ff",
-    url = "https://storage.googleapis.com/engflow-tools-public/github.com/bazelbuild/apple_support/releases/download/1.8.1/apple_support.1.8.1.tar.gz",
+    sha256 = "cf4d63f39c7ba9059f70e995bf5fe1019267d3f77379c2028561a5d7645ef67c",
+    url = "https://github.com/bazelbuild/apple_support/releases/download/1.11.1/apple_support.1.11.1.tar.gz",
 )
 
 # Some file dependencies
@@ -106,6 +115,10 @@ http_archive(
     ],
 )
 
+load("@rules_python//python:repositories.bzl", "py_repositories")
+
+py_repositories()
+
 # Support for macOS remote execution.
 load(
     "@build_bazel_apple_support//lib:repositories.bzl",
@@ -134,15 +147,6 @@ load("@rules_jvm_external//:defs.bzl", "maven_install")
 rules_proto_dependencies()
 
 rules_proto_toolchains()
-
-http_archive(
-    name = "com_google_protobuf",
-    sha256 = "476b9decae67fcbe2ead3c5b97004fe7029e5c5db63e8712b1dcaf14f02182c6",
-    strip_prefix = "protobuf-0b237199c562dad168d5c992bba8a0d7c9d23e00",
-    urls = [
-        "https://github.com/protocolbuffers/protobuf/archive/0b237199c562dad168d5c992bba8a0d7c9d23e00.tar.gz",
-    ],
-)
 
 load("@com_google_protobuf//:protobuf_deps.bzl", "protobuf_deps")
 
@@ -177,12 +181,9 @@ compat_repositories()
 
 http_archive(
     name = "io_bazel_rules_scala",
-    sha256 = "1f425972c97c99fa5325f74483b97f881cfe3f3809dbfd22d332cd82220eb4a2",
-    strip_prefix = "rules_scala-ce54e00a2406b8401483df61119cf00af8599763",
-    type = "zip",
-    urls = [
-        "https://github.com/bazelbuild/rules_scala/archive/ce54e00a2406b8401483df61119cf00af8599763.zip",
-    ],
+    sha256 = "9a23058a36183a556a9ba7229b4f204d3e68c8c6eb7b28260521016b38ef4e00",
+    strip_prefix = "rules_scala-6.4.0",
+    url = "https://github.com/bazelbuild/rules_scala/releases/download/v6.4.0/rules_scala-v6.4.0.tar.gz",
 )
 
 load("@io_bazel_rules_scala//:scala_config.bzl", "scala_config")
@@ -226,21 +227,27 @@ kt_register_toolchains()
 
 http_archive(
     name = "aspect_rules_ts",
-    sha256 = "4c3f34fff9f96ffc9c26635d8235a32a23a6797324486c7d23c1dfa477e8b451",
-    strip_prefix = "rules_ts-1.4.5",
-    urls = [
-        "https://github.com/aspect-build/rules_ts/archive/refs/tags/v1.4.5.tar.gz",
-    ],
+    sha256 = "6ad28b5bac2bb5a74e737925fbc3f62ce1edabe5a48d61a9980c491ef4cedfb7",
+    strip_prefix = "rules_ts-2.1.1",
+    url = "https://github.com/aspect-build/rules_ts/releases/download/v2.1.1/rules_ts-v2.1.1.tar.gz",
 )
 
 load("@aspect_rules_ts//ts:repositories.bzl", "rules_ts_dependencies")
 
 rules_ts_dependencies(ts_version_from = "//typescript:package.json")
 
+load("@aspect_rules_js//js:repositories.bzl", "rules_js_dependencies")
+
+rules_js_dependencies()
+
+load("@bazel_features//:deps.bzl", "bazel_features_deps")
+
+bazel_features_deps()
+
 load("@rules_nodejs//nodejs:repositories.bzl", "DEFAULT_NODE_VERSION", "nodejs_register_toolchains")
 
 nodejs_register_toolchains(
-    name = "node",
+    name = "nodejs",
     node_version = DEFAULT_NODE_VERSION,
 )
 
