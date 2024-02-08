@@ -76,8 +76,16 @@ jobs:
         shell: bash
         run: cp infra/bazelrc .bazelrc.user
 
-      - name: Generate python requirements lock
+      - name: Generate python requirements lock (bash)
+        if: matrix.os != 'windows' && success()
         shell: bash
+        run: bazel run //python:requirements.update
+
+      # msys2 bash mutates the last argument, removing one of the slashes.
+      # Use powershell instead, even though it's nearly the same command.
+      - name: Generate python requirements lock (powershell)
+        if: matrix.os != 'windows' && success()
+        shell: powershell
         run: bazel run --enable_runfiles //python:requirements.update
 
       - name: Build and test
