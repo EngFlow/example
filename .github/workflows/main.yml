@@ -84,7 +84,7 @@ jobs:
       # msys2 bash mutates the last argument, removing one of the slashes.
       # Use powershell instead, even though it's nearly the same command.
       - name: Generate python requirements lock (powershell)
-        if: matrix.os != 'windows' && success()
+        if: matrix.os == 'windows' && success()
         shell: powershell
         run: bazel run --enable_runfiles //python:requirements.update
 
@@ -93,4 +93,4 @@ jobs:
           ARCH: ${{ matrix.arch }}
           OS: ${{ matrix.os }}
           REMOTE_EXECUTION: ${{ matrix.remote_execution }}
-        run: python3 infra/test-all.py
+        run: python infra/test-all.py
