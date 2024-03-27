@@ -346,9 +346,9 @@ install_deps()
 # Abseil Python can be imported through pip_import, but it has native Bazel support too.
 http_archive(
     name = "io_abseil_py",
-    sha256 = "2ab7ce101db02d7a1de48f8157cbd978f00a19bad44828fd213aa69fe352497d",
-    strip_prefix = "abseil-py-2.0.0",
-    url = "https://github.com/abseil/abseil-py/archive/refs/tags/v2.0.0.tar.gz",
+    sha256 = "8a3d0830e4eb4f66c4fa907c06edf6ce1c719ced811a12e26d9d3162f8471758",
+    strip_prefix = "abseil-py-2.1.0",
+    url = "https://github.com/abseil/abseil-py/archive/refs/tags/v2.1.0.tar.gz",
 )
 
 http_archive(
