@@ -142,11 +142,14 @@ load("@rules_proto_grpc//java:repositories.bzl", rules_proto_grpc_java_repos = "
 rules_proto_grpc_java_repos()
 
 load("@rules_proto//proto:repositories.bzl", "rules_proto_dependencies", "rules_proto_toolchains")
-load("@rules_proto//proto:repositories.bzl", "rules_proto_dependencies", "rules_proto_toolchains")
 load("@rules_jvm_external//:repositories.bzl", "rules_jvm_external_deps")
+
 rules_jvm_external_deps()
+
 load("@rules_jvm_external//:setup.bzl", "rules_jvm_external_setup")
+
 rules_jvm_external_setup()
+
 load("@rules_jvm_external//:defs.bzl", "maven_install")
 
 rules_proto_dependencies()
@@ -209,7 +212,7 @@ scalatest_repositories()
 
 scalatest_toolchain()
 
-load("@io_bazel_rules_go//go:deps.bzl", "go_register_toolchains", "go_rules_dependencies")
+load("@io_bazel_rules_go//go:deps.bzl", "go_download_sdk", "go_register_toolchains", "go_rules_dependencies")
 load("@bazel_gazelle//:deps.bzl", "gazelle_dependencies")
 load(":deps.bzl", "go_dependencies")
 
@@ -218,7 +221,26 @@ go_dependencies()
 
 go_rules_dependencies()
 
-go_register_toolchains(version = "1.21.6")
+GO_PLATFORMS = [
+    ("darwin", "arm64"),
+    ("linux", "amd64"),
+    ("linux", "arm64"),
+    ("windows", "amd64"),
+]
+
+GO_VERSION = "1.21.6"
+
+[
+    go_download_sdk(
+        name = "go_{}_{}".format(goos, goarch),
+        goarch = goarch,
+        goos = goos,
+        version = GO_VERSION,
+    )
+    for goos, goarch in GO_PLATFORMS
+]
+
+go_register_toolchains()
 
 gazelle_dependencies()
 
