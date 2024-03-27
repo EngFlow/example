@@ -222,6 +222,7 @@ go_dependencies()
 go_rules_dependencies()
 
 GO_PLATFORMS = [
+    ("darwin", "amd64"),
     ("darwin", "arm64"),
     ("linux", "amd64"),
     ("linux", "arm64"),
