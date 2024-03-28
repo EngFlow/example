@@ -12,10 +12,10 @@ http_archive(
 
 http_archive(
     name = "com_google_protobuf",
-    sha256 = "476b9decae67fcbe2ead3c5b97004fe7029e5c5db63e8712b1dcaf14f02182c6",
-    strip_prefix = "protobuf-0b237199c562dad168d5c992bba8a0d7c9d23e00",
+    sha256 = "b0858058dc3676de0dfa6d0ff8a140ef714c8c92d7c919c397862e0b6f234a9f",
+    strip_prefix = "protobuf-1f6580dd0ccc9adab41a033ada1d2c9e7fce82ff",
     urls = [
-        "https://github.com/protocolbuffers/protobuf/archive/0b237199c562dad168d5c992bba8a0d7c9d23e00.tar.gz",
+        "https://github.com/protocolbuffers/protobuf/archive/1f6580dd0ccc9adab41a033ada1d2c9e7fce82ff.tar.gz",
     ],
 )
 
