@@ -24,13 +24,6 @@ http_file(
 )
 
 http_archive(
-    name = "rules_jvm_external",
-    sha256 = "85fd6bad58ac76cc3a27c8e051e4255ff9ccd8c92ba879670d195622e7c0a9b7",
-    strip_prefix = "rules_jvm_external-6.0",
-    url = "https://github.com/bazelbuild/rules_jvm_external/releases/download/6.0/rules_jvm_external-6.0.tar.gz",
-)
-
-http_archive(
     name = "com_google_googleapis",
     sha256 = "b541d28b3fd5c0ce802f02b665cf14dfe7a88bd34d8549215127e7ab1008bbbc",
     strip_prefix = "googleapis-e56f4b1c926f42d6ab127c049158df2dda189914",
@@ -79,16 +72,6 @@ load("@rules_proto_grpc//java:repositories.bzl", rules_proto_grpc_java_repos = "
 
 rules_proto_grpc_java_repos()
 
-load("@rules_jvm_external//:repositories.bzl", "rules_jvm_external_deps")
-
-rules_jvm_external_deps()
-
-load("@rules_jvm_external//:setup.bzl", "rules_jvm_external_setup")
-
-rules_jvm_external_setup()
-
-load("@rules_jvm_external//:defs.bzl", "maven_install")
-
 load("@io_grpc_grpc_java//:repositories.bzl", "IO_GRPC_GRPC_JAVA_ARTIFACTS", "IO_GRPC_GRPC_JAVA_OVERRIDE_TARGETS", "grpc_java_repositories")
 
 grpc_java_repositories()
@@ -99,6 +82,8 @@ switched_rules_by_language(
     name = "com_google_googleapis_imports",
     java = True,
 )
+
+load("@rules_jvm_external//:defs.bzl", "maven_install")
 
 maven_install(
     artifacts = IO_GRPC_GRPC_JAVA_ARTIFACTS + [
