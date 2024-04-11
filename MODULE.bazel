@@ -2,7 +2,12 @@
 
 module(name = "engflow-example", version = "0.0.0")
 
-bazel_dep(name = "protobuf", version = "23.1")
+bazel_dep(name = "bazel_skylib", version = "1.5.0")
+bazel_dep(
+    name = "protobuf",
+    version = "23.1",
+    repo_name = "com_google_protobuf",
+)
 
 bazel_dep(name = "rules_python", version = "0.31.0")
 
@@ -62,6 +67,9 @@ bazel_dep(name = "rules_java", version = "7.5.0")
 
 # https://github.com/bazelbuild/rules_jvm_external/blob/master/docs/bzlmod.md
 bazel_dep(name = "rules_jvm_external", version = "6.0")
+
+# Loads rules required to compile proto files
+bazel_dep(name = "rules_proto_grpc", version = "5.0.0-alpha2")
 
 bazel_dep(
     name = "rules_swift",

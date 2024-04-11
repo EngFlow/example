@@ -58,21 +58,11 @@ http_archive(
     ],
 )
 
-# Loads rules required to compile proto files
-http_archive(
-    name = "rules_proto_grpc",
-    sha256 = "c0d718f4d892c524025504e67a5bfe83360b3a982e654bc71fed7514eb8ac8ad",
-    strip_prefix = "rules_proto_grpc-4.6.0",
-    urls = [
-        "https://github.com/rules-proto-grpc/rules_proto_grpc/archive/4.6.0.tar.gz",
-    ],
+load("@io_grpc_grpc_java//:repositories.bzl",
+    "IO_GRPC_GRPC_JAVA_ARTIFACTS",
+    "IO_GRPC_GRPC_JAVA_OVERRIDE_TARGETS",
+    "grpc_java_repositories",
 )
-
-load("@rules_proto_grpc//java:repositories.bzl", rules_proto_grpc_java_repos = "java_repos")
-
-rules_proto_grpc_java_repos()
-
-load("@io_grpc_grpc_java//:repositories.bzl", "IO_GRPC_GRPC_JAVA_ARTIFACTS", "IO_GRPC_GRPC_JAVA_OVERRIDE_TARGETS", "grpc_java_repositories")
 
 grpc_java_repositories()
 
@@ -165,10 +155,6 @@ load("@aspect_bazel_lib//lib:repositories.bzl", "register_copy_directory_toolcha
 register_copy_directory_toolchains()
 
 register_copy_to_directory_toolchains()
-
-load("@bazel_skylib//:workspace.bzl", "bazel_skylib_workspace")
-
-bazel_skylib_workspace()
 
 http_archive(
     name = "rules_perl",
