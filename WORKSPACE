@@ -2,14 +2,6 @@ workspace(name = "example")
 
 load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive", "http_file")
 
-# Place this first so this version prevails.
-http_archive(
-    name = "rules_python",
-    sha256 = "d71d2c67e0bce986e1c5a7731b4693226867c45bfe0b7c5e0067228a536fc580",
-    strip_prefix = "rules_python-0.29.0",
-    url = "https://github.com/bazelbuild/rules_python/releases/download/0.29.0/rules_python-0.29.0.tar.gz",
-)
-
 http_archive(
     name = "com_google_protobuf",
     sha256 = "476b9decae67fcbe2ead3c5b97004fe7029e5c5db63e8712b1dcaf14f02182c6",
@@ -108,10 +100,6 @@ http_archive(
         "https://github.com/bazelbuild/rules_proto/archive/refs/tags/4.0.0.tar.gz",
     ],
 )
-
-load("@rules_python//python:repositories.bzl", "py_repositories")
-
-py_repositories()
 
 # Loads rules required to compile proto files
 http_archive(
@@ -309,30 +297,10 @@ perl_rules_dependencies()
 
 perl_register_toolchains()
 
-load("@rules_python//python:repositories.bzl", "python_register_toolchains")
-
-python_register_toolchains(
-    name = "python_3_11",
-    python_version = "3.11.4",
-)
-
-load("@python_3_11//:defs.bzl", python_3_11 = "interpreter")
-load("@rules_python//python:pip.bzl", "pip_parse")
-
-pip_parse(
-    name = "pip_deps",
-    python_interpreter_target = python_3_11,
-    requirements_lock = "//python:requirements_lock.txt",
-)
-
-load("@pip_deps//:requirements.bzl", "install_deps")
-
-install_deps()
-
 # Abseil Python can be imported through pip_import, but it has native Bazel support too.
 http_archive(
     name = "io_abseil_py",
-    sha256 = "2ab7ce101db02d7a1de48f8157cbd978f00a19bad44828fd213aa69fe352497d",
-    strip_prefix = "abseil-py-2.0.0",
-    url = "https://github.com/abseil/abseil-py/archive/refs/tags/v2.0.0.tar.gz",
+    sha256 = "8a3d0830e4eb4f66c4fa907c06edf6ce1c719ced811a12e26d9d3162f8471758",
+    strip_prefix = "abseil-py-2.1.0",
+    url = "https://github.com/abseil/abseil-py/archive/refs/tags/v2.1.0.tar.gz",
 )
