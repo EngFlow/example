@@ -19,12 +19,6 @@ http_archive(
     ],
 )
 
-http_archive(
-    name = "build_bazel_apple_support",
-    sha256 = "cf4d63f39c7ba9059f70e995bf5fe1019267d3f77379c2028561a5d7645ef67c",
-    url = "https://github.com/bazelbuild/apple_support/releases/download/1.11.1/apple_support.1.11.1.tar.gz",
-)
-
 # Some file dependencies
 http_file(
     name = "emacs",
@@ -118,14 +112,6 @@ http_archive(
 load("@rules_python//python:repositories.bzl", "py_repositories")
 
 py_repositories()
-
-# Support for macOS remote execution.
-load(
-    "@build_bazel_apple_support//lib:repositories.bzl",
-    "apple_support_dependencies",
-)
-
-apple_support_dependencies()
 
 # Loads rules required to compile proto files
 http_archive(
@@ -350,23 +336,3 @@ http_archive(
     strip_prefix = "abseil-py-2.0.0",
     url = "https://github.com/abseil/abseil-py/archive/refs/tags/v2.0.0.tar.gz",
 )
-
-http_archive(
-    name = "build_bazel_rules_swift",
-    sha256 = "bf2861de6bf75115288468f340b0c4609cc99cc1ccc7668f0f71adfd853eedb3",
-    url = "https://github.com/bazelbuild/rules_swift/releases/download/1.7.1/rules_swift.1.7.1.tar.gz",
-)
-
-load(
-    "@build_bazel_rules_swift//swift:repositories.bzl",
-    "swift_rules_dependencies",
-)
-
-swift_rules_dependencies()
-
-load(
-    "@build_bazel_rules_swift//swift:extras.bzl",
-    "swift_rules_extra_dependencies",
-)
-
-swift_rules_extra_dependencies()

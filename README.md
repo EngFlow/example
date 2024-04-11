@@ -6,33 +6,34 @@ build and test software with the EngFlow Remote Execution service.
 ## Prerequisites
 
 - In order to build and test `//python`, Bazel needs to install the dependencies listed in `python/requirements.txt`. To make this repository work across platforms, we do not check in a lock file; execute `bazel run //python:requirements.update` to generate it before building and testing `//python`.
-- In order to run `//swift` test you need `clang` compiler. Make sure the binary is in your `PATH`. 
+- In order to run `//swift` test you need `clang` compiler. Make sure the binary is in your `PATH`.
 
 ## Local execution
+
 ### Building locally
 
-- Build each example with  
+- Build each example with
 
-  `bazel build //${DIRECTORY}/...`  
+  `bazel build //${DIRECTORY}/...`
 
-  for `cpp`,  `csharp`, `docker`, `genrules`, `go`, `java`, `kotlin`, `perl`, `python`, `scala` and `typescript` or build them all with  
-  
+  for `cpp`,  `csharp`, `docker`, `genrules`, `go`, `java`, `kotlin`, `perl`, `python`, `scala` and `typescript` or build them all with
+
   `bazel build //...`
-- Build `swift` example with  
-  
-  `bazel build //swift:test --config=clang`.
+- Build `swift` example with
+
+  `bazel build //swift:tests --config=clang`.
 
 ### Testing locally
 
 - Test each example with
 
-  `bazel test //${DIRECTORY}/...`  
+  `bazel test //${DIRECTORY}/...`
 
   for `java`, `scala` and `typescript`.
 
 - Test `swift` example with
 
-  `bazel test //swift:test --config=clang`
+  `bazel test //swift:tests --config=clang`
 
 - Test `python` example with
 
@@ -51,15 +52,15 @@ build:remote --bes_lifecycle_events
 build:remote --tls_client_certificate=/path/to/credentials/cert.crt
 build:remote --tls_client_key=/path/to/credentials/cert.key
 ```
+
 ### Building on remote
 
+- Build each example with
 
-- Build each example with  
+  `bazel build //${DIRECTORY}/... --config=remote --enable_platform_specific_config`
 
-  `bazel build //${DIRECTORY}/... --config=remote --enable_platform_specific_config` 
-  
-  for `cpp`,  `csharp`, `docker`, `genrules`, `go`, `java`, `kotlin`, `perl`, `python`, `scala` or `typescript` or build them all with  
-  
+  for `cpp`,  `csharp`, `docker`, `genrules`, `go`, `java`, `kotlin`, `perl`, `python`, `scala` or `typescript` or build them all with
+
   `bazel build //... --config=remote  --enable_platform_specific_config`.
 - `swift` example does not build remotely yet.
 
@@ -67,10 +68,9 @@ build:remote --tls_client_key=/path/to/credentials/cert.key
 
 - Test each example with
 
-  `bazel test //${DIRECTORY}/... --config=remote`  
+  `bazel test //${DIRECTORY}/... --config=remote`
 
   for `java`, `python`, `scala` and `typescript`.
-
 
 ## `engflowapis` execution
 
