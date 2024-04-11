@@ -75,24 +75,6 @@ http_archive(
 )
 
 http_archive(
-    name = "io_bazel_rules_go",
-    sha256 = "c8035e8ae248b56040a65ad3f0b7434712e2037e5dfdcebfe97576e620422709",
-    urls = [
-        "https://mirror.bazel.build/github.com/bazelbuild/rules_go/releases/download/v0.44.0/rules_go-v0.44.0.zip",
-        "https://github.com/bazelbuild/rules_go/releases/download/v0.44.0/rules_go-v0.44.0.zip",
-    ],
-)
-
-http_archive(
-    name = "bazel_gazelle",
-    sha256 = "32938bda16e6700063035479063d9d24c60eda8d79fd4739563f50d331cb3209",
-    urls = [
-        "https://mirror.bazel.build/github.com/bazelbuild/bazel-gazelle/releases/download/v0.35.0/bazel-gazelle-v0.35.0.tar.gz",
-        "https://github.com/bazelbuild/bazel-gazelle/releases/download/v0.35.0/bazel-gazelle-v0.35.0.tar.gz",
-    ],
-)
-
-http_archive(
     name = "rules_proto",
     sha256 = "66bfdf8782796239d3875d37e7de19b1d94301e8972b3cbd2446b332429b4df1",
     strip_prefix = "rules_proto-4.0.0",
@@ -185,39 +167,6 @@ load("@io_bazel_rules_scala//testing:scalatest.bzl", "scalatest_repositories", "
 scalatest_repositories()
 
 scalatest_toolchain()
-
-load("@io_bazel_rules_go//go:deps.bzl", "go_download_sdk", "go_register_toolchains", "go_rules_dependencies")
-load("@bazel_gazelle//:deps.bzl", "gazelle_dependencies")
-load(":deps.bzl", "go_dependencies")
-
-# gazelle:repository_macro deps.bzl%go_dependencies
-go_dependencies()
-
-go_rules_dependencies()
-
-GO_PLATFORMS = [
-    ("darwin", "amd64"),
-    ("darwin", "arm64"),
-    ("linux", "amd64"),
-    ("linux", "arm64"),
-    ("windows", "amd64"),
-]
-
-GO_VERSION = "1.21.6"
-
-[
-    go_download_sdk(
-        name = "go_{}_{}".format(goos, goarch),
-        goarch = goarch,
-        goos = goos,
-        version = GO_VERSION,
-    )
-    for goos, goarch in GO_PLATFORMS
-]
-
-go_register_toolchains()
-
-gazelle_dependencies()
 
 load("@io_bazel_rules_kotlin//kotlin:repositories.bzl", "kotlin_repositories")
 
