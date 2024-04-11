@@ -2,15 +2,6 @@ workspace(name = "example")
 
 load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive", "http_file")
 
-http_archive(
-    name = "com_google_protobuf",
-    sha256 = "476b9decae67fcbe2ead3c5b97004fe7029e5c5db63e8712b1dcaf14f02182c6",
-    strip_prefix = "protobuf-0b237199c562dad168d5c992bba8a0d7c9d23e00",
-    urls = [
-        "https://github.com/protocolbuffers/protobuf/archive/0b237199c562dad168d5c992bba8a0d7c9d23e00.tar.gz",
-    ],
-)
-
 # Some file dependencies
 http_file(
     name = "emacs",
@@ -74,15 +65,6 @@ http_archive(
     ],
 )
 
-http_archive(
-    name = "rules_proto",
-    sha256 = "66bfdf8782796239d3875d37e7de19b1d94301e8972b3cbd2446b332429b4df1",
-    strip_prefix = "rules_proto-4.0.0",
-    urls = [
-        "https://github.com/bazelbuild/rules_proto/archive/refs/tags/4.0.0.tar.gz",
-    ],
-)
-
 # Loads rules required to compile proto files
 http_archive(
     name = "rules_proto_grpc",
@@ -97,7 +79,6 @@ load("@rules_proto_grpc//java:repositories.bzl", rules_proto_grpc_java_repos = "
 
 rules_proto_grpc_java_repos()
 
-load("@rules_proto//proto:repositories.bzl", "rules_proto_dependencies", "rules_proto_toolchains")
 load("@rules_jvm_external//:repositories.bzl", "rules_jvm_external_deps")
 
 rules_jvm_external_deps()
@@ -107,14 +88,6 @@ load("@rules_jvm_external//:setup.bzl", "rules_jvm_external_setup")
 rules_jvm_external_setup()
 
 load("@rules_jvm_external//:defs.bzl", "maven_install")
-
-rules_proto_dependencies()
-
-rules_proto_toolchains()
-
-load("@com_google_protobuf//:protobuf_deps.bzl", "protobuf_deps")
-
-protobuf_deps()
 
 load("@io_grpc_grpc_java//:repositories.bzl", "IO_GRPC_GRPC_JAVA_ARTIFACTS", "IO_GRPC_GRPC_JAVA_OVERRIDE_TARGETS", "grpc_java_repositories")
 
