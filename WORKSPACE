@@ -264,25 +264,6 @@ load("@bazel_skylib//:workspace.bzl", "bazel_skylib_workspace")
 bazel_skylib_workspace()
 
 http_archive(
-    name = "io_bazel_rules_dotnet",
-    sha256 = "5098268d2950d658a0ab5558fa9faa590866be7ff1b20a97964b37720f8af2c6",
-    strip_prefix = "rules_dotnet-0b7ae93fa81b7327a655118da0581db5ebbe0b8d",
-    urls = [
-        "https://github.com/bazelbuild/rules_dotnet/archive/0b7ae93fa81b7327a655118da0581db5ebbe0b8d.zip",
-    ],
-)
-
-load("@io_bazel_rules_dotnet//dotnet:deps.bzl", "dotnet_repositories")
-
-dotnet_repositories()
-
-load("@io_bazel_rules_dotnet//dotnet:defs.bzl", "dotnet_register_toolchains", "dotnet_repositories_nugets")
-
-dotnet_register_toolchains()
-
-dotnet_repositories_nugets()
-
-http_archive(
     name = "rules_perl",
     sha256 = "f1450b5e76ecb81340e2ff50f83b066bebb1fa78dd78bf5d7ece4f3d6d82b5be",
     strip_prefix = "rules_perl-366b6aa76b12056a9e0cc23364686f25dcc41702",
