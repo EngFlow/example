@@ -89,21 +89,6 @@ register_copy_directory_toolchains()
 
 register_copy_to_directory_toolchains()
 
-http_archive(
-    name = "rules_perl",
-    sha256 = "f1450b5e76ecb81340e2ff50f83b066bebb1fa78dd78bf5d7ece4f3d6d82b5be",
-    strip_prefix = "rules_perl-366b6aa76b12056a9e0cc23364686f25dcc41702",
-    urls = [
-        "https://github.com/bazelbuild/rules_perl/archive/366b6aa76b12056a9e0cc23364686f25dcc41702.zip",
-    ],
-)
-
-load("@rules_perl//perl:deps.bzl", "perl_register_toolchains", "perl_rules_dependencies")
-
-perl_rules_dependencies()
-
-perl_register_toolchains()
-
 # Abseil Python can be imported through pip_import, but it has native Bazel support too.
 http_archive(
     name = "io_abseil_py",

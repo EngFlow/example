@@ -1,6 +1,6 @@
 {
   "lockFileVersion": 6,
-  "moduleFileHash": "ce0824e799ea503c82bb2c0fcf8974265e0e5eed3a447a1283973fc4b0c9189b",
+  "moduleFileHash": "5b4e69564f672ecc72b67afb21debaa58d98bbd1661c0f8cb4ddfb02eca654b7",
   "flags": {
     "cmdRegistries": [
       "https://bcr.bazel.build/"
@@ -32,7 +32,7 @@
           "usingModule": "<root>",
           "location": {
             "file": "@@//:MODULE.bazel",
-            "line": 19,
+            "line": 22,
             "column": 20
           },
           "imports": {
@@ -50,7 +50,7 @@
               "devDependency": false,
               "location": {
                 "file": "@@//:MODULE.bazel",
-                "line": 21,
+                "line": 24,
                 "column": 10
               }
             }
@@ -64,7 +64,7 @@
           "usingModule": "<root>",
           "location": {
             "file": "@@//:MODULE.bazel",
-            "line": 39,
+            "line": 42,
             "column": 23
           },
           "imports": {
@@ -80,7 +80,7 @@
               "devDependency": false,
               "location": {
                 "file": "@@//:MODULE.bazel",
-                "line": 40,
+                "line": 43,
                 "column": 17
               }
             }
@@ -94,7 +94,7 @@
           "usingModule": "<root>",
           "location": {
             "file": "@@//:MODULE.bazel",
-            "line": 59,
+            "line": 62,
             "column": 23
           },
           "imports": {},
@@ -111,7 +111,7 @@
               "devDependency": false,
               "location": {
                 "file": "@@//:MODULE.bazel",
-                "line": 62,
+                "line": 65,
                 "column": 20
               }
             },
@@ -126,7 +126,7 @@
               "devDependency": false,
               "location": {
                 "file": "@@//:MODULE.bazel",
-                "line": 62,
+                "line": 65,
                 "column": 20
               }
             },
@@ -141,7 +141,7 @@
               "devDependency": false,
               "location": {
                 "file": "@@//:MODULE.bazel",
-                "line": 62,
+                "line": 65,
                 "column": 20
               }
             },
@@ -156,7 +156,7 @@
               "devDependency": false,
               "location": {
                 "file": "@@//:MODULE.bazel",
-                "line": 62,
+                "line": 65,
                 "column": 20
               }
             },
@@ -171,7 +171,7 @@
               "devDependency": false,
               "location": {
                 "file": "@@//:MODULE.bazel",
-                "line": 62,
+                "line": 65,
                 "column": 20
               }
             }
@@ -185,7 +185,7 @@
           "usingModule": "<root>",
           "location": {
             "file": "@@//:MODULE.bazel",
-            "line": 84,
+            "line": 87,
             "column": 22
           },
           "imports": {
@@ -209,7 +209,7 @@
               "devDependency": false,
               "location": {
                 "file": "@@//:MODULE.bazel",
-                "line": 85,
+                "line": 88,
                 "column": 14
               }
             }
@@ -233,6 +233,7 @@
         "io_grpc_grpc_java": "grpc-java@1.62.2",
         "rules_proto_grpc": "rules_proto_grpc@5.0.0-alpha2",
         "rules_kotlin": "rules_kotlin@1.9.5",
+        "rules_perl": "rules_perl@0.2.0",
         "build_bazel_rules_swift": "rules_swift@1.18.0",
         "bazel_tools": "bazel_tools@_",
         "local_config_platform": "local_config_platform@_"
@@ -2045,6 +2046,65 @@
         }
       }
     },
+    "rules_perl@0.2.0": {
+      "name": "rules_perl",
+      "version": "0.2.0",
+      "key": "rules_perl@0.2.0",
+      "repoName": "rules_perl",
+      "executionPlatformsToRegister": [],
+      "toolchainsToRegister": [
+        "@rules_perl//:perl_darwin_arm64_toolchain",
+        "@rules_perl//:perl_darwin_amd64_toolchain",
+        "@rules_perl//:perl_linux_amd64_toolchain",
+        "@rules_perl//:perl_linux_arm64_toolchain",
+        "@rules_perl//:perl_windows_x86_64_toolchain"
+      ],
+      "extensionUsages": [
+        {
+          "extensionBzlFile": "@rules_perl//perl:extensions.bzl",
+          "extensionName": "perl_repositories",
+          "usingModule": "rules_perl@0.2.0",
+          "location": {
+            "file": "https://bcr.bazel.build/modules/rules_perl/0.2.0/MODULE.bazel",
+            "line": 14,
+            "column": 22
+          },
+          "imports": {
+            "perl_darwin_amd64": "perl_darwin_amd64",
+            "perl_darwin_arm64": "perl_darwin_arm64",
+            "perl_linux_amd64": "perl_linux_amd64",
+            "perl_linux_arm64": "perl_linux_arm64",
+            "perl_windows_x86_64": "perl_windows_x86_64"
+          },
+          "devImports": [],
+          "tags": [],
+          "hasDevUseExtension": false,
+          "hasNonDevUseExtension": true
+        }
+      ],
+      "deps": {
+        "platforms": "platforms@0.0.9",
+        "bazel_skylib": "bazel_skylib@1.5.0",
+        "rules_cc": "rules_cc@0.0.9",
+        "bazel_tools": "bazel_tools@_",
+        "local_config_platform": "local_config_platform@_"
+      },
+      "repoSpec": {
+        "bzlFile": "@@bazel_tools//tools/build_defs/repo:http.bzl",
+        "ruleClassName": "http_archive",
+        "attributes": {
+          "urls": [
+            "https://github.com/bazelbuild/rules_perl/archive/refs/tags/0.2.0.zip"
+          ],
+          "integrity": "sha256-RPeEUXlxgn9RzJv9VQWpz4C4H0xH6tPtL8weBwLt5TI=",
+          "strip_prefix": "rules_perl-0.2.0",
+          "remote_patches": {
+            "https://bcr.bazel.build/modules/rules_perl/0.2.0/patches/module_dot_bazel_version.patch": "sha256-So53NQFE4oKAPiEy6Wx0FRl/8D/sn5Q37sNou1Tf9JA="
+          },
+          "remote_patch_strip": 0
+        }
+      }
+    },
     "rules_swift@1.18.0": {
       "name": "rules_swift",
       "version": "1.18.0",
@@ -3304,6 +3364,27 @@
             "bzlFile": "@@bazel_tools//tools/sh:sh_configure.bzl",
             "ruleClassName": "sh_config",
             "attributes": {}
+          }
+        },
+        "recordedRepoMappingEntries": []
+      }
+    },
+    "@@bazel_tools//tools/test:extensions.bzl%remote_coverage_tools_extension": {
+      "general": {
+        "bzlTransitiveDigest": "l5mcjH2gWmbmIycx97bzI2stD0Q0M5gpDc0aLOHKIm8=",
+        "recordedFileInputs": {},
+        "recordedDirentsInputs": {},
+        "envVariables": {},
+        "generatedRepoSpecs": {
+          "remote_coverage_tools": {
+            "bzlFile": "@@bazel_tools//tools/build_defs/repo:http.bzl",
+            "ruleClassName": "http_archive",
+            "attributes": {
+              "sha256": "7006375f6756819b7013ca875eab70a541cf7d89142d9c511ed78ea4fefa38af",
+              "urls": [
+                "https://mirror.bazel.build/bazel_coverage_output_generator/releases/coverage_output_generator-v2.6.zip"
+              ]
+            }
           }
         },
         "recordedRepoMappingEntries": []
@@ -7756,6 +7837,84 @@
             "rules_kotlin~",
             "bazel_tools",
             "bazel_tools"
+          ]
+        ]
+      }
+    },
+    "@@rules_perl~//perl:extensions.bzl%perl_repositories": {
+      "general": {
+        "bzlTransitiveDigest": "q2/owg+pdnRdE4DD/IZJGEKPJc345FnZLhJUCeJ3FBE=",
+        "recordedFileInputs": {},
+        "recordedDirentsInputs": {},
+        "envVariables": {},
+        "generatedRepoSpecs": {
+          "perl_linux_arm64": {
+            "bzlFile": "@@rules_perl~//perl:repo.bzl",
+            "ruleClassName": "perl_download",
+            "attributes": {
+              "strip_prefix": "perl-linux-arm64",
+              "sha256": "6fa4ece99e790ecbc2861f6ecb7b52694c01c2eeb215b4370f16a3b12d952117",
+              "urls": [
+                "https://github.com/skaji/relocatable-perl/releases/download/5.36.0.1/perl-linux-arm64.tar.xz"
+              ]
+            }
+          },
+          "perl_darwin_arm64": {
+            "bzlFile": "@@rules_perl~//perl:repo.bzl",
+            "ruleClassName": "perl_download",
+            "attributes": {
+              "strip_prefix": "perl-darwin-arm64",
+              "sha256": "285769f3c50c339fb59a3987b216ae3c5c573b95babe6875a1ef56fb178433da",
+              "urls": [
+                "https://github.com/skaji/relocatable-perl/releases/download/5.36.0.1/perl-darwin-arm64.tar.xz"
+              ]
+            }
+          },
+          "perl_windows_x86_64": {
+            "bzlFile": "@@rules_perl~//perl:repo.bzl",
+            "ruleClassName": "perl_download",
+            "attributes": {
+              "strip_prefix": "",
+              "sha256": "aeb973da474f14210d3e1a1f942dcf779e2ae7e71e4c535e6c53ebabe632cc98",
+              "urls": [
+                "https://mirror.bazel.build/strawberryperl.com/download/5.32.1.1/strawberry-perl-5.32.1.1-64bit.zip",
+                "https://strawberryperl.com/download/5.32.1.1/strawberry-perl-5.32.1.1-64bit.zip"
+              ]
+            }
+          },
+          "perl_darwin_amd64": {
+            "bzlFile": "@@rules_perl~//perl:repo.bzl",
+            "ruleClassName": "perl_download",
+            "attributes": {
+              "strip_prefix": "perl-darwin-amd64",
+              "sha256": "63bc5ee36f5394d71c50cca6cafdd333ee58f9eaa40bca63c85f9bd06f2c1fd6",
+              "urls": [
+                "https://github.com/skaji/relocatable-perl/releases/download/5.36.0.1/perl-darwin-amd64.tar.xz"
+              ]
+            }
+          },
+          "perl_linux_amd64": {
+            "bzlFile": "@@rules_perl~//perl:repo.bzl",
+            "ruleClassName": "perl_download",
+            "attributes": {
+              "strip_prefix": "perl-linux-amd64",
+              "sha256": "3bdffa9d7a3f97c0207314637b260ba5115b1d0829f97e3e2e301191a4d4d076",
+              "urls": [
+                "https://github.com/skaji/relocatable-perl/releases/download/5.36.0.1/perl-linux-amd64.tar.xz"
+              ]
+            }
+          }
+        },
+        "recordedRepoMappingEntries": [
+          [
+            "rules_perl~",
+            "bazel_tools",
+            "bazel_tools"
+          ],
+          [
+            "rules_perl~",
+            "rules_perl",
+            "rules_perl~"
           ]
         ]
       }
