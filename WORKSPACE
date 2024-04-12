@@ -24,15 +24,6 @@ http_file(
 )
 
 http_archive(
-    name = "com_google_googleapis",
-    sha256 = "b541d28b3fd5c0ce802f02b665cf14dfe7a88bd34d8549215127e7ab1008bbbc",
-    strip_prefix = "googleapis-e56f4b1c926f42d6ab127c049158df2dda189914",
-    urls = [
-        "https://github.com/googleapis/googleapis/archive/e56f4b1c926f42d6ab127c049158df2dda189914.tar.gz",
-    ],
-)
-
-http_archive(
     name = "com_engflow_engflowapis",
     sha256 = "8721f7a0ec52c5bc120119aac090eedd671ca3b708652f88b82b44bea2b6c278",
     strip_prefix = "engflowapis-44fcd39598f223e8e5f6c7cbf2f73c870b2a6341",
@@ -47,13 +38,6 @@ http_archive(
     urls = [
         "https://github.com/bazelbuild/rules_kotlin/releases/download/v1.8.1/rules_kotlin_release.tgz",
     ],
-)
-
-load("@com_google_googleapis//:repository_rules.bzl", "switched_rules_by_language")
-
-switched_rules_by_language(
-    name = "com_google_googleapis_imports",
-    java = True,
 )
 
 http_archive(
