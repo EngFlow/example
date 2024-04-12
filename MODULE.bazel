@@ -106,3 +106,15 @@ bazel_dep(
     version = "1.18.0",
     repo_name = "build_bazel_rules_swift"
 )
+
+bazel_dep(name = "aspect_rules_ts", version = "2.2.0")
+
+rules_ts_ext = use_extension(
+    "@aspect_rules_ts//ts:extensions.bzl",
+    "ext",
+    dev_dependency = True,
+)
+
+rules_ts_ext.deps()
+
+use_repo(rules_ts_ext, "npm_typescript")
