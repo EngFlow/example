@@ -9,4 +9,5 @@ scala_test(
     name = "exampleScalaTest",
     srcs = ["ScalaExampleTest.scala"],
     deps = [":exampleScala"],
+    size = "small",
 )

@@ -16,4 +16,5 @@ cc_test(
     name = "cpp_test",
     srcs = ["hello_test.cc"],
     deps = [":cpp_lib"],
+    size = "small",
 )

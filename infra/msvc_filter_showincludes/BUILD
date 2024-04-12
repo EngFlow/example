@@ -23,4 +23,5 @@ go_test(
     srcs = ["msvc_filter_showincludes_test.go"],
     embed = [":msvc_filter_showincludes_lib"],
     deps = ["@com_github_google_go_cmp//cmp"],
+    size = "small",
 )
