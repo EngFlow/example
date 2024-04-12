@@ -1,6 +1,6 @@
 {
   "lockFileVersion": 6,
-  "moduleFileHash": "024a1d167b60a9d6d37163cda6d1468914be8a4c4e7c49f1c0dbc735f4b2dbf3",
+  "moduleFileHash": "5d8746a319cb1531495c687f9ff106b7846176c8a473f3aab1787e7eea660b85",
   "flags": {
     "cmdRegistries": [
       "https://bcr.bazel.build/"
@@ -27,12 +27,101 @@
       ],
       "extensionUsages": [
         {
+          "extensionBzlFile": "//:MODULE.bazel",
+          "extensionName": "_repo_rules",
+          "usingModule": "<root>",
+          "location": {
+            "file": "@@//:MODULE.bazel",
+            "line": 0,
+            "column": 0
+          },
+          "imports": {
+            "emacs": "emacs",
+            "ubuntu_20.04_1.3GB": "ubuntu_20.04_1.3GB",
+            "com_engflow_engflowapis": "com_engflow_engflowapis",
+            "io_abseil_py": "io_abseil_py"
+          },
+          "devImports": [],
+          "tags": [
+            {
+              "tagName": "@bazel_tools//tools/build_defs/repo:http.bzl%http_file",
+              "attributeValues": {
+                "sha256": "1439bf7f24e5769f35601dbf332e74dfc07634da6b1e9500af67188a92340a28",
+                "urls": [
+                  "https://storage.googleapis.com/engflow-tools-public/emacs-28.1.tar.gz",
+                  "https://mirror.its.dal.ca/gnu/emacs/emacs-28.1.tar.gz",
+                  "https://mirrors.kernel.org/gnu/emacs/emacs-28.1.tar.gz"
+                ],
+                "name": "emacs"
+              },
+              "devDependency": false,
+              "location": {
+                "file": "@@//:MODULE.bazel",
+                "line": 12,
+                "column": 10
+              }
+            },
+            {
+              "tagName": "@bazel_tools//tools/build_defs/repo:http.bzl%http_file",
+              "attributeValues": {
+                "sha256": "5035be37a7e9abbdc09f0d257f3e33416c1a0fb322ba860d42d74aa75c3468d4",
+                "urls": [
+                  "https://storage.googleapis.com/engflow-tools-public/ubuntu-20.04.5-live-server-amd64.iso",
+                  "https://mirror.math.princeton.edu/pub/ubuntu-iso/focal/ubuntu-20.04.5-live-server-amd64.iso",
+                  "https://mirror.pit.teraswitch.com/ubuntu-releases/focal/ubuntu-20.04.5-live-server-amd64.iso"
+                ],
+                "name": "ubuntu_20.04_1.3GB"
+              },
+              "devDependency": false,
+              "location": {
+                "file": "@@//:MODULE.bazel",
+                "line": 22,
+                "column": 10
+              }
+            },
+            {
+              "tagName": "@bazel_tools//tools/build_defs/repo:http.bzl%http_archive",
+              "attributeValues": {
+                "sha256": "8721f7a0ec52c5bc120119aac090eedd671ca3b708652f88b82b44bea2b6c278",
+                "strip_prefix": "engflowapis-44fcd39598f223e8e5f6c7cbf2f73c870b2a6341",
+                "urls": [
+                  "https://github.com/EngFlow/engflowapis/archive/44fcd39598f223e8e5f6c7cbf2f73c870b2a6341.zip"
+                ],
+                "name": "com_engflow_engflowapis"
+              },
+              "devDependency": false,
+              "location": {
+                "file": "@@//:MODULE.bazel",
+                "line": 32,
+                "column": 13
+              }
+            },
+            {
+              "tagName": "@bazel_tools//tools/build_defs/repo:http.bzl%http_archive",
+              "attributeValues": {
+                "sha256": "8a3d0830e4eb4f66c4fa907c06edf6ce1c719ced811a12e26d9d3162f8471758",
+                "strip_prefix": "abseil-py-2.1.0",
+                "url": "https://github.com/abseil/abseil-py/archive/refs/tags/v2.1.0.tar.gz",
+                "name": "io_abseil_py"
+              },
+              "devDependency": false,
+              "location": {
+                "file": "@@//:MODULE.bazel",
+                "line": 43,
+                "column": 13
+              }
+            }
+          ],
+          "hasDevUseExtension": false,
+          "hasNonDevUseExtension": true
+        },
+        {
           "extensionBzlFile": "@rules_python//python/extensions:pip.bzl",
           "extensionName": "pip",
           "usingModule": "<root>",
           "location": {
             "file": "@@//:MODULE.bazel",
-            "line": 22,
+            "line": 67,
             "column": 20
           },
           "imports": {
@@ -50,7 +139,7 @@
               "devDependency": false,
               "location": {
                 "file": "@@//:MODULE.bazel",
-                "line": 24,
+                "line": 69,
                 "column": 10
               }
             }
@@ -64,7 +153,7 @@
           "usingModule": "<root>",
           "location": {
             "file": "@@//:MODULE.bazel",
-            "line": 42,
+            "line": 87,
             "column": 23
           },
           "imports": {
@@ -80,7 +169,7 @@
               "devDependency": false,
               "location": {
                 "file": "@@//:MODULE.bazel",
-                "line": 43,
+                "line": 88,
                 "column": 17
               }
             }
@@ -94,7 +183,7 @@
           "usingModule": "<root>",
           "location": {
             "file": "@@//:MODULE.bazel",
-            "line": 62,
+            "line": 107,
             "column": 23
           },
           "imports": {},
@@ -111,7 +200,7 @@
               "devDependency": false,
               "location": {
                 "file": "@@//:MODULE.bazel",
-                "line": 65,
+                "line": 110,
                 "column": 20
               }
             },
@@ -126,7 +215,7 @@
               "devDependency": false,
               "location": {
                 "file": "@@//:MODULE.bazel",
-                "line": 65,
+                "line": 110,
                 "column": 20
               }
             },
@@ -141,7 +230,7 @@
               "devDependency": false,
               "location": {
                 "file": "@@//:MODULE.bazel",
-                "line": 65,
+                "line": 110,
                 "column": 20
               }
             },
@@ -156,7 +245,7 @@
               "devDependency": false,
               "location": {
                 "file": "@@//:MODULE.bazel",
-                "line": 65,
+                "line": 110,
                 "column": 20
               }
             },
@@ -171,7 +260,7 @@
               "devDependency": false,
               "location": {
                 "file": "@@//:MODULE.bazel",
-                "line": 65,
+                "line": 110,
                 "column": 20
               }
             }
@@ -185,7 +274,7 @@
           "usingModule": "<root>",
           "location": {
             "file": "@@//:MODULE.bazel",
-            "line": 74,
+            "line": 119,
             "column": 24
           },
           "imports": {
@@ -201,7 +290,7 @@
               "devDependency": false,
               "location": {
                 "file": "@@//:MODULE.bazel",
-                "line": 75,
+                "line": 120,
                 "column": 18
               }
             }
@@ -215,7 +304,7 @@
           "usingModule": "<root>",
           "location": {
             "file": "@@//:MODULE.bazel",
-            "line": 92,
+            "line": 137,
             "column": 22
           },
           "imports": {
@@ -239,7 +328,7 @@
               "devDependency": false,
               "location": {
                 "file": "@@//:MODULE.bazel",
-                "line": 93,
+                "line": 138,
                 "column": 14
               }
             }
@@ -253,7 +342,7 @@
           "usingModule": "<root>",
           "location": {
             "file": "@@//:MODULE.bazel",
-            "line": 117,
+            "line": 162,
             "column": 29
           },
           "imports": {
@@ -269,7 +358,7 @@
               "devDependency": true,
               "location": {
                 "file": "@@//:MODULE.bazel",
-                "line": 123,
+                "line": 168,
                 "column": 18
               }
             }
