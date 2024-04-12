@@ -32,6 +32,8 @@ http_archive(
     ],
 )
 
+# https://github.com/bazelbuild/rules_scala/issues/1482
+# https://github.com/bazelbuild/bazel-central-registry/issues/522
 http_archive(
     name = "io_bazel_rules_scala",
     sha256 = "9a23058a36183a556a9ba7229b4f204d3e68c8c6eb7b28260521016b38ef4e00",
