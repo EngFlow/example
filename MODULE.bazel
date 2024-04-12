@@ -67,9 +67,28 @@ bazel_dep(name = "rules_java", version = "7.5.0")
 
 # https://github.com/bazelbuild/rules_jvm_external/blob/master/docs/bzlmod.md
 bazel_dep(name = "rules_jvm_external", version = "6.0")
+bazel_dep(
+    name = "grpc-java",
+    version = "1.62.2",
+    repo_name = "io_grpc_grpc_java",
+)
 
 # Loads rules required to compile proto files
 bazel_dep(name = "rules_proto_grpc", version = "5.0.0-alpha2")
+
+maven = use_extension("@rules_jvm_external//:extensions.bzl", "maven")
+maven.install(
+    artifacts = [
+        "commons-cli:commons-cli:1.5.0",
+        "com.google.oauth-client:google-oauth-client:1.34.1",
+        "io.netty:netty-handler:4.1.100.Final",
+    ],
+    strict_visibility = True,
+    repositories = [
+        "https://repo.maven.apache.org/maven2/",
+    ],
+)
+use_repo(maven, "maven")
 
 bazel_dep(
     name = "rules_swift",

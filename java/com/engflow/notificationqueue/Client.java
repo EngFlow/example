@@ -118,7 +118,7 @@ class Client {
       throws InterruptedException {
 
     NotificationQueueGrpc.NotificationQueueStub asyncStub = NotificationQueueGrpc.newStub(channel);
-    asyncStub = MetadataUtils.attachHeaders(asyncStub, header);
+    asyncStub = asyncStub.withInterceptors(MetadataUtils.newAttachHeadersInterceptor(header));
     final CountDownLatch finishLatch = new CountDownLatch(1);
     System.out.println("Listening for build events...");
     StreamObserver<PullNotificationRequest> requestObserver =
@@ -202,7 +202,7 @@ class Client {
       ManagedChannel channel, String invocationId, Metadata header, ManagedChannel forwardChannel)
       throws InterruptedException {
     EventStoreGrpc.EventStoreStub asyncStub = EventStoreGrpc.newStub(channel);
-    asyncStub = MetadataUtils.attachHeaders(asyncStub, header);
+    asyncStub = asyncStub.withInterceptors(MetadataUtils.newAttachHeadersInterceptor(header));
     asyncStub.getInvocation(
         GetInvocationRequest.newBuilder().setInvocationId(invocationId).build(),
         new StreamObserver<StreamedBuildEvent>() {

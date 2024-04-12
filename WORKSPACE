@@ -42,15 +42,6 @@ http_archive(
 )
 
 http_archive(
-    name = "io_grpc_grpc_java",
-    sha256 = "970dcec6c8eb3fc624015f24b98df78f4c857a158fce0617deceafab470b90fc",
-    strip_prefix = "grpc-java-1.57.2",
-    urls = [
-        "https://github.com/grpc/grpc-java/archive/refs/tags/v1.57.2.zip",
-    ],
-)
-
-http_archive(
     name = "io_bazel_rules_kotlin",
     sha256 = "a630cda9fdb4f56cf2dc20a4bf873765c41cf00e9379e8d59cd07b24730f4fde",
     urls = [
@@ -58,38 +49,12 @@ http_archive(
     ],
 )
 
-load("@io_grpc_grpc_java//:repositories.bzl",
-    "IO_GRPC_GRPC_JAVA_ARTIFACTS",
-    "IO_GRPC_GRPC_JAVA_OVERRIDE_TARGETS",
-    "grpc_java_repositories",
-)
-
-grpc_java_repositories()
-
 load("@com_google_googleapis//:repository_rules.bzl", "switched_rules_by_language")
 
 switched_rules_by_language(
     name = "com_google_googleapis_imports",
     java = True,
 )
-
-load("@rules_jvm_external//:defs.bzl", "maven_install")
-
-maven_install(
-    artifacts = IO_GRPC_GRPC_JAVA_ARTIFACTS + [
-        "commons-cli:commons-cli:1.5.0",
-        "com.google.oauth-client:google-oauth-client:1.34.1",
-    ],
-    generate_compat_repositories = True,
-    override_targets = IO_GRPC_GRPC_JAVA_OVERRIDE_TARGETS,
-    repositories = [
-        "https://repo.maven.apache.org/maven2/",
-    ],
-)
-
-load("@maven//:compat.bzl", "compat_repositories")
-
-compat_repositories()
 
 http_archive(
     name = "io_bazel_rules_scala",
