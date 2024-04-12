@@ -33,14 +33,6 @@ http_archive(
 )
 
 http_archive(
-    name = "io_bazel_rules_kotlin",
-    sha256 = "a630cda9fdb4f56cf2dc20a4bf873765c41cf00e9379e8d59cd07b24730f4fde",
-    urls = [
-        "https://github.com/bazelbuild/rules_kotlin/releases/download/v1.8.1/rules_kotlin_release.tgz",
-    ],
-)
-
-http_archive(
     name = "io_bazel_rules_scala",
     sha256 = "9a23058a36183a556a9ba7229b4f204d3e68c8c6eb7b28260521016b38ef4e00",
     strip_prefix = "rules_scala-6.4.0",
@@ -64,14 +56,6 @@ load("@io_bazel_rules_scala//testing:scalatest.bzl", "scalatest_repositories", "
 scalatest_repositories()
 
 scalatest_toolchain()
-
-load("@io_bazel_rules_kotlin//kotlin:repositories.bzl", "kotlin_repositories")
-
-kotlin_repositories()
-
-load("@io_bazel_rules_kotlin//kotlin:core.bzl", "kt_register_toolchains")
-
-kt_register_toolchains()
 
 http_archive(
     name = "aspect_rules_ts",
