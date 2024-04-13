@@ -64,10 +64,10 @@ http_archive(
 
 http_archive(
     name = "com_engflow_engflowapis",
-    sha256 = "8721f7a0ec52c5bc120119aac090eedd671ca3b708652f88b82b44bea2b6c278",
-    strip_prefix = "engflowapis-44fcd39598f223e8e5f6c7cbf2f73c870b2a6341",
+    sha256 = "96b999b7e3fada0524ca9a927d9fed7776338501d57ed62309173e70801d555e",
+    strip_prefix = "engflowapis-d495b899823b885b51cfef4e98ea6d161c4af8ba",
     urls = [
-        "https://github.com/EngFlow/engflowapis/archive/44fcd39598f223e8e5f6c7cbf2f73c870b2a6341.zip",
+        "https://github.com/EngFlow/engflowapis/archive/d495b899823b885b51cfef4e98ea6d161c4af8ba.zip",
     ],
 )
 
