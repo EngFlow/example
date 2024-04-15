@@ -5,8 +5,7 @@ platform(
     constraint_values = [
         "@platforms//os:macos",
         "@platforms//cpu:x86_64",
-        "@io_bazel_rules_go//go/toolchain:cgo_off",
-        "@io_bazel_rules_dotnet//dotnet/toolchain:6.0.101",
+        "@rules_go//go/toolchain:cgo_off",
     ],
     exec_properties = {
         "Pool": "macos_x64",

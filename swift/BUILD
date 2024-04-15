@@ -6,5 +6,6 @@ swift_test(
         "example.swift",
         "main.swift",
     ],
+    size = "small",
     tags = ["manual"],
 )

@@ -9,8 +9,7 @@ platform(
         "@platforms//os:linux",
         "@platforms//cpu:x86_64",
         "@bazel_tools//tools/cpp:clang",
-        "@io_bazel_rules_go//go/toolchain:cgo_off",
-        "@io_bazel_rules_dotnet//dotnet/toolchain:6.0.101",
+        "@rules_go//go/toolchain:cgo_off",
     ],
     exec_properties = {
         "container-image": "docker://gcr.io/bazel-public/ubuntu2004-java11@sha256:69a78f121230c6d5cbfe2f4af8ce65481aa3f2acaaaf8e899df335f1ac1b35b5",

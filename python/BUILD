@@ -25,6 +25,7 @@ py_test(
         ":hello",
         "@io_abseil_py//absl/testing:absltest",
     ],
+    size = "small",
 )
 
 # This wrapper supports sharding, fast-failing and test filtering: try
@@ -36,12 +37,14 @@ pytest_test(
     shard_count = 2,
     tags = ["todo-pe1188-remote-incompatible"],
     deps = [":hello"],
+    size = "small",
 )
 
 py_test(
     name = "hello_unittest_test",
     srcs = ["hello_unittest_test.py"],
     deps = [":hello"],
+    size = "small",
 )
 
 # Utility to help re-generate requirements lock.

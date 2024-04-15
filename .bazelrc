@@ -1,7 +1,6 @@
 # Options common for all EngFlow remote configurations.
 common --@aspect_rules_ts//ts:skipLibCheck=honor_tsconfig
 common --@aspect_rules_ts//ts:default_to_tsc_transpiler
-common --noenable_bzlmod
 common --noincompatible_check_sharding_support
 
 build:engflow_common --jobs=40

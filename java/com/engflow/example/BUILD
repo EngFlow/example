@@ -9,4 +9,5 @@ java_test(
     name = "ExampleTest",
     srcs = ["ExampleTest.java"],
     deps = [":example"],
+    size = "small",
 )
