@@ -91,30 +91,13 @@ use_repo(dotnet, "dotnet_toolchains")
 register_toolchains("@dotnet_toolchains//:all")
 
 # https://github.com/bazelbuild/rules_go/blob/master/docs/go/core/bzlmod.md
-bazel_dep(name = "rules_go", version = "0.46.0")
+bazel_dep(name = "rules_go", version = "0.47.1")
 bazel_dep(name = "gazelle", version = "0.36.0")
 
-GO_PLATFORMS = [
-    ("darwin", "amd64"),
-    ("darwin", "arm64"),
-    ("linux", "amd64"),
-    ("linux", "arm64"),
-    ("windows", "amd64"),
-]
-
-GO_VERSION = "1.21.6"
+GO_VERSION = "1.22.3"
 
 go_sdk = use_extension("@rules_go//go:extensions.bzl", "go_sdk")
-
-[
-    go_sdk.download(
-        name = "go_{}_{}".format(goos, goarch),
-        goarch = goarch,
-        goos = goos,
-        version = GO_VERSION,
-    )
-    for goos, goarch in GO_PLATFORMS
-]
+go_sdk.download(version = GO_VERSION)
 
 go_deps = use_extension("@gazelle//:extensions.bzl", "go_deps")
 go_deps.from_file(go_mod = "//:go.mod")
