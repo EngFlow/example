@@ -52,6 +52,7 @@ build:remote_windows_x64 --platforms=//platform/windows_x64
 build:remote_windows_x64 --action_env=BAZEL_DO_NOT_DETECT_CPP_TOOLCHAIN=1
 build:remote_windows_x64 --extra_execution_platforms=//platform/windows_x64
 build:remote_windows_x64 --extra_toolchains=//platform/windows_x64:cc-toolchain
+build:remote_windows_x64 --enable_runfiles
 
 # Options for private EngFlow clusters.
 # To use on your own cluster, change the URLs to your own endpoint.
