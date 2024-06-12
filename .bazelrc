@@ -64,7 +64,7 @@ build:opal --remote_executor=grpcs://opal.cluster.engflow.com
 build:opal_bes --bes_backend=grpcs://opal.cluster.engflow.com
 build:opal_bes --bes_instance_name=example-oss
 build:opal_bes --bes_lifecycle_events
-build:opal_bes --bes_results_url=https://opal.cluster.engflow.com/invocation/
+build:opal_bes --bes_results_url=https://opal.cluster.engflow.com/invocations/example-oss/
 
 build:magnesite --config=engflow_common
 build:magnesite --config=magnesite_bes
