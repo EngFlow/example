@@ -109,10 +109,10 @@ use_repo(go_deps, "com_github_google_go_cmp")
 bazel_dep(name = "rules_java", version = "7.5.0")
 
 # https://github.com/bazelbuild/rules_jvm_external/blob/master/docs/bzlmod.md
-bazel_dep(name = "rules_jvm_external", version = "6.0")
+bazel_dep(name = "rules_jvm_external", version = "6.1")
 bazel_dep(
     name = "grpc-java",
-    version = "1.62.2",
+    version = "1.64.0",
     repo_name = "io_grpc_grpc_java",
 )
 
