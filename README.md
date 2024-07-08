@@ -40,8 +40,6 @@ build and test software with the EngFlow Remote Execution service.
   - [bazelbuild/rules_swift: Migrate to platforms/toolchains API #3][8]
   - [bazelbuild/rules_swift: Auto-download Linux toolchains when possible #4][9]
 
-
-
 ## Local execution
 
 Make sure that you can build and run the tests in the language of your choice
@@ -101,7 +99,7 @@ needed. For instance:
 #
 # - Depending on your cluster configuration, replace remote_linux_64 with
 #   remote_macos_x64 or remote_windows_x64.
-build:engflow --config=engflow_common                                            
+build:engflow --config=engflow_common
 build:engflow --config=remote_linux_x64
 
 # Configuration for your trial cluster
@@ -141,7 +139,6 @@ build --config=engflow
   bazel build //swift:tests
   ```
 
-
 ### Testing on remote
 
 - `java`, `python`, `scala`, and `typescript`:
@@ -161,7 +158,6 @@ build --config=engflow
   ```sh
   bazel test //swift:tests
   ```
-
 
 ## `engflowapis` execution
 

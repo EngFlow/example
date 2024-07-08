@@ -48,13 +48,25 @@ http_archive(
 )
 
 bazel_dep(name = "bazel_skylib", version = "1.5.0")
-bazel_dep(name = "rules_cc", version = "0.0.9")
 bazel_dep(name = "platforms", version = "0.0.10")
 bazel_dep(
     name = "protobuf",
     version = "23.1",
     repo_name = "com_google_protobuf",
 )
+
+# Per the instructions from:
+# https://github.com/bazelbuild/apple_support?tab=readme-ov-file#bazel-7-setup
+#
+# If you also depend on `rules_cc`, `apple_support` must come _above_ `rules_cc`
+# in your `MODULE.bazel` or `WORKSPACE` file because Bazel selects toolchains
+# based on which is registered first.
+bazel_dep(
+    name = "apple_support",
+    version = "1.15.1",
+    repo_name = "build_bazel_apple_support",
+)
+bazel_dep(name = "rules_cc", version = "0.0.9")
 
 # https://github.com/googleapis/googleapis/pull/855
 # https://github.com/bazelbuild/bazel-central-registry/pull/1699
@@ -77,12 +89,6 @@ pip.parse(
 use_repo(pip, "pip")
 
 bazel_dep(name = "rules_proto", version = "6.0.0-rc2")
-
-bazel_dep(
-    name = "apple_support",
-    version = "1.15.1",
-    repo_name = "build_bazel_apple_support",
-)
 
 bazel_dep(name = "rules_dotnet", version = "0.15.1")
 
