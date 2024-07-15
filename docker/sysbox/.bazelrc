@@ -1,0 +1,61 @@
+# Options common for all EngFlow remote configurations.
+common --noincompatible_check_sharding_support
+
+build:engflow_common --jobs=40
+build:engflow_common --define=EXECUTOR=remote
+build:engflow_common --disk_cache=
+build:engflow_common --experimental_inmemory_dotd_files
+build:engflow_common --experimental_inmemory_jdeps_files
+build:engflow_common --incompatible_strict_action_env=true
+build:engflow_common --remote_timeout=3600
+build:engflow_common --action_env=BAZEL_DO_NOT_DETECT_CPP_TOOLCHAIN=1
+build:engflow_common --java_runtime_version=remotejdk_11
+build:engflow_common --java_language_version=11
+build:engflow_common --grpc_keepalive_time=30s
+build:engflow_common --legacy_important_outputs=false
+
+# Platform-specific options for each supported platform.
+build:remote --extra_execution_platforms=//platform
+build:remote --host_platform=//platform
+build:remote --platforms=//platform
+
+# Options for private EngFlow clusters.
+# To use on your own cluster, change the URLs to your own endpoint.
+build:<your-cluster> --config=engflow_common
+build:<your-cluster> --config=remote
+build:<your-cluster> --config=opal_bes
+build:<your-cluster> --config=opal_auth
+build:<your-cluster> --remote_instance_name=example-oss
+build:<your-cluster> --remote_executor=grpcs://<your-cluster>.cluster.engflow.com
+
+# Just for testing. Must be removed before checking into examples repo
+build:engflow --remote_default_exec_properties=container-image=docker://645088952840.dkr.ecr.eu-west-1.amazonaws.com/engflow-re/debian12-x64@sha256:b636ba1e2fd5da78372596e9e882a6a19e8931b52a7ec37e17587d84f1fb8e76
+build:engflow --remote_default_exec_properties=dockerNetwork=standard
+build:engflow --define=EXECUTOR=remote
+build:engflow --disk_cache=
+build:engflow --experimental_inmemory_dotd_files
+build:engflow --experimental_inmemory_jdeps_files
+build:engflow --incompatible_strict_action_env=true
+build:engflow --remote_timeout=600
+build:engflow --nolegacy_important_outputs
+
+build:glass_bes --bes_backend=grpcs://glass.cluster.engflow.com
+build:glass_bes --bes_results_url=https://glass.cluster.engflow.com/invocations/default/
+
+build:glass --config=engflow
+build:glass --config=remote
+build:glass --config=glass_auth
+build:glass --config=glass_bes
+build:glass --remote_executor=grpcs://glass.cluster.engflow.com
+
+# To authenticate with the clusters above, create a .bazelrc.user file.
+# This file is not checked into Git because it refers to local file system paths.
+#
+# It could contain (for example for mTLS authentication):
+#
+#     build:opal_auth --tls_client_certificate=/home/example/.engflow/opal/engflow.crt
+#     build:opal_auth --tls_client_key=/home/example/.engflow/opal/engflow.key
+#
+# You can obtain an mTLS certificate by visiting the cluster's "Getting Started"
+# page, after logging in.
+try-import .bazelrc.user
