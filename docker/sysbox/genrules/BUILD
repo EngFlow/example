@@ -24,9 +24,7 @@ UPPER_BOUND = 10
     cmd_bash = "echo 'Hello engflow world from bash' > $@",
     cmd_ps = "Set-Content -Path $@ -Value 'Hello engflow world from powershell'",
     exec_properties = {
-        # "container-image": "docker://YOUR_SYSBOX_DIND_DOCKER_IMAGE",
-        # For testing purposes. Will be removed before submitting to sample repo.
-        "container-image": "docker://645088952840.dkr.ecr.eu-west-1.amazonaws.com/engflow-ci/debian12-dind-x64@sha256:fbbaadfc4bc64fe8b7bc3aa5baba2307f1324c1572360c94fe952ff3a703a2af",
+        "container-image": "docker://YOUR_SYSBOX_DIND_DOCKER_IMAGE",
         "dockerRuntime": "sysbox-runc",
         "Pool": "linux_sysbox_x64", # this can change depending on what pool has sysbox enabled
         "dockerNetwork": "standard",
