@@ -24,7 +24,8 @@ UPPER_BOUND = 10
     cmd_bash = "echo 'Hello engflow world from bash' > $@",
     cmd_ps = "Set-Content -Path $@ -Value 'Hello engflow world from powershell'",
     exec_properties = {
-        "container-image": "docker://YOUR_SYSBOX_DIND_DOCKER_IMAGE",
+        # Uncomment the line below and modify the docker container to use the one you created.
+        # "container-image": "docker://YOUR_SYSBOX_DIND_DOCKER_IMAGE",
         "dockerRuntime": "sysbox-runc",
         "Pool": "linux_sysbox_x64", # this can change depending on what pool has sysbox enabled
         "dockerNetwork": "standard",
