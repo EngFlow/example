@@ -19,7 +19,7 @@ sh_test(
         # Replace the container-image below to use the one you created.
         "container-image": "docker://645088952840.dkr.ecr.eu-west-1.amazonaws.com/engflow-ci/debian12-dind-x64@sha256:fbbaadfc4bc64fe8b7bc3aa5baba2307f1324c1572360c94fe952ff3a703a2af",
         "dockerRuntime": "sysbox-runc",
-        "Pool": "linux_sysbox_x64", # this can change depending on what pool has sysbox enabled
+        "Pool": "ci_sysbox_x64", # this can change depending on what pool has sysbox enabled
         "dockerNetwork": "standard",
         # DO NOT ENABLE!!! "dockerSiblingContainers": "True",
         # it will cause the worker to mount /var/run/docker.sock
