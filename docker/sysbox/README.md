@@ -18,7 +18,7 @@ rule to point the container you produced in the previous step.
 - Run the following command:
 
 ```sh
-bazel test --config=<your-cluster> //docker/sysbox/dind_test/...
+bazel test --config=<your-cluster> --test_output=all //docker/sysbox/dind_test/...
 ```
 
 # How does it work?
