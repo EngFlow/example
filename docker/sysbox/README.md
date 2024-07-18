@@ -8,7 +8,7 @@ Use as companion to https://docs.engflow.com/re/client/sysbox.html
 Usage:
 
 - Follow instructions in https://docs.engflow.com/re/client/sysbox.html to generate
- a container tha runs with `sysbox` runtime which enables running nested docker containers.
+ a container tha uses `sysbox` to run nested docker containers.
 
 - Modify the `dind_test/BUILD`. Change the `container-image` attribute of the `sh_test`
 rule to point the container you produced in the previous step. 
