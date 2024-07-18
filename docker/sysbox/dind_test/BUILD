@@ -11,21 +11,13 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-#
-# The following genrules are able to produce thousands of targets based
-# on the user's input.
-# This can be used for stress testing your build infrastructure.
-# Change the upper bound of the range and enjoy!
-UPPER_BOUND = 10
 
-[genrule(
-    name = "foo_TXT_4KB_" + str(x),
-    outs = ["foo_text" + str(x) + ".txt"],
-    cmd_bash = "echo 'Hello engflow world from bash' > $@",
-    cmd_ps = "Set-Content -Path $@ -Value 'Hello engflow world from powershell'",
+sh_test(
+    name = "check_docker",
+    srcs = ["check_docker.sh"],
     exec_properties = {
-        # Uncomment the line below and modify the docker container to use the one you created.
-        # "container-image": "docker://YOUR_SYSBOX_DIND_DOCKER_IMAGE",
+        # Replace the container-image below to use the one you created.
+        "container-image": "docker://645088952840.dkr.ecr.eu-west-1.amazonaws.com/engflow-ci/debian12-dind-x64@sha256:fbbaadfc4bc64fe8b7bc3aa5baba2307f1324c1572360c94fe952ff3a703a2af",
         "dockerRuntime": "sysbox-runc",
         "Pool": "linux_sysbox_x64", # this can change depending on what pool has sysbox enabled
         "dockerNetwork": "standard",
@@ -36,4 +28,4 @@ UPPER_BOUND = 10
         # DO NOT ENABLE!!! "dockerPrivileged": "True",
         # sysbox containers will refuse to start
     },
-) for x in range(1, UPPER_BOUND)]
+)
