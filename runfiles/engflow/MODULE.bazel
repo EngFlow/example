@@ -1,0 +1,16 @@
+# Note: Not our actual MODULE.bazel
+module(name = "engflow", version = "0.0.0")
+
+bazel_dep(name = "frobozz")
+local_path_override(module_name = "frobozz", path = "../frobozz")
+
+bazel_dep(name = "rules_python", version = "0.34.0")
+
+python = use_extension(
+    "@rules_python//python/extensions:python.bzl",
+    "python",
+)
+python.toolchain(
+    is_default = True,
+    python_version = "3.12.3",
+)
