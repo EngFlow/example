@@ -1,0 +1,6 @@
+# Required for now to prevent `bazel build //...` from recursing into the
+# modules under `runfiles/` pending resolution of:
+#
+# - https://github.com/bazelbuild/bazel/issues/22208
+# - https://github.com/bazelbuild/bazel/issues/21515
+runfiles/
