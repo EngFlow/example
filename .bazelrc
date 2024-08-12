@@ -10,11 +10,9 @@ build:engflow_common --experimental_inmemory_dotd_files
 build:engflow_common --experimental_inmemory_jdeps_files
 build:engflow_common --incompatible_strict_action_env=true
 build:engflow_common --remote_timeout=3600
-build:engflow_common --action_env=BAZEL_DO_NOT_DETECT_CPP_TOOLCHAIN=1
-build:engflow_common --java_runtime_version=remotejdk_11
-build:engflow_common --java_language_version=11
 build:engflow_common --grpc_keepalive_time=30s
 build:engflow_common --legacy_important_outputs=false
+build:engflow_common --action_env=BAZEL_DO_NOT_DETECT_CPP_TOOLCHAIN=1
 
 # Options for continuous testing.
 build:ci --color=yes
@@ -25,6 +23,8 @@ build:ci --test_output=summary
 build:ci --show_progress_rate_limit=2.0
 build:ci --nobuild_runfile_links
 build:ci --keep_going
+build:ci --java_runtime_version=remotejdk_11
+build:ci --java_language_version=11
 
 # Additional clang toolchain options for automatically configured toolchains.
 build --cxxopt="-std=c++14"
