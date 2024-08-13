@@ -63,7 +63,7 @@ jobs:
             remote_execution: 'true'
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       - name: Set up authentication
         shell: bash
