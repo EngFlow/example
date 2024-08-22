@@ -1,1 +1,1 @@
-build:opal_auth --experimental_credential_helper=opal.cluster.engflow.com=%workspace%/infra/bazel_credential_helper.sh
+build:opal_auth --credential_helper=opal.cluster.engflow.com=%workspace%/infra/bazel_credential_helper.sh
