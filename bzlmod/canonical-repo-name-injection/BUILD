@@ -47,7 +47,7 @@ genrule(
 genrule(
     name = "repo-vars",
     outs = ["repo-vars.txt"],
-    cmd = """printf '%%s\n' \
+    cmd = r"""printf '%%s\n' \
           '%s' \
           '  repo-name: $(repo-name)' \
           '  repo-dir:  $(repo-dir)' >$@""" % repo_target,
@@ -152,7 +152,7 @@ genrule(
     name = "genrule-constants",
     srcs = [":repo-target"],
     outs = ["genrule-constants.js"],
-    cmd  = """printf 'module.exports.%%s;\n' \
+    cmd  = r"""printf 'module.exports.%%s;\n' \
         'ruleName = "genrule-constants"' \
         'target = "%s"' \
         'binDir = "$(BINDIR)"' \
