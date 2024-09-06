@@ -4,3 +4,4 @@
 # - https://github.com/bazelbuild/bazel/issues/22208
 # - https://github.com/bazelbuild/bazel/issues/21515
 runfiles/
+bzlmod/
