@@ -275,10 +275,14 @@ http_archive(
 )
 
 # This constant matches the default Scala version from rules_scala for now.
-SCALA_VERSION = "2.12.18"
+SCALA_VERSION = "2.13.12"
 SCALA_VERSIONS = [SCALA_VERSION]
 
 scala_config = use_extension("//scala/extensions:config.bzl", "scala_config")
+scala_config.settings(
+    scala_version = SCALA_VERSION,
+    scala_versions = SCALA_VERSIONS,
+)
 use_repo(
     scala_config,
     "io_bazel_rules_scala_config",
