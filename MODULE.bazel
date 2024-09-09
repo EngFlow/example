@@ -119,7 +119,7 @@ go_deps.from_file(go_mod = "//:go.mod")
 
 use_repo(go_deps, "com_github_google_go_cmp")
 
-bazel_dep(name = "rules_java", version = "7.10.0")
+bazel_dep(name = "rules_java", version = "7.9.1")
 
 # https://github.com/bazelbuild/rules_jvm_external/blob/master/docs/bzlmod.md
 bazel_dep(name = "rules_jvm_external", version = "6.2")
