@@ -119,7 +119,7 @@ go_deps.from_file(go_mod = "//:go.mod")
 
 use_repo(go_deps, "com_github_google_go_cmp")
 
-bazel_dep(name = "rules_java", version = "7.6.5")
+bazel_dep(name = "rules_java", version = "7.9.1")
 
 # https://github.com/bazelbuild/rules_jvm_external/blob/master/docs/bzlmod.md
 bazel_dep(name = "rules_jvm_external", version = "6.2")
@@ -203,11 +203,12 @@ use_repo(rules_ts_ext, "npm_typescript")
 #
 # - MODULE.bazel loads the rules_scala archive as @io_bazel_rules_scala.
 #
-# - The //scala:config.bzl extension defines @io_bazel_rules_scala_config, which
-#   depends on @io_bazel_rules_scala.
+# - The //scala/extensions:config.bzl extension defines
+#   @io_bazel_rules_scala_config, which depends on @io_bazel_rules_scala.
 #
-# - The //scala:deps.bzl extension defines the repos needed by the Scala rules,
-#   which depend on @io_bazel_rules_scala and @io_bazel_rules_scala_config.
+# - The //scala/extensions:deps.bzl extension defines the repos needed by the
+#   Scala rules, which depend on @io_bazel_rules_scala and
+#   @io_bazel_rules_scala_config.
 #
 # The following problems occur when trying to import everything directly in
 # MODULE.bazel, or in fewer extension files.
@@ -266,22 +267,24 @@ use_repo(rules_ts_ext, "npm_typescript")
 
 http_archive(
     name = "io_bazel_rules_scala",
-    sha256 = "3b00fa0b243b04565abb17d3839a5f4fa6cc2cac571f6db9f83c1982ba1e19e5",
-    strip_prefix = "rules_scala-6.5.0",
-    url = "https://github.com/bazelbuild/rules_scala/releases/download/v6.5.0/rules_scala-v6.5.0.tar.gz",
-    patches = ["//scala:rules_scala-6.5.0.patch"],
+    sha256 = "e734eef95cf26c0171566bdc24d83bd82bdaf8ca7873bec6ce9b0d524bdaf05d",
+    strip_prefix = "rules_scala-6.6.0",
+    url = "https://github.com/bazelbuild/rules_scala/releases/download/v6.6.0/rules_scala-v6.6.0.tar.gz",
+    patches = ["//scala:rules_scala-6.6.0.patch"],
     patch_args = ["-p1"],
 )
 
-scala_config = use_extension("//scala:config.bzl", "scala_config")
+# This constant matches the default Scala version from rules_scala for now.
+SCALA_VERSION = "2.12.18"
+SCALA_VERSIONS = [SCALA_VERSION]
+
+scala_config = use_extension("//scala/extensions:config.bzl", "scala_config")
 use_repo(
     scala_config,
     "io_bazel_rules_scala_config",
 )
 
-scala_deps = use_extension("//scala:deps.bzl", "scala_deps")
-use_repo(
-    scala_deps,
+repos = [
     "io_bazel_rules_scala_scala_compiler",
     "io_bazel_rules_scala_scala_library",
     "io_bazel_rules_scala_scala_parser_combinators",
@@ -299,11 +302,20 @@ use_repo(
     "io_bazel_rules_scala_scalatest_matchers_core",
     "io_bazel_rules_scala_scalatest_mustmatchers",
     "io_bazel_rules_scala_scalatest_shouldmatchers",
-)
+]
 
-# Extracted from scala_register_toolchains() and scalatest_toolchain(), since
-# other bazel rules modules suggest similar usage.
-register_toolchains(
-    "@io_bazel_rules_scala//scala:default_toolchain",
-    "@io_bazel_rules_scala//testing:scalatest_toolchain"
-)
+toolchains = [
+    "@io_bazel_rules_scala//scala:toolchain",
+    "@io_bazel_rules_scala//testing:scalatest_toolchain",
+]
+
+scala_deps = use_extension("//scala/extensions:deps.bzl", "scala_deps")
+[
+    (
+        [use_repo(scala_deps, repo + suffix) for repo in repos],
+        [register_toolchains(toolchain + suffix) for toolchain in toolchains],
+    )
+    # The v.replace() expression mimics the logic to generate version specific
+    # repo suffixes from rules_scala.
+    for suffix in ["_" + v.replace(".", "_") for v in SCALA_VERSIONS]
+]
