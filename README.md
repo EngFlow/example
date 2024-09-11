@@ -57,7 +57,7 @@ locally before attempting remote execution.
   Build them all with:
 
   ```sh
-  bazel build -- //... -//platform/...
+  bazel build //...
   ```
 
 - `swift`:
@@ -78,7 +78,7 @@ locally before attempting remote execution.
   Test them all with:
 
   ```sh
-  bazel test -- //... -//platform/...
+  bazel test //...
   ```
 
 - `swift`:
@@ -130,7 +130,7 @@ build --config=engflow
   Build them all with:
 
   ```sh
-  bazel build -- //... -//platform/...
+  bazel build //...
   ```
 
 - `swift`:
@@ -150,7 +150,7 @@ build --config=engflow
   Test them all with:
 
   ```sh
-  bazel test -- //... -//platform/...
+  bazel test //...
   ```
 
 - `swift`:
