@@ -11,14 +11,14 @@ Usage:
  a container tha uses `sysbox` to run nested docker containers.
 
 - Modify the `dind_test/BUILD`. Change the `container-image` attribute of the `sh_test`
-rule to point the container you produced in the previous step. 
+rule to point the container you produced in the previous step.
 
-- Modify the `.bazelrc` file at the top level of the repo to use your own endpoint. 
+- Modify the `.bazelrc` file at the top level of the repo to use your own endpoint.
 
 - Run the following command:
 
 ```sh
-bazel test --config=<your-cluster> --test_output=all //docker/sysbox/dind_test/...
+bazel test --config=<your-cluster> --test_output=all //docker/sysbox/dind_test:check_docker
 ```
 
 # How does it work?

@@ -30,7 +30,7 @@ def main():
         ]
     # The //docker/sysbox/... targets should only run in linux + remote
     if os.getenv("REMOTE_EXECUTION") == "true" and os.getenv("OS") == "linux":
-        targets += ["//docker/sysbox:check_docker",]
+        targets += ["//docker/sysbox/dind_test:check_docker",]
     args = ["bazel", "test"] + flags + ["--"] + targets
 
     result = subprocess.run(args)
