@@ -1,8 +1,8 @@
-package com.engflow.cycleexample.main;
+package com.engflow.internship.cycleexample.main;
 
-import com.engflow.cycleexample.class_a.ClassA;
-import com.engflow.cycleexample.class_b.ClassB;
-import com.engflow.cycleexample.class_c.ClassC;
+import com.engflow.internship.cycleexample.class_a.ClassA;
+import com.engflow.internship.cycleexample.class_b.ClassB;
+import com.engflow.internship.cycleexample.class_c.ClassC;
 
 public class Main {
     public static void main(String[] args) {

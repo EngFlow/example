@@ -1,7 +1,7 @@
-package com.engflow.cycleexample.class_a;
+package com.engflow.internship.cycleexample.class_a;
 
-import com.engflow.cycleexample.class_b.ClassB;
-import com.engflow.cycleexample.interface_a.InterfaceA;
+import com.engflow.internship.cycleexample.class_b.ClassB;
+import com.engflow.internship.cycleexample.interface_a.InterfaceA;
 
 public class ClassA implements InterfaceA {
     private static final int MAX_CALLS = 10;

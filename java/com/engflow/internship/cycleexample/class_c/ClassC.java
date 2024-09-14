@@ -1,6 +1,6 @@
-package com.engflow.cycleexample.class_c;
+package com.engflow.internship.cycleexample.class_c;
 
-import com.engflow.cycleexample.interface_a.InterfaceA;
+import com.engflow.internship.cycleexample.interface_a.InterfaceA;
 
 public class ClassC implements InterfaceA {
     private InterfaceA classA;

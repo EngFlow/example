@@ -5,7 +5,7 @@ java_library(
     srcs = ["ClassC.java"],
     visibility = ["//visibility:public"],
     deps = [
-        "//java/com/engflow/cycleexample/interface_a",
+        "//java/com/engflow/internship/cycleexample/interface_a",
     ],
 )
 
@@ -15,6 +15,6 @@ java_test(
     test_class = "cycleexample",
     deps = [
         ":class_c",
-        "//java/com/engflow/cycleexample/class_a:class_a",
+        "//java/com/engflow/internship/cycleexample/class_a:class_a",
     ],
 )

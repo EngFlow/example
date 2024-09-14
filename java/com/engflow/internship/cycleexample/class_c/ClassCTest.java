@@ -1,6 +1,6 @@
-package com.engflow.cycleexample.class_c;
+package com.engflow.internship.cycleexample.class_c;
 
-import com.engflow.cycleexample.class_a.ClassA;
+import com.engflow.internship.cycleexample.class_a.ClassA;
 import org.junit.Test;
 import static org.junit.Assert.assertTrue;
 
