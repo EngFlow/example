@@ -4,8 +4,6 @@ import com.engflow.internship.cycleexample.class_b.ClassB;
 import com.engflow.internship.cycleexample.interface_a.InterfaceA;
 
 public class ClassA implements InterfaceA {
-    private static final int MAX_CALLS = 10;
-    private int callCount = 0;
     private ClassB classB;
 
     public ClassA(ClassB classB) {
@@ -13,13 +11,21 @@ public class ClassA implements InterfaceA {
     }
 
     @Override
-    public void methodA() {
-        if (callCount >= MAX_CALLS) {
-            System.out.println("ClassA.methodA() reached max calls");
+    public void methodA(String input) {
+        // If the input is null or empty, return immediately
+        if (input == null || input.isEmpty()) {
             return;
         }
-        System.out.println("ClassA.methodA()");
-        callCount++;
-        classB.methodB();
+
+        //Find the index of the first space character in the input string.
+        int spaceIndex = input.indexOf(' ');
+        //Extract the word from the beginning of the input string up to the space character.
+        String word = (spaceIndex == -1) ? input : input.substring(0, spaceIndex);
+        //Extract the remaining part of the input string after the space character.
+        String remaining = (spaceIndex == -1) ? "" : input.substring(spaceIndex + 1);
+
+        //Print the word extracted from the input string.
+        System.out.println("ClassA: " + word);
+        classB.methodB(remaining);
     }
 }

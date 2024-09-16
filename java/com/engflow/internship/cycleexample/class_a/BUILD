@@ -12,7 +12,7 @@ java_library(
 java_test(
     name = "class_a_test",
     srcs = ["ClassATest.java"],
-    test_class = "cycleexample",
+    test_class = "com.engflow.internship.cycleexample.class_a.ClassATest",
     deps = [
         ":class_a",
         "//java/com/engflow/internship/cycleexample/class_b:class_b",

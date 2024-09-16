@@ -13,7 +13,7 @@ public class ClassCTest {
         }
 
         @Override
-        public void methodA() {
+        public void methodA(String input) {
             methodACalled = true;
         }
     }
@@ -27,7 +27,7 @@ public class ClassCTest {
         ClassC classC = new ClassC(testClassA);
 
         // Call methodA on classC
-        classC.methodA();
+        classC.methodA("sample input");
 
         // Verify that methodA on the TestClassA was called
         assertTrue(testClassA.methodACalled);
