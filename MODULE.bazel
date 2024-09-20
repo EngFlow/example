@@ -51,7 +51,7 @@ bazel_dep(name = "bazel_skylib", version = "1.7.1")
 bazel_dep(name = "platforms", version = "0.0.10")
 bazel_dep(
     name = "protobuf",
-    version = "28.0-rc2",
+    version = "28.2",
     repo_name = "com_google_protobuf",
 )
 
@@ -76,9 +76,9 @@ bazel_dep(
     repo_name = "com_google_googleapis",
 )
 
-bazel_dep(name = "rules_python", version = "0.33.2")
+bazel_dep(name = "rules_python", version = "0.35.0")
 
-PYTHON_VERSION = "3.12"
+PYTHON_VERSION = "3.12.4"
 python = use_extension("@rules_python//python/extensions:python.bzl", "python")
 python.toolchain(
     is_default = True,
@@ -122,22 +122,22 @@ use_repo(go_deps, "com_github_google_go_cmp")
 bazel_dep(name = "rules_java", version = "7.11.1")
 
 # https://github.com/bazelbuild/rules_jvm_external/blob/master/docs/bzlmod.md
-bazel_dep(name = "rules_jvm_external", version = "6.2")
+bazel_dep(name = "rules_jvm_external", version = "6.4")
 bazel_dep(
     name = "grpc-java",
-    version = "1.64.0",
+    version = "1.66.0",
     repo_name = "io_grpc_grpc_java",
 )
 
 # Loads rules required to compile proto files
-bazel_dep(name = "rules_proto_grpc", version = "5.0.0-alpha2")
+bazel_dep(name = "rules_proto_grpc", version = "5.0.0")
 
 maven = use_extension("@rules_jvm_external//:extensions.bzl", "maven")
 maven.install(
     artifacts = [
-        "commons-cli:commons-cli:1.8.0",
+        "commons-cli:commons-cli:1.9.0",
         "com.google.oauth-client:google-oauth-client:1.36.0",
-        "io.netty:netty-handler:4.1.111.Final",
+        "io.netty:netty-handler:4.1.113.Final",
     ],
 
     # When updating versions, run `REPIN=1 bazel run @maven//:pin`
@@ -151,8 +151,8 @@ maven.install(
 )
 use_repo(maven, "maven")
 
-bazel_dep(name = "rules_kotlin", version = "1.9.6")
-bazel_dep(name = "rules_perl", version = "0.2.0")
+bazel_dep(name = "rules_kotlin", version = "2.0.0")
+bazel_dep(name = "rules_perl", version = "0.2.3.bcr.1")
 
 bazel_dep(
     name = "rules_swift",
@@ -283,10 +283,7 @@ scala_config.settings(
     scala_version = SCALA_VERSION,
     scala_versions = SCALA_VERSIONS,
 )
-use_repo(
-    scala_config,
-    "io_bazel_rules_scala_config",
-)
+use_repo(scala_config, "io_bazel_rules_scala_config")
 
 repos = [
     "io_bazel_rules_scala_scala_compiler",
