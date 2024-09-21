@@ -27,8 +27,12 @@ build:ci --java_runtime_version=remotejdk_11
 build:ci --java_language_version=11
 
 # Additional clang toolchain options for automatically configured toolchains.
-build --cxxopt="-std=c++14"
-build --host_cxxopt="-std=c++14"
+build --cxxopt="-std=c++17"
+build --host_cxxopt="-std=c++17"
+build --java_language_version=21
+build --java_runtime_version=remotejdk_21
+build --tool_java_language_version=21
+build --tool_java_runtime_version=remotejdk_21
 build:clang --cxxopt="-fno-exceptions"
 build:clang --host_cxxopt="-fno-exceptions"
 build:clang --cxxopt="-fvisibility=hidden"
