@@ -72,7 +72,7 @@ bazel_dep(name = "rules_cc", version = "0.0.9")
 # https://github.com/bazelbuild/bazel-central-registry/pull/1699
 bazel_dep(
     name = "googleapis",
-    version = "0.0.0-20240326-1c8d509c5",
+    version = "0.0.0-20240819-fe8ba054a",
     repo_name = "com_google_googleapis",
 )
 
