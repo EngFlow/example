@@ -28,9 +28,6 @@ The project is organized into several packages, each representing different comp
 
 The program takes a text input file and recursively prints each word with each class (`ClassA` prints a word, then `ClassB`, and so on) until the string is empty. The input file should be specified in the `data` attribute of the `java_binary` rule in the `BUILD` file.
 
-Here is an example of how the `Main` class processes the input file:
-
-
 ## How to Run Tests
 
 To run the tests and gather performance data, use the following Bazel command:
