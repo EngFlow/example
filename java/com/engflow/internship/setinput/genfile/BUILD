@@ -1,4 +1,4 @@
-NUM_FILES = 10
+NUM_FILES = 16
 
 [genrule(
     name = "benchmark_test_file" + str(x),
@@ -8,6 +8,5 @@ NUM_FILES = 10
 
 filegroup(
     name = "genfile",
-    srcs = glob(["genfile/benchmark_test_file*.txt"]),
-    visibility = ["//visibility:public"],
+    srcs = [":benchmark_test_file" + str(x) for x in range(1,NUM_FILES+1)],
 )

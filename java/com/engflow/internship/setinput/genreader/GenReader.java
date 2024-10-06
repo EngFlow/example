@@ -8,38 +8,28 @@ import java.io.BufferedReader;
 public class GenReader {
 
     /**
-     * Reads the content of all files in the specified directory and prints it to the console.
+     * Reads the content of the specified file and prints it to the console.
      * @param inputPath
      */
     public void readFiles(String inputPath) {
-        File directory = new File(inputPath);
+        File file = new File(inputPath);
 
-        // Check if the directory exists and is a directory
-        if (!directory.exists() || !directory.isDirectory()) {
-            System.out.println("Invalid directory path: " + inputPath);
+        // Check if the file exists and is a file
+        if (!file.exists() || !file.isFile()) {
+            System.out.println("Invalid file path: " + inputPath + "\n Absolute path: " + file.getAbsolutePath()+
+            "\n File: " + file);
             return;
         }
 
-        // List all files in the directory and check if there are any
-        File[] files = directory.listFiles();
-        if (files == null || files.length == 0) {
-            System.out.println("No files found in the directory: " + inputPath);
-            return;
-        }
-
-        // Read the content of each file and print it to the console
-        for (File file : files) {
-            if (file.isFile()) {
-                try (BufferedReader reader = new BufferedReader(new FileReader(file))) {
-                    String line;
-                    System.out.println("Reading file: " + file.getName());
-                    while ((line = reader.readLine()) != null) {
-                        System.out.println(line);
-                    }
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
+        // Read the content of the file and print it to the console
+        try (BufferedReader reader = new BufferedReader(new FileReader(file))) {
+            String line;
+            System.out.println("Reading file: " + file.getName());
+            while ((line = reader.readLine()) != null) {
+                System.out.println(line);
             }
+        } catch (IOException e) {
+            e.printStackTrace();
         }
     }
 }
