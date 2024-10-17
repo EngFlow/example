@@ -18,7 +18,8 @@ concurrency:
 env:
   BAZELISK_GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
   GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-  OPAL_RPC_CREDENTIALS: ${{ secrets.OPAL_RPC_CREDENTIALS }}
+  OPAL_RPC_CREDENTIALS: '{"headers":{"Authorization": ["Bearer ${{ secrets.GITHUB_TOKEN }}"]}}'
+
 
 jobs:
   test-matrix:
@@ -57,7 +58,7 @@ jobs:
 
       - name: Generate python requirements lock
         shell: bash
-        run: bazel run //python:requirements.update
+        run: bazel run --remote_header="Authorization=Bearer $GITHUB_TOKEN" //python:requirements.update
 
       - name: Build and test
         env:
@@ -94,7 +95,7 @@ jobs:
 
       - name: Generate python requirements lock
         shell: bash
-        run: bazel run //python:requirements.update
+        run: bazel run --remote_header="Authorization=Bearer $GITHUB_TOKEN" //python:requirements.update 
 
       - name: Build and test
         env:
