@@ -18,7 +18,8 @@ concurrency:
 env:
   BAZELISK_GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
   GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-  OPAL_RPC_CREDENTIALS: ${{ secrets.OPAL_RPC_CREDENTIALS }}
+  OPAL_RPC_CREDENTIALS: '{"headers":{"Authorization": ["Bearer ${{ secrets.GITHUB_TOKEN }}"]}}'
+
 
 jobs:
   test-matrix:
