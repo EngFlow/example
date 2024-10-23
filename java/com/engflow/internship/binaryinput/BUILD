@@ -1,17 +1,6 @@
 load("@rules_java//java:defs.bzl", "java_binary", "java_library")
 
-NUM_FILES = 10
-
-#Main class
-java_binary(
-    name = "main",
-    srcs = ["Main.java"],
-    main_class = "com.engflow.internship.binaryinput.Main",
-    deps = [
-        ":genbinary"
-    ],
-    args = [str(NUM_FILES)],
-)
+NUM_FILES = 500
 
 #Generates a number of java files based on the value of NUM_FILES
 #Each file is named HelloX.java where X is the number of the file
@@ -25,8 +14,19 @@ java_binary(
 ) for x in range(1,NUM_FILES+1)]
 
 #Generates a java library that contains all the generated java files
-java_library(
-    name = "genbinary",
+[java_library(
+    name = "genbinary" + str(x),
     srcs = [":Hello" + str(x) + ".java" for x in range(1,NUM_FILES+1)],
     visibility = ["//visibility:public"],
+) for x in range(1,NUM_FILES+1)]
+
+#Main class
+java_binary(
+    name = "main",
+    srcs = ["Main.java"],
+    main_class = "com.engflow.internship.binaryinput.Main",
+    deps = [
+        ":genbinary" + str(x) for x in range(1,NUM_FILES+1)
+    ],
+    args = [str(NUM_FILES)],
 )
