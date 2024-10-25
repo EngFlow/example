@@ -75,16 +75,6 @@ build:magnesite_bes --bes_backend=grpcs://magnesite.cluster.engflow.com
 build:magnesite_bes --bes_lifecycle_events
 build:magnesite_bes --bes_results_url=https://magnesite.cluster.engflow.com/invocation/
 
-
-# EngFlow Remote caching
-build:engflow-rc --remote_cache=grpc://127.0.0.1:8080
-# EngFlow BES forwarding
-build:engflow-bes --bes_backend=grpc://127.0.0.1:8080
-build:engflow-bes --bes_results_url=http://127.0.0.1:8080/invocation/
-# EngFlow Remote caching and BES forwarding
-build:engflow --config=engflow-rc
-build:engflow --config=engflow-bes
-
 # To authenticate with the clusters above, create a .bazelrc.user file.
 # This file is not checked into Git because it refers to local file system paths.
 #
