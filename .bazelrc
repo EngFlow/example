@@ -3,6 +3,9 @@ common --@aspect_rules_ts//ts:skipLibCheck=honor_tsconfig
 common --@aspect_rules_ts//ts:default_to_tsc_transpiler
 common --noincompatible_check_sharding_support
 
+build --java_runtime_version=remotejdk_11
+build --java_language_version=11
+
 build:engflow_common --jobs=40
 build:engflow_common --define=EXECUTOR=remote
 build:engflow_common --disk_cache=
@@ -23,8 +26,6 @@ build:ci --test_output=summary
 build:ci --show_progress_rate_limit=2.0
 build:ci --nobuild_runfile_links
 build:ci --keep_going
-build:ci --java_runtime_version=remotejdk_11
-build:ci --java_language_version=11
 
 # Additional clang toolchain options for automatically configured toolchains.
 build --cxxopt="-std=c++14"
