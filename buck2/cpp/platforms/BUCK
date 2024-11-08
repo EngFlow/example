@@ -1,0 +1,18 @@
+load(":defs.bzl", "platforms")
+load("@prelude//platforms:defs.bzl", "execution_platform")
+
+# This platform configures details of remote execution.
+platforms(
+    name = "remote_platform",
+    cpu_configuration = "config//cpu:x86_64",
+    os_configuration = "config//os:linux",
+)
+
+# Simple execution platform for the remote worker env (x86_64 / linux)
+execution_platform(
+    name = "remote",
+    cpu_configuration = "config//cpu:x86_64",
+    os_configuration = "config//os:linux",
+    use_windows_path_separators = False,
+    visibility = ["PUBLIC"],
+)
