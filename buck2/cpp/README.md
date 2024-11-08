@@ -1,6 +1,6 @@
 # EngFlow RE + Buck2 cpp example
 
-This example demonstrates use of EngFlow RE for a simple C++ project built with Buck2 using the prelude.
+This example demonstrates use of EngFlow RE for a simple C++ project built with [Buck2](https://github.com/facebook/buck2) using the prelude.
 
 It is based on two existing samples in the Buck2 upstream repo:
 
