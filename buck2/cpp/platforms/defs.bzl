@@ -25,6 +25,7 @@ def _platforms(ctx):
 
     # The sample EngFlow RE image.
     image = "docker://gcr.io/bazel-public/ubuntu2004-java11@sha256:69a78f121230c6d5cbfe2f4af8ce65481aa3f2acaaaf8e899df335f1ac1b35b5"
+    name = ctx.label.raw_target()
     platform = ExecutionPlatformInfo(
         label = ctx.label.raw_target(),
         configuration = configuration,
@@ -41,7 +42,12 @@ def _platforms(ctx):
         ),
     )
 
-    return [DefaultInfo(), ExecutionPlatformRegistrationInfo(platforms = [platform]), configuration]
+    return [
+        DefaultInfo(),
+        ExecutionPlatformRegistrationInfo(platforms = [platform]),
+        configuration,
+        PlatformInfo(label = str(name), configuration = configuration),
+    ]
 
 platforms = rule(
     attrs = {

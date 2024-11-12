@@ -17,5 +17,5 @@ cxx_binary(
     srcs = ["main.cpp"],
     link_style = "static",
     exec_compatible_with = ["//platforms:remote_platform"],
-    default_target_platform = "//platforms:remote",
+    default_target_platform = "//platforms:remote_platform",
 )
