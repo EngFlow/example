@@ -10,8 +10,7 @@ It is based on two existing samples in the Buck2 upstream repo:
 ### Example structure
 
 In the `platforms` cell we specify:
-* The platform used for remote execution in this project `root//platforms:remote_platform`, which includes the definition of the Docker image used for remote execution.
-* The `execution_platform`, `root//platforms:remote` that defines constraints for targets to run in the remote execution environment. 
+* The platform used for remote execution in this project `root//platforms:remote_platform`, which includes the definition of the Docker image used for remote execution, and that defines constraints for targets to run in the remote execution environment. This platform provides an `ExecutionPlatformRegistrationInfo` a `ConfigurationInfo` and a `PlatformInfo` to be able to be used in the `.buckconfig`, and in the `exec_compatible_with` and `default_target_platform` of `cxx_*` rules.
 
 In the `toolchains` cell we specify:
 
