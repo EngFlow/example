@@ -35,7 +35,7 @@ following:
 engine_address       = <CLUSTER_NAME>.cluster.engflow.com
 action_cache_address = <CLUSTER_NAME>.cluster.engflow.com
 cas_address          = <CLUSTER_NAME>.cluster.engflow.com
-tls_client_cert      = x-engflow-auth-method:jwt-v0,x-engflow-auth-token:LONG_JWT_STRING
+http_headers         = x-engflow-auth-method:jwt-v0,x-engflow-auth-token:LONG_JWT_STRING
  ```
 
  To obtain the value of `LONG_JWT_STRING`, log into https://<CLUSTER_NAME>.cluster.engflow.com/gettingstarted and use the value of `x-engflow-auth-token` in section `Method 2: JWT`.

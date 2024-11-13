@@ -41,7 +41,7 @@ digest_algorithms = SHA256
 engine_address       = <CLUSTER_NAME>.cluster.engflow.com
 action_cache_address = <CLUSTER_NAME>.cluster.engflow.com
 cas_address          = <CLUSTER_NAME>.cluster.engflow.com
-tls_client_cert      = x-engflow-auth-method:jwt-v0,x-engflow-auth-token:LONG_JWT_STRING
+http_headers         = x-engflow-auth-method:jwt-v0,x-engflow-auth-token:LONG_JWT_STRING
 
 [build]
   execution_platforms = root//platforms:remote_platform
