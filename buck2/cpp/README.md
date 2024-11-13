@@ -44,9 +44,14 @@ tls_client_cert      = x-engflow-auth-method:jwt-v0,x-engflow-auth-token:LONG_JW
 
 Clone the repository and replace the relevant configs in `.buckconfig`.
 
-Build and run the example:
+Build the example:
 
 ```
-buck2 build //:main
-buck2 run -v 4 //:main
+buck2 build //:cpp_lib
+```
+
+Test the example:
+
+```
+buck2 test //:cpp_test
 ```
