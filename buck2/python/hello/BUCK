@@ -1,0 +1,20 @@
+
+python_library(
+    name = "hellolib",
+    srcs = ["hello.py"],
+    base_module = "hellolib",
+    visibility = ["PUBLIC"],
+)
+
+python_binary(
+    name = "main",
+    main = "main.py",
+    deps = [":hellolib"],
+)
+
+python_test(
+    name = "hello_unittest_test",
+    srcs = ["hello_unittest_test.py"],
+    deps = [":hellolib"],
+    remote_execution_action_key_providers = "//platforms:remote_execution_action_keys",
+)

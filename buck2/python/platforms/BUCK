@@ -1,0 +1,16 @@
+load(":defs.bzl", "platforms")
+load(":defs.bzl", "action_keys")
+
+# This platform configures details of remote execution.
+platforms(
+    name = "remote_platform",
+)
+
+# This action_key provides a default BuildModeInfo that is needed for RE of tests to function properly.
+# The values in `cell` and `mode` can be used, in practice, to create cache silos. Any values can be given to these attributes.
+action_keys(
+    name = "remote_execution_action_keys",
+    cell = "standard",
+    mode = "standard",
+    visibility = ["PUBLIC"],
+)
