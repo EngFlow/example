@@ -30,4 +30,3 @@ http_headers         = x-engflow-auth-method:jwt-v0,x-engflow-auth-token:LONG_JW
 
 [project]
   ignore = .git
-  
