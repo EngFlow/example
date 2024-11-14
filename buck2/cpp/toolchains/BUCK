@@ -14,6 +14,7 @@
 load("@prelude//toolchains:python.bzl", "system_python_bootstrap_toolchain")
 load("@prelude//toolchains:cxx.bzl", "cxx_tools_info_toolchain")
 load("@prelude//toolchains:remote_test_execution.bzl", "remote_test_execution_toolchain")
+load("@prelude//tests:test_toolchain.bzl", "noop_test_toolchain")
 load("tools.bzl", "path_clang_tools")
 
 # We use the default system python toolchain in this example, focusing only on configuring the cpp toolchain.
@@ -52,4 +53,10 @@ remote_test_execution_toolchain(
             },
         }
     },
+)
+
+# In newer versions of buck2 this toolchain is needed `noop_test_toolchain`.
+noop_test_toolchain(
+    name = "test",
+    visibility = ["PUBLIC"],
 )
