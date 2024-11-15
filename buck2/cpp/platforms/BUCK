@@ -1,0 +1,8 @@
+load(":defs.bzl", "platforms")
+
+# This platform configures details of remote execution.
+platforms(
+    name = "remote_platform",
+    cpu_configuration = "config//cpu:x86_64",
+    os_configuration = "config//os:linux",
+)
