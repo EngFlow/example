@@ -12,6 +12,7 @@ It is based on three existing samples in the Buck2 upstream repo and the EngFlow
 
 In the `platforms` cell we specify:
 * The platform used for remote execution in this project `root//platforms:remote_platform`, which includes the definition of the Docker image used for remote execution, and that defines constraints for targets to run in the remote execution environment. This platform provides an `ExecutionPlatformRegistrationInfo`.
+* The action keys `root//platforms:remote_execution_action_keys`, which provides a default `BuildModeInfo` that is needed for RE of tests to function properly.
 
 In the `toolchains` cell we specify:
 
