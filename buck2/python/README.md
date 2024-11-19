@@ -1,4 +1,4 @@
-# EngFlow RE + Buck2 cpp example
+# EngFlow RE + Buck2 python example
 
 This example demonstrates use of EngFlow RE for a simple python project built with [Buck2](https://github.com/facebook/buck2) using the prelude.
 
