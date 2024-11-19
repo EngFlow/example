@@ -5,7 +5,7 @@ This example demonstrates use of EngFlow RE for a simple python project built wi
 It is based on three existing samples in the Buck2 upstream repo and the EngFlow samples repo:
 
 * Simple python project with prelude - https://github.com/facebook/buck2/tree/main/examples/with_prelude/python
-* Buck2 remote execution integration with EngFlow - https://github.com/facebook/buck2/tree/804d62242214455d51787f7c8c96a1e12c75ec32/examples/remote_execution/engflow
+* Buck2 remote execution integration with EngFlow - https://github.com/facebook/buck2/tree/main/examples/remote_execution/engflow
 * EngFlow python example - https://github.com/EngFlow/example/tree/main/python
 
 ### Example structure
