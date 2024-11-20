@@ -1,0 +1,66 @@
+# Copyright 2022 EngFlow Inc. All rights reserved.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#    http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+load("defs.bzl", "remote_python_toolchain")
+load("@prelude//toolchains:python.bzl", "system_python_bootstrap_toolchain")
+load("@prelude//toolchains:cxx.bzl", "cxx_tools_info_toolchain")
+load("@prelude//toolchains:genrule.bzl", "system_genrule_toolchain")
+load("@prelude//toolchains:remote_test_execution.bzl", "remote_test_execution_toolchain")
+load("@prelude//tests:test_toolchain.bzl", "noop_test_toolchain")
+
+# Python toolchain used in scripts that bootstrap other aspects of the Buck2 prelude.
+system_python_bootstrap_toolchain(
+    name = "python_bootstrap",
+    visibility = ["PUBLIC"],
+)
+
+# The remote python toolchain. Uses python3, the rest is just default.
+remote_python_toolchain(
+    name = "python",
+    visibility = ["PUBLIC"],
+)
+
+# c++ toolchain required implcitly for py targets.
+cxx_tools_info_toolchain(
+    name = "cxx",
+    visibility = ["PUBLIC"],
+)
+
+system_genrule_toolchain(
+    name = "genrule",
+    visibility = ["PUBLIC"],
+)
+
+# Default toolchain for remote execution of tests.
+# Note it defines a profile with a capability that defines the `container-image` that matches the one defined in //platforms:remote_platform. 
+# Capabilities are passed to the RE service to find workers that match them as Platform options.
+remote_test_execution_toolchain(
+    name = "remote_test_execution",
+    visibility = ["PUBLIC"],
+    default_profile = "cxx_re_toolchain",
+    profiles = {
+        "cxx_re_toolchain": {
+            "use_case": "cxx-testing",
+            "capabilities": {
+                "container-image" : "docker://gcr.io/bazel-public/ubuntu2004-java11@sha256:69a78f121230c6d5cbfe2f4af8ce65481aa3f2acaaaf8e899df335f1ac1b35b5",
+            },
+        }
+    },
+)
+
+# In some cases the execution of test can fail looking for this `noop_test_toolchain`.
+noop_test_toolchain(
+    name = "test",
+    visibility = ["PUBLIC"],
+)

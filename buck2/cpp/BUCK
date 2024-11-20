@@ -49,4 +49,3 @@ cxx_test(
     default_target_platform = "//platforms:remote_platform",
     remote_execution_action_key_providers = "//platforms:remote_execution_action_keys",
 )
-
