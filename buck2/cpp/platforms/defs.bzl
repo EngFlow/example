@@ -14,6 +14,8 @@
 
 # This platform is essentially the same as the one provided in https://github.com/facebook/buck2/blob/804d62242214455d51787f7c8c96a1e12c75ec32/examples/remote_execution/engflow/platforms/defs.bzl
 # The main difference is we enable passing CPU and OS constraints and we use the sample EngFlow RE image.
+load("@prelude//:build_mode.bzl", "BuildModeInfo")
+
 def _platforms(ctx):
     constraints = dict()
     constraints.update(ctx.attrs.cpu_configuration[ConfigurationInfo].constraints)
@@ -49,10 +51,24 @@ def _platforms(ctx):
         PlatformInfo(label = str(name), configuration = configuration),
     ]
 
+def _action_keys(ctx):
+    return [
+        DefaultInfo(),
+        BuildModeInfo(cell = ctx.attrs.cell, mode = ctx.attrs.mode),
+    ]
+
 platforms = rule(
     attrs = {
         "cpu_configuration": attrs.dep(providers = [ConfigurationInfo]),
         "os_configuration": attrs.dep(providers = [ConfigurationInfo]),
     }, 
     impl = _platforms
+)
+
+action_keys = rule(
+     attrs = {
+        "cell": attrs.string(),
+        "mode": attrs.string(),
+     },
+     impl = _action_keys
 )

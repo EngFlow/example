@@ -13,6 +13,8 @@
 # limitations under the License.
 load("@prelude//toolchains:python.bzl", "system_python_bootstrap_toolchain")
 load("@prelude//toolchains:cxx.bzl", "cxx_tools_info_toolchain")
+load("@prelude//toolchains:remote_test_execution.bzl", "remote_test_execution_toolchain")
+load("@prelude//tests:test_toolchain.bzl", "noop_test_toolchain")
 load("tools.bzl", "path_clang_tools")
 
 # We use the default system python toolchain in this example, focusing only on configuring the cpp toolchain.
@@ -33,6 +35,28 @@ cxx_tools_info_toolchain(
     name = "cxx",
     target_compatible_with = ["config//os:linux"],
     cxx_tools_info = ":clang_tools",
-    link_style = "static",
+    visibility = ["PUBLIC"],
+)
+
+# Default toolchain for remote execution of tests.
+# Note it defines a profile with a capability that defines the `container-image` that matches the one defined in //platforms:remote_platform. 
+# Capabilities are passed to the RE service to find workers that match them as Platform options.
+remote_test_execution_toolchain(
+    name = "remote_test_execution",
+    visibility = ["PUBLIC"],
+    default_profile = "cxx_re_toolchain",
+    profiles = {
+        "cxx_re_toolchain": {
+            "use_case": "cxx-testing",
+            "capabilities": {
+                "container-image" : "docker://gcr.io/bazel-public/ubuntu2004-java11@sha256:69a78f121230c6d5cbfe2f4af8ce65481aa3f2acaaaf8e899df335f1ac1b35b5",
+            },
+        }
+    },
+)
+
+# In newer versions of buck2 this toolchain is needed `noop_test_toolchain`.
+noop_test_toolchain(
+    name = "test",
     visibility = ["PUBLIC"],
 )

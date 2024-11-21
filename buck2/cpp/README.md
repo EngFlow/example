@@ -11,15 +11,19 @@ It is based on two existing samples in the Buck2 upstream repo:
 
 In the `platforms` cell we specify:
 * The platform used for remote execution in this project `root//platforms:remote_platform`, which includes the definition of the Docker image used for remote execution, and that defines constraints for targets to run in the remote execution environment. This platform provides an `ExecutionPlatformRegistrationInfo` a `ConfigurationInfo` and a `PlatformInfo` to be able to be used in the `.buckconfig`, and in the `exec_compatible_with` and `default_target_platform` of `cxx_*` rules.
+* The `root//platforms:remote_execution_action_keys` target that provides a `BuildModeInfo` which is necessary for the prelude to correctly configure remote execution of tests. It defines two attributes that can be used as cache silo keys.
 
 In the `toolchains` cell we specify:
 
 * The c++ toolchain `root//toolchains:cxx_tools_info_toolchain` that is compatible with the remote execution environment.
 * The clang tools, `root//toolchains:path_clang_tools, which is used by the c++ toolchain, and specifies the tools installed in the Docker image.
+* The remote test execution toolchain, `root//toolchains:remote_test_execution_toolchain`. This toolchain defines platform options in the form of `capabilities`. Critically these include the `container-image`.
 
 The main `BUCK` file defines:
 
-* A `cxx_binary` binary target that has the `exec_compatible_with` attr pointing to the `root//platforms:remote_platform` target and the `default_target_platform` attr pointing to the `root//platforms:remote` target.
+* A `cxx_binary` target that has the `exec_compatible_with` as well as the `default_target_platform` attrs pointing to the `root//platforms:remote_platform`.
+* A `cxx_library`target that has the `exec_compatible_with` as well as the `default_target_platform` attrs pointing to the `root//platforms:remote_platform`.
+* A `cxx_test` target that has the `exec_compatible_with` as well as the `default_target_platform` attrs pointing to the `root//platforms:remote_platform`. It also has a `remote_execution_action_key_providers` attr that points to the `root//platforms:remote_execution_action_keys` target.
 
 ### Relevant configs in `.buckconfig`
 
@@ -40,9 +44,14 @@ http_headers         = x-engflow-auth-method:jwt-v0,x-engflow-auth-token:LONG_JW
 
 Clone the repository and replace the relevant configs in `.buckconfig`.
 
-Build and run the example:
+Build the example:
 
 ```
-buck2 build //:main
-buck2 run -v 4 //:main
+buck2 build //:cpp_lib
+```
+
+Test the example:
+
+```
+buck2 test //:cpp_test
 ```

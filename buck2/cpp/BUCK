@@ -19,3 +19,33 @@ cxx_binary(
     exec_compatible_with = ["//platforms:remote_platform"],
     default_target_platform = "//platforms:remote_platform",
 )
+
+cxx_binary(
+    name = "cpp",
+    srcs = ["main.cc"],
+    deps = [":cpp_lib"],
+    exec_compatible_with = ["//platforms:remote_platform"],
+    default_target_platform = "//platforms:remote_platform",
+)
+
+cxx_library(
+    name = "cpp_lib",
+    srcs = [
+        "hello.cc",
+    ],
+    exported_headers = glob(["**/*.h"]),
+    visibility = ["PUBLIC"],
+    exec_compatible_with = ["//platforms:remote_platform"],
+    default_target_platform = "//platforms:remote_platform",
+)
+
+cxx_test(
+    name = "cpp_test",
+    srcs = ["hello_test.cc"],
+    deps = [
+        ":cpp_lib",
+    ],
+    exec_compatible_with = ["//platforms:remote_platform"],
+    default_target_platform = "//platforms:remote_platform",
+    remote_execution_action_key_providers = "//platforms:remote_execution_action_keys",
+)
