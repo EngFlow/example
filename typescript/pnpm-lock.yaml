@@ -9,16 +9,16 @@ importers:
   .:
     dependencies:
       typescript:
-        specifier: 5.5.3
-        version: 5.5.3
+        specifier: 5.7.2
+        version: 5.7.2
 
 packages:
 
-  typescript@5.5.3:
-    resolution: {integrity: sha512-/hreyEujaB0w76zKo6717l3L0o/qEUtRgdvUBvlkhoWeOVMjMuHNHk0BRBzikzuGDqNmPQbg5ifMEqsHLiIUcQ==}
+  typescript@5.7.2:
+    resolution: {integrity: sha512-i5t66RHxDvVN40HfDd1PsEThGNnlMCMT3jMUuoh9/0TaqWevNontacunWyN02LA9/fIbEWlcHZcgTKb9QoaLfg==}
     engines: {node: '>=14.17'}
     hasBin: true
 
 snapshots:
 
-  typescript@5.5.3: {}
+  typescript@5.7.2: {}
