@@ -8,15 +8,15 @@ make
 cd ..
 
 # Get the Buck2 binary.
-curl -L -O https://github.com/facebook/buck2/releases/download/latest/buck2-x86_64-unknown-linux-gnu.zst
+curl -L -O https://github.com/facebook/buck2/releases/download/latest/buck2-x86_64-unknown-linux-musl.zst
 
 
 
 # Unpack the binary.
 # Use installed zstd once available in the CI runner.
-./zstd/zstd -d buck2-x86_64-unknown-linux-gnu.zst
-# unzstd buck2-x86_64-unknown-linux-gnu.zst
+./zstd/zstd -d buck2-x86_64-unknown-linux-musl.zst
+# unzstd buck2-x86_64-unknown-linux-musl.zst
 
 # Change its name and make it executable.
-mv buck2-x86_64-unknown-linux-gnu buck2-exe
+mv buck2-x86_64-unknown-linux-musl buck2-exe
 chmod +x buck2-exe
