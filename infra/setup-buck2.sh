@@ -12,7 +12,7 @@ wget https://github.com/facebook/buck2/releases/download/latest/buck2-aarch64-un
 
 # Unpack the binary.
 # Use installed zstd once available in the CI runner.
-zstd/build/cmake//programs/zstd -d buck2-aarch64-unknown-linux-gnu.zst
+zstd/build/cmake/programs/zstd -d buck2-aarch64-unknown-linux-gnu.zst
 # unzstd buck2-aarch64-unknown-linux-gnu.zst
 
 # Change its name and make it executable.
