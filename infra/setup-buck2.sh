@@ -8,7 +8,7 @@ make
 cd ../
 
 # Get the Buck2 binary.
-curl --output buck2-aarch64-unknown-linux-gnu.zst https://github.com/facebook/buck2/releases/download/latest/buck2-aarch64-unknown-linux-gnu.zst
+curl -L -O https://github.com/facebook/buck2/releases/download/latest/buck2-aarch64-unknown-linux-gnu.zst
 
 # Unpack the binary.
 # Use installed zstd once available in the CI runner.
