@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+set -x
 
 # Run cpp example
 cd buck2/cpp
@@ -13,7 +14,7 @@ cd python
 cd ..
 
 # Run go example
-pwd
+echo pwd
 cd go
 ../../buck2-exe build //go:hello
 ../../buck2-exe test //go/greeting:greeting_test

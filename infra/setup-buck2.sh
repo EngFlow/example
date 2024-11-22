@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+set -x
 
 # Build zstd: Remove once zstd is insalled in CI runner.
 git clone https://github.com/facebook/zstd.git
