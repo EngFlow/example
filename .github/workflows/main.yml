@@ -102,3 +102,29 @@ jobs:
           OS: linux
           REMOTE_EXECUTION: ${{ matrix.remote_execution }}
         run: python3 infra/test-all.py
+
+  buck2-test-matrix:
+    runs-on:
+      - self-hosted
+      - "os=linux"
+      - "arch=x64"
+      - "engflow-container-image=docker://645088952840.dkr.ecr.eu-west-1.amazonaws.com/engflow-ci/debian11-dind-x64@sha256:604855f1ecd6edad3f45f513ed0112b9e8e32589871133767a1a51944b07f487"
+      - "engflow-pool=ci_sysbox_x64"
+      - "engflow-runtime=sysbox-runc"
+      - "engflow-runner-id=${{ github.repository_id }}_ci-runners-test-matrix_${{ github.run_id }}_${{ github.run_number }}_${{ github.run_attempt }}"
+    timeout-minutes: 10
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Buck2 binary
+        shell: bash
+        run: infra/setup-buck2.sh
+
+      - name: Set up authentication
+        shell: bash
+        run: infra/auth-buck2.sh
+
+      - name: Build and test
+        shell: bash
+        run: infra/test-buck2.sh
