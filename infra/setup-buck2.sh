@@ -18,5 +18,5 @@ curl -L -O https://github.com/facebook/buck2/releases/download/latest/buck2-x86_
 # unzstd buck2-x86_64-unknown-linux-gnu.zst
 
 # Change its name and make it executable.
-mv buck2-x86_64-unknown-linux-gnu.zst buck2-exe
+mv buck2-x86_64-unknown-linux-gnu buck2-exe
 chmod +x buck2-exe
