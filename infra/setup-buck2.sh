@@ -5,7 +5,7 @@ set -x
 git clone https://github.com/facebook/zstd.git
 cd zstd/
 make
-cd ../
+cd ..
 
 # Get the Buck2 binary.
 curl -L -O https://github.com/facebook/buck2/releases/download/latest/buck2-x86_64-unknown-linux-gnu.zst
