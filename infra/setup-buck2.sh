@@ -17,5 +17,5 @@ zstd/build/cmake/programs/zstd -d buck2-aarch64-unknown-linux-gnu.zst
 # unzstd buck2-aarch64-unknown-linux-gnu.zst
 
 # Change its name and make it executable.
-mv buck2-aarch64-unknown-linux-gnu.zst buck2
-chmod +x buck2
+mv buck2-aarch64-unknown-linux-gnu.zst buck2-exe
+chmod +x buck2-exe

@@ -103,7 +103,7 @@ jobs:
           REMOTE_EXECUTION: ${{ matrix.remote_execution }}
         run: python3 infra/test-all.py
 
-  buck2-test-matrix:
+  buck2-test:
     runs-on:
       - self-hosted
       - "os=linux"
@@ -111,7 +111,7 @@ jobs:
       - "engflow-container-image=docker://645088952840.dkr.ecr.eu-west-1.amazonaws.com/engflow-ci/debian11-dind-x64@sha256:604855f1ecd6edad3f45f513ed0112b9e8e32589871133767a1a51944b07f487"
       - "engflow-pool=ci_sysbox_x64"
       - "engflow-runtime=sysbox-runc"
-      - "engflow-runner-id=${{ github.repository_id }}_ci-runners-test-matrix_${{ github.run_id }}_${{ github.run_number }}_${{ github.run_attempt }}"
+      - "engflow-runner-id=${{ github.repository_id }}_buck2-test_${{ github.run_id }}_${{ github.run_number }}_${{ github.run_attempt }}"
     timeout-minutes: 10
 
     steps:

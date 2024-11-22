@@ -14,8 +14,7 @@ cd python
 cd ..
 
 # Run go example
-echo pwd
-cd go
+cd golang
 ../../buck2-exe build //go:hello
 ../../buck2-exe test //go/greeting:greeting_test
 cd ..
