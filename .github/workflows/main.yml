@@ -126,5 +126,7 @@ jobs:
         run: infra/auth-buck2.sh
 
       - name: Build and test
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         shell: bash
         run: infra/test-buck2.sh
