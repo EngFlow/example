@@ -53,7 +53,7 @@ jobs:
 
       - name: Set up authentication
         shell: bash
-        run: test-github-auth.sh
+        run: infra/test-github-auth.sh
 
       - name: Generate python requirements lock
         shell: bash
