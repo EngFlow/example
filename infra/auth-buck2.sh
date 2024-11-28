@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-set -x
+set -xe
 
 # Modify the buck2/**/.buckconfig files to set the test cluster to opal.
 find ./ -type f -name '.buckconfig' -exec sed -i 's/<CLUSTER_NAME>/opal/g' {} \;
