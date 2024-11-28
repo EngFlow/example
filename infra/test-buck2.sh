@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-set -x
+set -xe
 
 # Run cpp example
 cd buck2/cpp

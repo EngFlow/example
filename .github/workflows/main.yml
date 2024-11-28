@@ -53,7 +53,7 @@ jobs:
 
       - name: Set up authentication
         shell: bash
-        run: infra/test-github-auth.sh
+        run: cp infra/bazelrc .bazelrc.user
 
       - name: Generate python requirements lock
         shell: bash
