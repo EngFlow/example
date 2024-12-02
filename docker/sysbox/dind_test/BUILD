@@ -17,7 +17,7 @@ sh_test(
     srcs = ["check_docker.sh"],
     exec_properties = {
         # Replace the container-image below to use the one you created.
-        "container-image": "docker://645088952840.dkr.ecr.eu-west-1.amazonaws.com/engflow-ci/debian12-dind-x64@sha256:fbbaadfc4bc64fe8b7bc3aa5baba2307f1324c1572360c94fe952ff3a703a2af",
+        "container-image": "docker://645088952840.dkr.ecr.eu-west-1.amazonaws.com/engflow-ci/debian12-dind-x64@sha256:e9715893e041427c283808db96760634b47b276d35bef4fc2af3990553f94262",
         "dockerRuntime": "sysbox-runc",
         "Pool": "ci_sysbox_x64", # this can change depending on what pool has sysbox enabled
         "dockerNetwork": "standard",
