@@ -39,6 +39,9 @@ cc_toolchain_suite(
         "x64_windows|msvc": ":msvc_cc_toolchain",
         "x64_windows": ":msvc_cc_toolchain",
     },
+    target_compatible_with = [
+        "@platforms//os:windows",
+    ],
 )
 
 cc_toolchain(

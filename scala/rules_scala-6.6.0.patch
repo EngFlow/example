@@ -1,11 +1,11 @@
 diff --git a/third_party/repositories/repositories.bzl b/third_party/repositories/repositories.bzl
-index 4232478..0e6e13c 100644
+index 8167516..a84105d 100644
 --- a/third_party/repositories/repositories.bzl
 +++ b/third_party/repositories/repositories.bzl
-@@ -77,6 +77,26 @@ def repositories(
+@@ -90,6 +90,26 @@ def repositories(
      for id in for_artifact_ids:
          _scala_maven_import_external(
-             name = id,
+             name = id + suffix,
 +            # Split the last component off of mangled bzlmod repo names to
 +            # produce the expected target name. Or else we get output like:
 +            #
@@ -25,15 +25,14 @@ index 4232478..0e6e13c 100644
 +            #   .../_main~scala_deps~io_bazel_rules_scala_scala_compiler/BUILD
 +            # and referenced by '@@_main~_repo_rules~io_bazel_rules_scala
 +            #   //scala:default_toolchain_scala_compile_classpath_provider'
-+            generated_rule_name = _unmangle_bzlmod_repo_name(id),
++            generated_rule_name = _unmangle_bzlmod_repo_name(id) + suffix,
              artifact = artifacts[id]["artifact"],
              artifact_sha256 = artifacts[id]["sha256"],
              licenses = ["notice"],
-@@ -86,3 +106,56 @@ def repositories(
-             testonly_ = artifacts[id].get("testonly", False),
-             fetch_sources = fetch_sources,
-         )
-+
+@@ -106,6 +126,59 @@ def repositories(
+         if suffix and scala_version == SCALA_VERSION:
+             _alias_repository(name = id, target = id + suffix)
+ 
 +def _unmangle_bzlmod_repo_name(name):
 +    """Return the correct repository name under bzlmod.
 +
@@ -86,3 +85,7 @@ index 4232478..0e6e13c 100644
 +        if not (c.isalnum() or c in "_-."):
 +            return name[i+1:]
 +    return name
++
+ def _alias_repository_impl(rctx):
+     """ Builds a repository containing just two aliases to the Scala Maven artifacts in the `target` repository. """
+ 

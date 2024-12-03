@@ -37,6 +37,9 @@ cc_toolchain_suite(
         "k8|clang": ":cc-compiler-k8",
         "k8": ":cc-compiler-k8",
     },
+    target_compatible_with = [
+        "@platforms//os:linux",
+    ],
 )
 
 cc_toolchain(

@@ -1,0 +1,51 @@
+# Copyright 2022 EngFlow Inc. All rights reserved.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#    http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+cxx_binary(
+    name = "main",
+    srcs = ["main.cpp"],
+    link_style = "static",
+    exec_compatible_with = ["//platforms:remote_platform"],
+    default_target_platform = "//platforms:remote_platform",
+)
+
+cxx_binary(
+    name = "cpp",
+    srcs = ["main.cc"],
+    deps = [":cpp_lib"],
+    exec_compatible_with = ["//platforms:remote_platform"],
+    default_target_platform = "//platforms:remote_platform",
+)
+
+cxx_library(
+    name = "cpp_lib",
+    srcs = [
+        "hello.cc",
+    ],
+    exported_headers = glob(["**/*.h"]),
+    visibility = ["PUBLIC"],
+    exec_compatible_with = ["//platforms:remote_platform"],
+    default_target_platform = "//platforms:remote_platform",
+)
+
+cxx_test(
+    name = "cpp_test",
+    srcs = ["hello_test.cc"],
+    deps = [
+        ":cpp_lib",
+    ],
+    exec_compatible_with = ["//platforms:remote_platform"],
+    default_target_platform = "//platforms:remote_platform",
+    remote_execution_action_key_providers = "//platforms:remote_execution_action_keys",
+)

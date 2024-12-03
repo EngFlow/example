@@ -38,14 +38,14 @@ jobs:
             arch: x64
             os_distribution: monterey
             os_version: "12"
-            revision: d04e89854b3931f4aaced77aa3a2fcad5834b3a6
+            revision: 1ec247a1e93f4980098fc6bb2764bb093b37b3da
             remote_execution: 'false'
 
           - os: macos
             arch: x64
             os_distribution: monterey
             os_version: "12"
-            revision: d04e89854b3931f4aaced77aa3a2fcad5834b3a6
+            revision: 1ec247a1e93f4980098fc6bb2764bb093b37b3da
             remote_execution: 'true'
 
     steps:
@@ -72,7 +72,7 @@ jobs:
       - "os=linux"
       - "arch=x64"
       - "remote_execution=${{ matrix.remote_execution }}"
-      - "engflow-container-image=docker://645088952840.dkr.ecr.eu-west-1.amazonaws.com/engflow-ci/debian11-dind-x64@sha256:604855f1ecd6edad3f45f513ed0112b9e8e32589871133767a1a51944b07f487"
+      - "engflow-container-image=docker://645088952840.dkr.ecr.eu-west-1.amazonaws.com/engflow-ci/debian11-dind-x64@sha256:a0f386162b6498b9220a33f33f158fd175d2873ddd6ed30ca67aa33915850e1e"
       - "engflow-pool=ci_sysbox_x64"
       - "engflow-runtime=sysbox-runc"
       - "engflow-runner-id=${{ github.repository_id }}_ci-runners-test-matrix_${{ github.run_id }}_${{ github.run_number }}_${{ github.run_attempt }}"
