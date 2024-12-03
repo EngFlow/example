@@ -6,19 +6,19 @@ The goal of this example project is to test the performance of Engflow's remote 
 
 ## Project Structure
 
-- `java/com/engflow/internship/binaryinput/Main.java`: Main class that dynamically loads and invokes methods from generated classes.
-- `java/com/engflow/internship/binaryinput/BUILD`: Bazel build file for the `main` java binary and the `genbinary` library.
+- `java/com/engflow/binaryinput/Main.java`: Main class that dynamically loads and invokes methods from generated classes.
+- `java/com/engflow/binaryinput/BUILD`: Bazel build file for the `main` java binary and the `genbinary` library.
 
 ## Usage
 
 To generate the test files, build the `genbinary` library using the `genrule`:
 ```sh
-bazel build //java/com/engflow/internship/binaryinput:genbinary
+bazel build //java/com/engflow/binaryinput:genbinary
 ```
 
 Then, the program can be run with the following command:
 ```sh
-bazel run //java/com/engflow/internship/binaryinput:main
+bazel run //java/com/engflow/binaryinput:main
 ```
 
 ## How It Works
@@ -39,14 +39,14 @@ The number of generated files is controlled by the `NUM_FILES` variable in the `
 
 To generate and run the program with 10 input binary files:
 
-1. Set `NUM_FILES` to 10 in `java/com/engflow/internship/binaryinput/BUILD`.
+1. Set `NUM_FILES` to 10 in `java/com/engflow/binaryinput/BUILD`.
 2. Build the `genbinary` library:
    ```sh
-   bazel build //java/com/engflow/internship/binaryinput:genbinary
+   bazel build //java/com/engflow/binaryinput:genbinary
    ```
 3. Run the `main` binary:
    ```sh
-   bazel run //java/com/engflow/internship/binaryinput:main
+   bazel run //java/com/engflow/binaryinput:main
    ```
 
 This will generate 10 Java classes, build the `genbinary` library, and run the `main` binary, which will print messages from each generated class.

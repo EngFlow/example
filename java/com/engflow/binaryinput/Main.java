@@ -10,7 +10,7 @@ public class Main {
 
             // Load and run the greetNum method from each class
             for(int i = 1; i <= numFiles; i++){
-                Class<?> clazz = Class.forName("com.engflow.internship.binaryinput.Hello" + i);
+                Class<?> clazz = Class.forName("com.engflow.binaryinput.Hello" + i);
                 clazz.getMethod("greetNum").invoke(null);
             }
 

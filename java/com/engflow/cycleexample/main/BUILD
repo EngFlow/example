@@ -11,5 +11,5 @@ java_binary(
     data = [
         "//java/com/engflow/cycleexample/input:input",
     ],
-    main_class = "com.engflow.internship.cycleexample.main.Main",
+    main_class = "com.engflow.cycleexample.main.Main",
 )

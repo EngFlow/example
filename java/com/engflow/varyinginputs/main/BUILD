@@ -10,5 +10,5 @@ java_binary(
     data = [
         "//java/com/engflow/varyinginputs/input:input",
     ],
-    main_class = "com.engflow.internship.varyinginputs.main.Main",
+    main_class = "com.engflow.varyinginputs.main.Main",
 )

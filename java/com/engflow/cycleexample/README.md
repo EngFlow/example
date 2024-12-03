@@ -33,4 +33,4 @@ The program takes a text input file and recursively prints each word with each c
 To run the tests and gather performance data, use the following Bazel command:
 
 ```sh
-bazel test //java/com/engflow/internship/cycleexample/class_a:class_a_test
+bazel test //java/com/engflow/cycleexample/class_a:class_a_test

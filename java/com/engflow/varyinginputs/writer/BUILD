@@ -7,7 +7,7 @@ java_library(
 java_test(
     name = "writer_test",
     srcs = ["WriterTest.java"],
-    test_class = "com.engflow.internship.varyinginputs.writer.WriterTest",
+    test_class = "com.engflow.varyinginputs.writer.WriterTest",
     deps = [
         ":writer",
     ],

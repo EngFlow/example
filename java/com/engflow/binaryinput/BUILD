@@ -8,12 +8,9 @@ NUM_FILES = 1
 [genrule(
     name = "Hello" + str(x),
     outs = ["Hello" + str(x) + ".java"],
-    cmd_bash = "echo 'package com.engflow.internship.binaryinput;" + "\n" +
+    cmd_bash = "echo 'package com.engflow.binaryinput;" + "\n" +
     "public class Hello" + str(x) +
     " { public static void greetNum() { System.out.println(\"Hello " + str(x) + "\"); } }' > $@",
-    #cmd_ps = "echo 'package com.engflow.internship.binaryinput;" + "\n" +
-    #    "public class Hello" + str(x) +
-    #    " { public static void greetNum() { System.out.println(\"Hello " + str(x) + "\"); } }' > $($outputFile.FullName)",
 ) for x in range(1,NUM_FILES+1)]
 
 #Generates a java library that contains all the generated java files

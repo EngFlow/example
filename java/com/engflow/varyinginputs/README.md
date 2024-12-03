@@ -6,17 +6,17 @@ The goal of this example project is to test the performance of Engflow's remote 
 
 ## Project Structure
 
-- `java/com/engflow/internship/varyinginputs/input`: Directory where the generated `.txt` files are saved.
-- `java/com/engflow/internship/varyinginputs/main`: Contains the `Main` class which orchestrates the file creation and reading process.
-- `java/com/engflow/internship/varyinginputs/reader`: Contains the `Reader` class responsible for reading the files.
-- `java/com/engflow/internship/varyinginputs/writer`: Contains the `Writer` class responsible for writing the files.
+- `java/com/engflow/varyinginputs/input`: Directory where the generated `.txt` files are saved.
+- `java/com/engflow/varyinginputs/main`: Contains the `Main` class which orchestrates the file creation and reading process.
+- `java/com/engflow/varyinginputs/reader`: Contains the `Reader` class responsible for reading the files.
+- `java/com/engflow/varyinginputs/writer`: Contains the `Writer` class responsible for writing the files.
 
 ## Usage
 
 To run the project and specify the number of files to be created, use the following command:
 
 ```sh
-bazel run //java/com/engflow/internship/varyinginputs/main -- <num_files>
+bazel run //java/com/engflow/varyinginputs/main -- <num_files>
 ```
 
 Replace `<num_files>` with the desired number of files to be created.
@@ -26,7 +26,7 @@ Replace `<num_files>` with the desired number of files to be created.
 To create and read 10 files, you would run:
 
 ```sh
-bazel run //java/com/engflow/internship/varyinginputs/main -- 10
+bazel run //java/com/engflow/varyinginputs/main -- 10
 ```
 
 This command will:

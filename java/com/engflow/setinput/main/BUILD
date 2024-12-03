@@ -6,6 +6,6 @@ java_binary(
     deps = [
         "//java/com/engflow/setinput/genreader:genreader",
     ],
-    data = glob(["java/com/engflow/internship/setinput/genfile/*.txt"]),
-    main_class = "com.engflow.internship.setinput.main.Main",
+    data = glob(["java/com/engflow/setinput/genfile/*.txt"]),
+    main_class = "com.engflow.setinput.main.Main",
 )
