@@ -1,6 +1,8 @@
 #!/usr/bin/env bash
 set -xe
 
+alias buck2="$(realpath buck2-exe)"
+
 # Run cpp example
 cd buck2/cpp
 buck2 build //:cpp_lib

@@ -10,5 +10,3 @@ unzstd buck2-x86_64-unknown-linux-musl.zst
 # Change its name and make it executable.
 mv buck2-x86_64-unknown-linux-musl buck2-exe
 chmod +x buck2-exe
-
-alias buck2="$(realpath buck2-exe)"
