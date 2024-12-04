@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 set -xe
+shopt -s expand_aliases
 
 alias buck2="$(realpath buck2-exe)"
 
