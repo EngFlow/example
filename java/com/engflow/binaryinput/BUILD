@@ -1,6 +1,6 @@
 load("@rules_java//java:defs.bzl", "java_binary", "java_library")
 
-NUM_FILES = 1
+NUM_FILES = 100
 
 # Generates a number of java files based on the value of NUM_FILES
 # Each file is named HelloX.java where X is the number of the file
