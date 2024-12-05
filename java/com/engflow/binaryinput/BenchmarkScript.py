@@ -1,6 +1,5 @@
 import subprocess
 import uuid
-import csv
 import os
 import json
 
@@ -80,12 +79,6 @@ def main():
         profile_output = analyze_bazel_profile(profile_path)
         critical_time, total_run_time = extract_times(profile_output)
         results.append((critical_time, total_run_time))
-
-    # Write the results to a CSV file
-    #with open(f'results{num_files}.csv', 'w', newline='') as csvfile:
-    #    writer = csv.writer(csvfile)
-    #    writer.writerow(['Critical Time', 'Total Run Time'])
-    #    writer.writerows(results)
 
     critical_times = [result[0] for result in results]
     total_run_times = [result[1] for result in results]
