@@ -1,16 +1,5 @@
 # Varying Inputs Example
 
-## Overview
-
-The goal of this example project is to test the performance of Engflow's remote execution and caching service for different input sizes. The project involves creating a specified number of txt files, each containing 100 random characters, using the `Writer` class, and then reading and printing out their contents with the `Reader` class.
-
-## Project Structure
-
-- `java/com/engflow/varyinginputs/input`: Directory where the generated `.txt` files are saved.
-- `java/com/engflow/varyinginputs/main`: Contains the `Main` class which orchestrates the file creation and reading process.
-- `java/com/engflow/varyinginputs/reader`: Contains the `Reader` class responsible for reading the files.
-- `java/com/engflow/varyinginputs/writer`: Contains the `Writer` class responsible for writing the files.
-
 ## Usage
 
 To run the project and specify the number of files to be created, use the following command:
