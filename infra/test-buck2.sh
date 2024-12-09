@@ -21,3 +21,9 @@ cd golang
 buck2 build //go:hello
 buck2 test //go/greeting:greeting_test
 cd ..
+
+# Run rust example
+cd rust
+buck2 build //:main
+buck2 test //:test
+cd ..
