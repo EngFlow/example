@@ -57,7 +57,7 @@ remote_test_execution_toolchain(
         "cxx_re_toolchain": {
             "use_case": "cxx-testing",
             "capabilities": {
-                "container-image" : "docker://gcr.io/bazel-public/ubuntu2004-java11@sha256:69a78f121230c6d5cbfe2f4af8ce65481aa3f2acaaaf8e899df335f1ac1b35b5",
+                "container-image" : "docker://public.ecr.aws/docker/library/rust:1.83.0-bullseye@sha256:24118f76a7da011b22a25b8e9dbdbb549ed29c1eba635d6aa4a9c9f5ed545066",
             },
         }
     },
