@@ -15,11 +15,21 @@
 load(":defs.bzl", "platforms")
 load(":defs.bzl", "action_keys")
 
+constraint_setting(
+  name = "re_provider"
+)
+
+constraint_value(
+  name = "engflow",
+  constraint_setting = ":re_provider",
+)
+
 # This platform configures details of remote execution.
 platforms(
     name = "remote_platform",
     cpu_configuration = "config//cpu:x86_64",
     os_configuration = "config//os:linux",
+    re_provider = ":engflow",
 )
 
 # This action_key provides a default BuildModeInfo that is needed for RE of tests to function properly.

@@ -31,13 +31,13 @@ The `src`, `bin` and `test` cells:
 To test the project with RE run (after setting up `.buckconfig` as indicated below):
 
 ```
-buck2 test //:test
+buck2 test --target-platforms //platforms:remote_platform //:test
 ```
 
 You can also build the `main` for this sample by running:
 
 ```
-buck2 build //:main
+buck2 build --target-platforms //platforms:remote_platform //:main
 ```
 
 ### Relevant configs in `.buckconfig`
