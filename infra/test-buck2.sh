@@ -24,6 +24,6 @@ cd ..
 
 # Run rust example
 cd rust
-buck2 build //:main
-buck2 test //:test
+buck2 build --target-platforms //platforms:remote_platform //:main
+buck2 test --target-platforms //platforms:remote_platform //:test
 cd ..
