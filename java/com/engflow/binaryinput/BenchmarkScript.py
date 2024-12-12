@@ -3,6 +3,14 @@ import uuid
 import os
 import json
 
+# This script is used to benchmark the performance of Bazel builds by modifying the BUILD file to define the number of files,
+# running Bazel commands to build targets, and analyzing the Bazel profile data to extract critical time and total run time.
+
+# Usage:
+# 1. Run the script and provide the number of files, execution type (local/remote), and number of iterations when prompted.
+# 2. The script will modify the BUILD file, run Bazel commands, and analyze the profile data.
+# 3. The results will be printed, showing the highest critical time and total run time.
+
 # Modify the BUILD file to define the number of files
 def modify_build_file(num_files):
     with open('BUILD', 'r') as file:
