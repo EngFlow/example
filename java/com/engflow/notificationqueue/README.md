@@ -6,7 +6,7 @@ to obtain invocation events from the **event store API**. To do so,
 the [EngFlow API](https://github.com/EngFlow/engflowapis) is used as external
 dependency (see [WORKSPACE](../../../../WORKSPACE)).
 
-# Running the client
+# Running the client 
 
 The first argument you must have to execute the client is the cluster `grpc` endpoint
 you want to listen to.
