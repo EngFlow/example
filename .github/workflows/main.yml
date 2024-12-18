@@ -57,7 +57,7 @@ jobs:
 
       - name: Generate python requirements lock
         shell: bash
-        run: bazel run //python:requirements.update && find bazel-out/darwin_x86_64-fastbuild/bin/python/requirements.update.runfiles/_main/../ && bazel run //python:requirements.update
+        run: bazel build //python:requirements.update && find bazel-out/darwin_x86_64-fastbuild/bin/python/requirements.update.runfiles/_main/../ && bazel run //python:requirements.update
 
       - name: Build and test
         env:
