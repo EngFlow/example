@@ -24,7 +24,7 @@ def _platforms(ctx):
     )
 
     # A bookworm image with go pre-installed.
-    # Unlike Bazel go_toolchain, Buck2 go_toolchain does not include a hermetic go binary.
+    # Unlike Bazel go_toolchain, Buck2 go_toolchain does not include a hermetic go binary. Image details can be found in https://gallery.ecr.aws/docker/library/golang.
     image = "docker://public.ecr.aws/docker/library/golang:1.23.3-bookworm@sha256:3f3b9daa3de608f3e869cd2ff8baf21555cf0fca9fd34251b8f340f9b7c30ec5"
     name = ctx.label.raw_target()
     platform = ExecutionPlatformInfo(

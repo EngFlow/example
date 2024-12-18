@@ -16,7 +16,7 @@ In the `platforms` cell we specify:
 In the `toolchains` cell we specify:
 
 * The c++ toolchain `root//toolchains:cxx_tools_info_toolchain` that is compatible with the remote execution environment.
-* The clang tools, `root//toolchains:path_clang_tools, which is used by the c++ toolchain, and specifies the tools installed in the Docker image.
+* The clang tools, `root//toolchains:path_clang_tools`, which is used by the c++ toolchain, and specifies the tools installed in the Docker image.
 * The remote test execution toolchain, `root//toolchains:remote_test_execution_toolchain`. This toolchain defines platform options in the form of `capabilities`. Critically these include the `container-image`.
 
 The main `BUCK` file defines:
@@ -38,9 +38,9 @@ cas_address          = <CLUSTER_NAME>.cluster.engflow.com
 http_headers         = <AUTH_HTTP_HEADERS>
  ```
 
- To obtain the value of `<AUTH_HTTP_HEADERS>`, log into https://<CLUSTER_NAME>.cluster.engflow.com/gettingstarted and obtain the value of `x-engflow-auth-token` in section `Method 2: JWT`, take note of this value. Then set `AUTH_HTTP_HEADERS` with the value `x-engflow-auth-method:jwt-v0,x-engflow-auth-token:<JWT_TOKEN_FROM_GETTINGSTARTED_PAGE>.
+To obtain the value of `<AUTH_HTTP_HEADERS>`, log into https://<CLUSTER_NAME>.cluster.engflow.com/gettingstarted and obtain the value of `x-engflow-auth-token` in section `Method 2: JWT`, take note of this value. Then set `AUTH_HTTP_HEADERS` with the value `x-engflow-auth-method:jwt-v0,x-engflow-auth-token:<JWT_TOKEN_FROM_GETTINGSTARTED_PAGE>.
 
- Note for CI runs, the auth method used is [Github Tokens](https://docs.engflow.com/re/config/authentication.html#github-tokens).
+Note for CI runs, the auth method used is [Github Tokens](https://docs.engflow.com/re/config/authentication.html#github-tokens).
 
 ### Usage instructions
 
