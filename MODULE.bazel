@@ -76,7 +76,7 @@ bazel_dep(
     repo_name = "com_google_googleapis",
 )
 
-bazel_dep(name = "rules_python", version = "0.33.2")
+bazel_dep(name = "rules_python", version = "1.0.0")
 
 PYTHON_VERSION = "3.12"
 python = use_extension("@rules_python//python/extensions:python.bzl", "python")

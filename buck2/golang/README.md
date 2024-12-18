@@ -22,7 +22,7 @@ In the `toolchains` cell we specify:
 
 The `main` cell and `library` cell:
 
-* Contains an copied version of https://github.com/facebook/buck2/tree/main/examples/with_prelude/go that works with Buck2 and RE as configured in this sample project.
+* Contains a copied version of https://github.com/facebook/buck2/tree/main/examples/with_prelude/go that works with Buck2 and RE as configured in this sample project.
 
 To test this cell with RE run (after setting up `.buckconfig` as indicated below):
 
