@@ -13,5 +13,5 @@ jobs:
       - name: Renovate Update
         uses: renovatebot/github-action@v41.0.6
         with:
-          configurationFile: renovate.json
+          configurationFile: renovate-global.json
           token: ${{ secrets.GITHUB_TOKEN }}
