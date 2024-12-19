@@ -1,7 +1,8 @@
 module.exports = {
-    forkProcessing: 'enabled',
-    gradle: { enabled: false },
+    onboarding: false,
+    requireConfig: "optional",
     repositories: [
         "EngFlow/example"
     ],
+    platform: "github",
   };
