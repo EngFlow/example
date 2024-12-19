@@ -5,7 +5,7 @@ on:
     - cron: "0 0 1 * *" # Run the 1st of each month
 
 permissions:
-  contents: read
+  contents: write
   issues: write
 
 jobs:
