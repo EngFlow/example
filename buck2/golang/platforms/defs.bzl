@@ -18,6 +18,7 @@ load("@prelude//:build_mode.bzl", "BuildModeInfo")
 
 def _platforms(ctx):
     constraints = dict()
+    constraints.update(ctx.attrs.re_provider[ConfigurationInfo].constraints)
     configuration = ConfigurationInfo(
         constraints = constraints,
         values = {},
@@ -25,6 +26,7 @@ def _platforms(ctx):
 
     # A bookworm image with go pre-installed.
     # Unlike Bazel go_toolchain, Buck2 go_toolchain does not include a hermetic go binary. Image details can be found in https://gallery.ecr.aws/docker/library/golang.
+    # The Dockerfile can be found in https://github.com/docker-library/golang/blob/master/1.23/bookworm/Dockerfile.
     image = "docker://public.ecr.aws/docker/library/golang:1.23.3-bookworm@sha256:3f3b9daa3de608f3e869cd2ff8baf21555cf0fca9fd34251b8f340f9b7c30ec5"
     name = ctx.label.raw_target()
     platform = ExecutionPlatformInfo(
@@ -46,6 +48,7 @@ def _platforms(ctx):
     return [
         DefaultInfo(),
         ExecutionPlatformRegistrationInfo(platforms = [platform]),
+        PlatformInfo(label = str(name), configuration = configuration),
     ]
 
 def _action_keys(ctx):
@@ -55,7 +58,9 @@ def _action_keys(ctx):
     ]
 
 platforms = rule(
-    attrs = {}, 
+    attrs = {
+        "re_provider": attrs.dep(providers = [ConfigurationInfo]),
+    },
     impl = _platforms
 )
 
