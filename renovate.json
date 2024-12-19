@@ -1,17 +1,6 @@
 {
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
   "extends": [
-    "config:recommended"
-  ],
-  "enabledManagers": [
-    "bazel",
-    "npm"
-  ],
-  "gitAuthor": "engflow-github-automation <engflow-github-automation@engflow.com>",
-  "prHourlyLimit": 0,
-  "prConcurrentLimit": 0,
-  "automerge": true,
-  "labels": [
-    "dependencies"
+    "config:base"
   ]
 }
