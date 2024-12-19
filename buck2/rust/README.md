@@ -11,13 +11,13 @@ It is based on two existing samples in the Buck2 upstream repo:
 
 In the `platforms` cell we specify:
 In the `platforms` cell we specify:
-* The platform used for remote execution in this project `root//platforms:remote_platform`, which includes the definition of the Docker image used for remote execution, and that defines constraints for targets to run in the remote execution environment. This platform provides an `ExecutionPlatformRegistrationInfo` a `ConfigurationInfo` and a `PlatformInfo` to be able to be used in the `.buckconfig`, in the `--target-platforms` flag, and in the `exec_compatible_with` of `rust_*` rules. Note since rust rules depend on C++ linking this is needed similarly to the Buck2 cpp example in this repo.
+* The platform used for remote execution in this project `root//platforms:remote_platform`, which includes the definition of the Docker image used for remote execution, and that defines constraints for targets to run in the remote execution environment. This platform provides an `ExecutionPlatformRegistrationInfo` a `ConfigurationInfo` and a `PlatformInfo` to be able to be used in the `.buckconfig`, and in the `--target-platforms` flag.
 * The action keys `root//platforms:remote_execution_action_keys`, which provides a default `BuildModeInfo` that is needed for RE of tests to function properly.
 * The platform `image` configured in `platforms/defs.bzl`, notably, uses a different image than other Buck2 samples in this repo. Specifically, it uses a public AWS image that has `rust` preinstalled. This is because Buck2 rust rules do not include a hermetic rust toolchain.
 
 In the `toolchains` cell we specify:
 
-* The remote rust toolchain `root//toolchains:remote_rust_toolchain` which is compatible with the remote execution environment. This toolchain is configured with the `rustc_target_triple` to match the remote execution environment.  
+* The remote rust toolchain `root//toolchains:remote_rust_toolchain` which is compatible with the remote execution environment. This toolchain is configured with the `rustc_target_triple` to match the remote execution environment, and the compiler, clippy
 * The c++ toolchain `root//toolchains:cxx_tools_info_toolchain` that is compatible with the remote execution environment.
 * The clang tools, `root//toolchains:path_clang_tools`, which is used by the c++ toolchain, and specifies the tools installed in the Docker image.
 * The remote test execution toolchain, `root//toolchains:remote_test_execution_toolchain`. This toolchain defines platform options in the form of `capabilities`. Critically these include the `container-image`. This toolchain is identical to the one in the `buck2/cpp` sample in this repo.
