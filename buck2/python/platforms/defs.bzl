@@ -18,6 +18,7 @@ load("@prelude//:build_mode.bzl", "BuildModeInfo")
 
 def _platforms(ctx):
     constraints = dict()
+    constraints.update(ctx.attrs.re_provider[ConfigurationInfo].constraints)
     configuration = ConfigurationInfo(
         constraints = constraints,
         values = {},
@@ -54,7 +55,9 @@ def _action_keys(ctx):
     ]
 
 platforms = rule(
-    attrs = {}, 
+    attrs = {
+        "re_provider": attrs.dep(providers = [ConfigurationInfo]),
+    },
     impl = _platforms
 )
 

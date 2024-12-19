@@ -49,11 +49,11 @@ Clone the repository and replace the relevant configs in `.buckconfig`.
 Build the example:
 
 ```
-buck2 build //:cpp_lib
+buck2 build --target-platforms //platforms:remote_platform //:cpp_lib
 ```
 
 Test the example:
 
 ```
-buck2 test //:cpp_test
+buck2 test --target-platforms //platforms:remote_platform //:cpp_test
 ```

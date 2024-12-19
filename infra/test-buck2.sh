@@ -6,20 +6,20 @@ alias buck2="$(realpath buck2-exe)"
 
 # Run cpp example
 cd buck2/cpp
-buck2 build //:cpp_lib
-buck2 test //:cpp_test
+buck2 build --target-platforms //platforms:remote_platform //:cpp_lib
+buck2 test --target-platforms //platforms:remote_platform //:cpp_test
 cd ..
 
 # Run python example
 cd python
-buck2 build //main:check_main
-buck2 test //hello:hello_unittest_test
+buck2 build --target-platforms //platforms:remote_platform //main:check_main
+buck2 test --target-platforms //platforms:remote_platform //hello:hello_unittest_test
 cd ..
 
 # Run go example
 cd golang
-buck2 build //go:hello
-buck2 test //go/greeting:greeting_test
+buck2 build --target-platforms //platforms:remote_platform //go:hello
+buck2 test --target-platforms //platforms:remote_platform //go/greeting:greeting_test
 cd ..
 
 # Run rust example

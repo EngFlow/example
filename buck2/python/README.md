@@ -26,7 +26,7 @@ The `main` cell and `library` cell:
 To test these cells with RE run (after setting up `.buckconfig` as indicated below):
 
 ```
-buck2 build //main:check_main
+buck2 build --target-platforms //platforms:remote_platform //main:check_main
 ```
 
 The `hello` cell:
@@ -36,7 +36,7 @@ The `hello` cell:
 To test this cell with RE run (after setting up `.buckconfig` as indicated below):
 
 ```
-buck2 test //hello:hello_unittest_test
+buck2 test --target-platforms //platforms:remote_platform //hello:hello_unittest_test
 ```
 
 ### Relevant configs in `.buckconfig`
