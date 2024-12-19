@@ -6,5 +6,8 @@
     "platform": "github",
     "repositories": [
         "EngFlow/example"
-    ]
+    ],
+    "vulnerabilityAlerts": {
+        "enabled": false
+    }
 }
