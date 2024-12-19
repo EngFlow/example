@@ -14,42 +14,18 @@
 
 rust_library(
     name = "library",
-    # We set these env vars to configure the RE Rust toolchain. Unfortunately the prelude does not provide a way to set these at the rust_toolchain level. We override the HOME location so rustp creates its `.rustp` directory in this location.
-    env = select({
-        "//platforms:engflow": {
-            "RUSTUP_TOOLCHAIN":"/usr/local/rustup/toolchains/1.83.0-x86_64-unknown-linux-gnu",
-            "RUSTUP_HOME": ".rustup",
-        },
-        "DEFAULT": {},
-    }),
     srcs = glob(
         ["src/**/*.rs"],
     ),
-    exec_compatible_with = select({
-        "//platforms:engflow": ["//platforms:remote_platform"],
-        "DEFAULT": [],
-    }),
 )
 
 rust_binary(
     name = "main",
-    # We set these env vars to configure the RE Rust toolchain. Unfortunately the prelude does not provide a way to set these at the rust_toolchain level. We override the HOME location so rustp creates its `.rustp` directory in this location.
-    env = select({
-        "//platforms:engflow": {
-            "RUSTUP_TOOLCHAIN":"/usr/local/rustup/toolchains/1.83.0-x86_64-unknown-linux-gnu",
-            "RUSTUP_HOME": ".rustup",
-        },
-        "DEFAULT": {},
-    }),
     srcs = glob(
         ["bin/**/*.rs"],
     ),    
     crate_root = "bin/main.rs",
     deps = [":library"],
-    exec_compatible_with = select({
-        "//platforms:engflow": ["//platforms:remote_platform"],
-        "DEFAULT": [],
-    }),
 )
 
 rust_test(
@@ -58,18 +34,6 @@ rust_test(
         ["test/**/*.rs"],
     ),
     deps = [":library"],
-    # We set these env vars to configure the RE Rust toolchain. Unfortunately the prelude does not provide a way to set these at the rust_toolchain level. We override the HOME location so rustp creates its `.rustp` directory in this location.
-    env = select({
-        "//platforms:engflow": {
-            "RUSTUP_TOOLCHAIN":"/usr/local/rustup/toolchains/1.83.0-x86_64-unknown-linux-gnu",
-            "RUSTUP_HOME": ".rustup",
-        },
-        "DEFAULT": {},
-    }),
-    exec_compatible_with = select({
-        "//platforms:engflow": ["//platforms:remote_platform"],
-        "DEFAULT": [],
-    }),
     remote_execution_action_key_providers = select({
         "//platforms:engflow": "//platforms:remote_execution_action_keys",
         "DEFAULT": None,

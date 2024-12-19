@@ -27,6 +27,7 @@ def _platforms(ctx):
     )
 
     # A bookworm image with rust pre-installed. Image details can be found in https://gallery.ecr.aws/docker/library/rust.
+    # Dockerfile can be found in https://github.com/rust-lang/docker-rust/blob/700c4f146427808cfb1e07a646e4afabbe99da4f/stable/bullseye/Dockerfile
     image = "docker://public.ecr.aws/docker/library/rust:1.83.0-bullseye@sha256:24118f76a7da011b22a25b8e9dbdbb549ed29c1eba635d6aa4a9c9f5ed545066"
     name = ctx.label.raw_target()
     platform = ExecutionPlatformInfo(
