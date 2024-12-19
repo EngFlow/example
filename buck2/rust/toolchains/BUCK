@@ -1,0 +1,72 @@
+
+# Copyright 2022 EngFlow Inc. All rights reserved.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#    http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+load("defs.bzl", "remote_rust_toolchain", "path_clang_tools")
+load("@prelude//toolchains:cxx.bzl", "cxx_tools_info_toolchain")
+load("@prelude//toolchains:python.bzl", "system_python_bootstrap_toolchain")
+load("@prelude//toolchains:remote_test_execution.bzl", "remote_test_execution_toolchain")
+load("@prelude//tests:test_toolchain.bzl", "noop_test_toolchain")
+
+remote_rust_toolchain(
+    name = "rust",
+    default_edition = "2021",
+    visibility = ["PUBLIC"],
+    rustdoc = "/usr/local/rustup/toolchains/1.83.0-x86_64-unknown-linux-gnu/bin/rustc",
+    compiler = "/usr/local/rustup/toolchains/1.83.0-x86_64-unknown-linux-gnu/bin/rustc",
+    clippy_driver = "/usr/local/rustup/toolchains/1.83.0-x86_64-unknown-linux-gnu/bin/rustc",
+    rustc_target_triple = "x86_64-unknown-linux-gnu",
+)
+
+# Python toolchain used in scripts that bootstrap other aspects of the Buck2 prelude.
+system_python_bootstrap_toolchain(
+    name = "python_bootstrap",
+    visibility = ["PUBLIC"],
+)
+
+# Custom clang tools that use g++ for linking.
+path_clang_tools(
+    name = "clang_tools",
+    visibility = ["PUBLIC"],
+)
+
+# Custom cpp toolchain that is compatible with the remote worker environment.
+cxx_tools_info_toolchain(
+    name = "cxx",
+    cxx_tools_info = ":clang_tools",
+    visibility = ["PUBLIC"],
+)
+
+# Default toolchain for remote execution of tests.
+# Note it defines a profile with a capability that defines the `container-image` that matches the one defined in //platforms:remote_platform. 
+# Capabilities are passed to the RE service to find workers that match them as Platform options.
+remote_test_execution_toolchain(
+    name = "remote_test_execution",
+    visibility = ["PUBLIC"],
+    default_profile = "cxx_re_toolchain",
+    profiles = {
+        "cxx_re_toolchain": {
+            "use_case": "cxx-testing",
+            "capabilities": {
+                "container-image" : "docker://public.ecr.aws/docker/library/rust:1.83.0-bullseye@sha256:24118f76a7da011b22a25b8e9dbdbb549ed29c1eba635d6aa4a9c9f5ed545066",
+            },
+        }
+    },
+)
+
+# In some cases the execution of test can fail looking for this `noop_test_toolchain`.
+noop_test_toolchain(
+    name = "test",
+    visibility = ["PUBLIC"],
+)
