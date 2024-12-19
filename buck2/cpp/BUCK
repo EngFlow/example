@@ -16,16 +16,12 @@ cxx_binary(
     name = "main",
     srcs = ["main.cpp"],
     link_style = "static",
-    exec_compatible_with = ["//platforms:remote_platform"],
-    default_target_platform = "//platforms:remote_platform",
 )
 
 cxx_binary(
     name = "cpp",
     srcs = ["main.cc"],
     deps = [":cpp_lib"],
-    exec_compatible_with = ["//platforms:remote_platform"],
-    default_target_platform = "//platforms:remote_platform",
 )
 
 cxx_library(
@@ -35,8 +31,6 @@ cxx_library(
     ],
     exported_headers = glob(["**/*.h"]),
     visibility = ["PUBLIC"],
-    exec_compatible_with = ["//platforms:remote_platform"],
-    default_target_platform = "//platforms:remote_platform",
 )
 
 cxx_test(
@@ -45,7 +39,8 @@ cxx_test(
     deps = [
         ":cpp_lib",
     ],
-    exec_compatible_with = ["//platforms:remote_platform"],
-    default_target_platform = "//platforms:remote_platform",
-    remote_execution_action_key_providers = "//platforms:remote_execution_action_keys",
+    remote_execution_action_key_providers = select({
+        "//platforms:engflow": "//platforms:remote_execution_action_keys",
+        "DEFAULT": None,
+    }),
 )
