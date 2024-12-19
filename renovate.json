@@ -13,5 +13,8 @@
   "automerge": true,
   "labels": [
     "dependencies"
+  ],
+  "repositories": [
+    "EngFlow/example"
   ]
 }
