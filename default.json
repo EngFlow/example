@@ -1,0 +1,19 @@
+{
+    "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+    "extends": [
+        "config:base"
+    ],
+    "platformAutomerge": true,
+    "prHourlyLimit": 0,
+    "rebaseWhen": "behind-base-branch",
+    "dependencyDashboard": false,
+    "pre-commit": {
+      "enabled": true
+    },
+    "labels": ["renovate-bot"],
+    "osvVulnerabilityAlerts": false,
+    "vulnerabilityAlerts": {
+        "enabled": false
+    },
+    "dependencyDashboardOSVVulnerabilitySummary": "all"
+  }
