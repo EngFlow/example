@@ -2,7 +2,7 @@
 
 ## Overview
 
-The goal of this example project is to test the performance of Engflow's remote execution and caching service based on the number of input binary files in the dependency graph. The project contains a `genrule` that generates a specified number of Java binaries for the `genbinary` Java library, which are then listed as dependencies in the main binary. The `Main.java` file loops through each generated class and calls its `greetNum` method.
+The example contains a `genrule` that generates a specified number of Java binaries for the `genbinary` Java library, which are then listed as dependencies in the main binary. In this way we can study the relation between number of inputs (dependendencies) and build time.
 
 ## Project Structure
 
