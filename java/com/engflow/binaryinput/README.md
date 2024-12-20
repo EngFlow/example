@@ -13,10 +13,6 @@ Then, the program can be built with the following command:
 bazel build //java/com/engflow/binaryinput:main
 ```
 
-Alternatively, use run the `BenchmarkScript.py` script. 
-Make sure that the `.bazelrc` file in the main directory is properly set up for remote execution using MyEngflow for building remmotely. 
-Write the desired values in the console input prompt.
-
 ## How It Works
 
 1. **Generation of Java Binaries:**
@@ -51,18 +47,3 @@ To generate and run the program with 10 input binary files:
    ```
 
 This will generate 10 Java classes, build the `genbinary` library, and build the `main` binary. Using `bazel run` will also print messages from each generated class.
-
-To use `BenchmarkScript.py` to execute 5 builds locally:
-
-1. Run the script. For a linux bash shell:
-    ```sh
-     python3 BenchmarkScript.py
-   ```
-2. In the console:
-    ```sh
-    Enter the number of files: 10
-    Enter the execution type (local/remote): local
-    Enter the number of iterations: 5
-   ```
-
-This will clear the bazel cache, generate the input files and their libraries, then build the main target 5 times. Then the longest critical path time and total run time from the 5 runs will be printed in the console.
