@@ -39,14 +39,14 @@ jobs:
             arch: x64
             os_distribution: monterey
             os_version: "12"
-            revision: 1ec247a1e93f4980098fc6bb2764bb093b37b3da
+            revision: "dd17e52a1f04529abb97003e8093d356739980d7"
             remote_execution: 'false'
 
           - os: macos
             arch: x64
             os_distribution: monterey
             os_version: "12"
-            revision: 1ec247a1e93f4980098fc6bb2764bb093b37b3da
+            revision: "dd17e52a1f04529abb97003e8093d356739980d7"
             remote_execution: 'true'
 
     steps:
