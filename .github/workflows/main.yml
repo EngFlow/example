@@ -37,15 +37,15 @@ jobs:
         include:
           - os: macos
             arch: x64
-            os_distribution: monterey
-            os_version: "12"
+            os_distribution: "sonoma"
+            os_version: "14"
             revision: "dd17e52a1f04529abb97003e8093d356739980d7"
             remote_execution: 'false'
 
           - os: macos
             arch: x64
-            os_distribution: monterey
-            os_version: "12"
+            os_distribution: "sonoma"
+            os_version: "14"
             revision: "dd17e52a1f04529abb97003e8093d356739980d7"
             remote_execution: 'true'
 
