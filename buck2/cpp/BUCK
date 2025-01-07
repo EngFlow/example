@@ -39,6 +39,7 @@ cxx_test(
     deps = [
         ":cpp_lib",
     ],
+    # TODO: remove these once https://github.com/facebook/buck2/pull/826 gets merged
     remote_execution_action_key_providers = select({
         "//platforms:engflow": "//platforms:remote_execution_action_keys",
         "DEFAULT": None,
