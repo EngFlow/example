@@ -13,7 +13,7 @@ cd ..
 # Run python example
 cd python
 buck2 build --remote-only //main:check_main
-buck2 test ---remote-only //hello:hello_unittest_test
+buck2 test --remote-only //hello:hello_unittest_test
 cd ..
 
 # Run go example
