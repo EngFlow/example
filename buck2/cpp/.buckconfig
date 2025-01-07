@@ -32,7 +32,7 @@
   prelude = bundled
 
 [parser]
-  target_platform_detector_spec = target:root//...->prelude//platforms:default
+  target_platform_detector_spec = target:root//...->root//platforms:remote_platform
   
 [buck2]
 digest_algorithms = SHA256
