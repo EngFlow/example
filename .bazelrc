@@ -67,14 +67,14 @@ build:opal_bes --bes_instance_name=example-oss
 build:opal_bes --bes_lifecycle_events
 build:opal_bes --bes_results_url=https://opal.cluster.engflow.com/invocations/example-oss/
 
-build:magnesite --config=engflow_common
-build:magnesite --config=magnesite_bes
-build:magnesite --config=magnesite_auth
-build:magnesite --remote_executor=grpcs://magnesite.cluster.engflow.com
+build:pyrite --config=engflow_common
+build:pyrite --config=pyrite_bes
+build:pyrite --config=pyrite_auth
+build:pyrite --remote_executor=grpcs://pyrite.cluster.engflow.com
 
-build:magnesite_bes --bes_backend=grpcs://magnesite.cluster.engflow.com
-build:magnesite_bes --bes_lifecycle_events
-build:magnesite_bes --bes_results_url=https://magnesite.cluster.engflow.com/invocation/
+build:pyrite_bes --bes_backend=grpcs://pyrite.cluster.engflow.com
+build:pyrite_bes --bes_lifecycle_events
+build:pyrite_bes --bes_results_url=https://pyrite.cluster.engflow.com/invocation/
 
 # To authenticate with the clusters above, create a .bazelrc.user file.
 # This file is not checked into Git because it refers to local file system paths.
