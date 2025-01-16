@@ -41,12 +41,12 @@ build:remote_linux_x64 --host_platform=//platform/linux_x64
 build:remote_linux_x64 --platforms=//platform/linux_x64
 build:remote_linux_x64 --extra_toolchains=//platform/linux_x64:cc-toolchain
 
-build:remote_macos_x64 --config=clang
-build:remote_macos_x64 --host_platform=//platform/macos_x64
-build:remote_macos_x64 --platforms=//platform/macos_x64
-build:remote_macos_x64 --macos_minimum_os=12
-build:remote_macos_x64 --action_env=BAZEL_DO_NOT_DETECT_CPP_TOOLCHAIN=1
-build:remote_macos_x64 --host_action_env=BAZEL_DO_NOT_DETECT_CPP_TOOLCHAIN=1
+build:remote_macos_arm64 --config=clang
+build:remote_macos_arm64 --host_platform=//platform/macos_arm64
+build:remote_macos_arm64 --platforms=//platform/macos_arm64
+build:remote_macos_arm64 --macos_minimum_os=14
+build:remote_macos_arm64 --action_env=BAZEL_DO_NOT_DETECT_CPP_TOOLCHAIN=1
+build:remote_macos_arm64 --host_action_env=BAZEL_DO_NOT_DETECT_CPP_TOOLCHAIN=1
 
 build:remote_windows_x64 --host_platform=//platform/windows_x64
 build:remote_windows_x64 --platforms=//platform/windows_x64
