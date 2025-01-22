@@ -12,8 +12,8 @@ import (
 	"os/signal"
 	"time"
 
-	notificationv1 "github.com/EngFlow/engflowapis-go/engflow/notification/v1"
-	resourceusagev1 "github.com/EngFlow/engflowapis-go/engflow/resourceusage/v1"
+	notificationv1 "github.com/EngFlow/engflowapis/go/engflow/notification/v1"
+	resourceusagev1 "github.com/EngFlow/engflowapis/go/engflow/resourceusage/v1"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/credentials"

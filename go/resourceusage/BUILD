@@ -6,8 +6,8 @@ go_library(
     importpath = "github.com/EngFlow/example/go/resourceusage",
     visibility = ["//visibility:private"],
     deps = [
-        "//go/proto:notification_queue_go_proto",
-        "//go/proto:resourceusage_go_proto",
+        "@engflowapis-go//engflow/notification/v1",
+        "@engflowapis-go//engflow/resourceusage/v1",
         "@org_golang_google_grpc//:grpc",
         "@org_golang_google_grpc//codes",
         "@org_golang_google_grpc//credentials",

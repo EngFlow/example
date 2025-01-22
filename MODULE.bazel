@@ -47,6 +47,18 @@ http_archive(
 
 bazel_dep(name = "bazel_skylib", version = "1.7.1")
 bazel_dep(name = "engflowapis-java", version = "2025.01.17-13.50.20")
+
+# TODO(BZL-7): apply patch upstream and replace this http_archive with a
+# plain bazel_dep.
+http_archive(
+    name = "engflowapis-go",
+    urls = ["https://github.com/EngFlow/engflowapis/releases/download/2025.01.17-16.55.05/engflowapis-2025.01.17-16.55.05.tar.gz"],
+    sha256 = "ddf8fd5e9fc14520d6182319dcec6a8228e510c37fe4615a53c87fdcb702a99d",
+    strip_prefix = "go",
+    patches = ["//go/proto:engflowapis-go.patch"],
+    patch_args = ["--strip", "1"],
+)
+
 bazel_dep(name = "platforms", version = "0.0.10")
 bazel_dep(
     name = "protobuf",
@@ -69,11 +81,7 @@ bazel_dep(name = "rules_cc", version = "0.0.9")
 
 # https://github.com/googleapis/googleapis/pull/855
 # https://github.com/bazelbuild/bazel-central-registry/pull/1699
-bazel_dep(
-    name = "googleapis",
-    version = "0.0.0-20240326-1c8d509c5",
-    repo_name = "com_google_googleapis",
-)
+bazel_dep(name = "googleapis", version = "0.0.0-20240326-1c8d509c5")
 bazel_dep(name = "engflowapis", version = "2024.11.04-11.10.20")
 bazel_dep(name = "rules_python", version = "1.0.0")
 
@@ -116,9 +124,13 @@ go_deps.from_file(go_mod = "//:go.mod")
 use_repo(
     go_deps,
     "com_github_google_go_cmp",
+    # TODO(BZL-7): remove direct dependencies on modules that are only needed
+    # by the engflowapis-go patch.
+    "org_golang_google_genproto",
     "org_golang_google_genproto_googleapis_api",
     "org_golang_google_genproto_googleapis_rpc",
     "org_golang_google_grpc",
+    "org_golang_google_protobuf",
 )
 
 bazel_dep(name = "rules_java", version = "7.9.1")
