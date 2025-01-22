@@ -177,7 +177,10 @@ A detailed example of `EngFlow` APIs consumption is presented in
 | '--------------' || '--------------' || '--------------' || '--------------' || '--------------' || '--------------' || '--------------' |
  '----------------'  '----------------'  '----------------'  '----------------'  '----------------'  '----------------'  '----------------' 
 
-
+88""Yb 88  dP""b8  dP""b8 888888 88""Yb     Yb        dP 88  88  dP"Yb   dP"Yb  88""Yb .dP"Y8 
+88__dP 88 dP   `" dP   `" 88__   88__dP      Yb  db  dP  88  88 dP   Yb dP   Yb 88__dP `Ybo." 
+88""Yb 88 Yb  "88 Yb  "88 88""   88"Yb        YbdPYbdP   888888 Yb   dP Yb   dP 88"""  o.`Y8b 
+88oodP 88  YboodP  YboodP 888888 88  Yb        YP  YP    88  88  YbodP   YbodP  88     8bodP' 
 
 [1]: java/com/engflow/notificationqueue/README.md
 [2]: https://github.com/bazelbuild/rules_swift
