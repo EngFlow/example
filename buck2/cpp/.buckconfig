@@ -48,3 +48,6 @@ execution_platforms = root//platforms:remote_platform
 
 [project]
 ignore = .git
+
+[re]
+remote_execution_action_key_providers = "//platforms:remote_execution_action_keys"
