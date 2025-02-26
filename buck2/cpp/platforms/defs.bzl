@@ -20,7 +20,6 @@ def _platforms(ctx):
     constraints = dict()
     constraints.update(ctx.attrs.cpu_configuration[ConfigurationInfo].constraints)
     constraints.update(ctx.attrs.os_configuration[ConfigurationInfo].constraints)
-    constraints.update(ctx.attrs.re_provider[ConfigurationInfo].constraints)
     configuration = ConfigurationInfo(
         constraints = constraints,
         values = {},
@@ -62,7 +61,6 @@ platforms = rule(
     attrs = {
         "cpu_configuration": attrs.dep(providers = [ConfigurationInfo]),
         "os_configuration": attrs.dep(providers = [ConfigurationInfo]),
-        "re_provider": attrs.dep(providers = [ConfigurationInfo]),
     }, 
     impl = _platforms
 )
