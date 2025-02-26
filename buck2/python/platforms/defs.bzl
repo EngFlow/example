@@ -55,6 +55,7 @@ def _action_keys(ctx):
     ]
 
 platforms = rule(
+    attrs = {},
     impl = _platforms
 )
 
