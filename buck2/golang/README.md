@@ -33,7 +33,7 @@ buck2 test --target-platforms //platforms:remote_platform //go/greeting:greeting
 You can also build the `main` for this sample by running:
 
 ```
-buck2 build --target-platforms //platforms:remote_platform //go:hello
+buck2 build --remote-only //go:hello
 ```
 
 ### Relevant configs in `.buckconfig`
