@@ -29,15 +29,6 @@ http_file(
     ],
 )
 
-http_archive(
-    name = "com_engflow_engflowapis",
-    sha256 = "8721f7a0ec52c5bc120119aac090eedd671ca3b708652f88b82b44bea2b6c278",
-    strip_prefix = "engflowapis-44fcd39598f223e8e5f6c7cbf2f73c870b2a6341",
-    urls = [
-        "https://github.com/EngFlow/engflowapis/archive/44fcd39598f223e8e5f6c7cbf2f73c870b2a6341.zip",
-    ],
-)
-
 # Abseil Python can be imported through pip_import, but it has native Bazel support too.
 # bzlmod: https://github.com/abseil/abseil-py/issues/263
 http_archive(
@@ -48,6 +39,7 @@ http_archive(
 )
 
 bazel_dep(name = "bazel_skylib", version = "1.7.1")
+bazel_dep(name = "engflowapis-java", version = "2025.01.17-13.50.20")
 bazel_dep(name = "platforms", version = "0.0.10")
 bazel_dep(
     name = "protobuf",
@@ -76,7 +68,7 @@ bazel_dep(
     repo_name = "com_google_googleapis",
 )
 
-bazel_dep(name = "rules_python", version = "0.33.2")
+bazel_dep(name = "rules_python", version = "1.0.0")
 
 PYTHON_VERSION = "3.12"
 python = use_extension("@rules_python//python/extensions:python.bzl", "python")

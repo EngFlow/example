@@ -18,14 +18,17 @@ load("@prelude//:build_mode.bzl", "BuildModeInfo")
 
 def _platforms(ctx):
     constraints = dict()
+    constraints.update(ctx.attrs.cpu_configuration[ConfigurationInfo].constraints)
+    constraints.update(ctx.attrs.os_configuration[ConfigurationInfo].constraints)
+    constraints.update(ctx.attrs.re_provider[ConfigurationInfo].constraints)
     configuration = ConfigurationInfo(
         constraints = constraints,
         values = {},
     )
 
-    # A bookworm image with go pre-installed.
-    # Unlike Bazel go_toolchain, Buck2 go_toolchain does not include a hermetic go binary. Image details can be found in https://gallery.ecr.aws/docker/library/golang.
-    image = "docker://public.ecr.aws/docker/library/golang:1.23.3-bookworm@sha256:3f3b9daa3de608f3e869cd2ff8baf21555cf0fca9fd34251b8f340f9b7c30ec5"
+    # A bookworm image with rust pre-installed. Image details can be found in https://gallery.ecr.aws/docker/library/rust.
+    # Dockerfile can be found in https://github.com/rust-lang/docker-rust/blob/700c4f146427808cfb1e07a646e4afabbe99da4f/stable/bullseye/Dockerfile
+    image = "docker://public.ecr.aws/docker/library/rust:1.83.0-bullseye@sha256:24118f76a7da011b22a25b8e9dbdbb549ed29c1eba635d6aa4a9c9f5ed545066"
     name = ctx.label.raw_target()
     platform = ExecutionPlatformInfo(
         label = ctx.label.raw_target(),
@@ -46,6 +49,8 @@ def _platforms(ctx):
     return [
         DefaultInfo(),
         ExecutionPlatformRegistrationInfo(platforms = [platform]),
+        configuration,
+        PlatformInfo(label = str(name), configuration = configuration),
     ]
 
 def _action_keys(ctx):
@@ -55,7 +60,11 @@ def _action_keys(ctx):
     ]
 
 platforms = rule(
-    attrs = {}, 
+    attrs = {
+        "cpu_configuration": attrs.dep(providers = [ConfigurationInfo]),
+        "os_configuration": attrs.dep(providers = [ConfigurationInfo]),
+        "re_provider": attrs.dep(providers = [ConfigurationInfo]),
+    }, 
     impl = _platforms
 )
 

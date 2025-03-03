@@ -41,12 +41,12 @@ build:remote_linux_x64 --host_platform=//platform/linux_x64
 build:remote_linux_x64 --platforms=//platform/linux_x64
 build:remote_linux_x64 --extra_toolchains=//platform/linux_x64:cc-toolchain
 
-build:remote_macos_x64 --config=clang
-build:remote_macos_x64 --host_platform=//platform/macos_x64
-build:remote_macos_x64 --platforms=//platform/macos_x64
-build:remote_macos_x64 --macos_minimum_os=12
-build:remote_macos_x64 --action_env=BAZEL_DO_NOT_DETECT_CPP_TOOLCHAIN=1
-build:remote_macos_x64 --host_action_env=BAZEL_DO_NOT_DETECT_CPP_TOOLCHAIN=1
+build:remote_macos_arm64 --config=clang
+build:remote_macos_arm64 --host_platform=//platform/macos_arm64
+build:remote_macos_arm64 --platforms=//platform/macos_arm64
+build:remote_macos_arm64 --macos_minimum_os=14
+build:remote_macos_arm64 --action_env=BAZEL_DO_NOT_DETECT_CPP_TOOLCHAIN=1
+build:remote_macos_arm64 --host_action_env=BAZEL_DO_NOT_DETECT_CPP_TOOLCHAIN=1
 
 build:remote_windows_x64 --host_platform=//platform/windows_x64
 build:remote_windows_x64 --platforms=//platform/windows_x64
@@ -67,14 +67,14 @@ build:opal_bes --bes_instance_name=example-oss
 build:opal_bes --bes_lifecycle_events
 build:opal_bes --bes_results_url=https://opal.cluster.engflow.com/invocations/example-oss/
 
-build:magnesite --config=engflow_common
-build:magnesite --config=magnesite_bes
-build:magnesite --config=magnesite_auth
-build:magnesite --remote_executor=grpcs://magnesite.cluster.engflow.com
+build:pyrite --config=engflow_common
+build:pyrite --config=pyrite_bes
+build:pyrite --config=pyrite_auth
+build:pyrite --remote_executor=grpcs://pyrite.cluster.engflow.com
 
-build:magnesite_bes --bes_backend=grpcs://magnesite.cluster.engflow.com
-build:magnesite_bes --bes_lifecycle_events
-build:magnesite_bes --bes_results_url=https://magnesite.cluster.engflow.com/invocation/
+build:pyrite_bes --bes_backend=grpcs://pyrite.cluster.engflow.com
+build:pyrite_bes --bes_lifecycle_events
+build:pyrite_bes --bes_results_url=https://pyrite.cluster.engflow.com/invocation/
 
 # To authenticate with the clusters above, create a .bazelrc.user file.
 # This file is not checked into Git because it refers to local file system paths.

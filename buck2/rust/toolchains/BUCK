@@ -13,11 +13,21 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-load("defs.bzl", "remote_go_toolchain", "remote_go_bootstrap_toolchain")
+load("defs.bzl", "remote_rust_toolchain", "path_clang_tools")
 load("@prelude//toolchains:cxx.bzl", "cxx_tools_info_toolchain")
 load("@prelude//toolchains:python.bzl", "system_python_bootstrap_toolchain")
 load("@prelude//toolchains:remote_test_execution.bzl", "remote_test_execution_toolchain")
 load("@prelude//tests:test_toolchain.bzl", "noop_test_toolchain")
+
+remote_rust_toolchain(
+    name = "rust",
+    default_edition = "2021",
+    visibility = ["PUBLIC"],
+    rustdoc = "/usr/local/rustup/toolchains/1.83.0-x86_64-unknown-linux-gnu/bin/rustc",
+    compiler = "/usr/local/rustup/toolchains/1.83.0-x86_64-unknown-linux-gnu/bin/rustc",
+    clippy_driver = "/usr/local/rustup/toolchains/1.83.0-x86_64-unknown-linux-gnu/bin/rustc",
+    rustc_target_triple = "x86_64-unknown-linux-gnu",
+)
 
 # Python toolchain used in scripts that bootstrap other aspects of the Buck2 prelude.
 system_python_bootstrap_toolchain(
@@ -25,19 +35,16 @@ system_python_bootstrap_toolchain(
     visibility = ["PUBLIC"],
 )
 
-remote_go_bootstrap_toolchain(
-    name = "go_bootstrap",
+# Custom clang tools that use g++ for linking.
+path_clang_tools(
+    name = "clang_tools",
     visibility = ["PUBLIC"],
 )
 
-# c++ toolchain required implicitly for py targets.
+# Custom cpp toolchain that is compatible with the remote worker environment.
 cxx_tools_info_toolchain(
     name = "cxx",
-    visibility = ["PUBLIC"],
-)
-
-remote_go_toolchain(
-    name = "go",
+    cxx_tools_info = ":clang_tools",
     visibility = ["PUBLIC"],
 )
 
@@ -52,7 +59,7 @@ remote_test_execution_toolchain(
         "cxx_re_toolchain": {
             "use_case": "cxx-testing",
             "capabilities": {
-                "container-image" : "docker://public.ecr.aws/docker/library/golang:1.23.3-bookworm@sha256:3f3b9daa3de608f3e869cd2ff8baf21555cf0fca9fd34251b8f340f9b7c30ec5",
+                "container-image" : "docker://public.ecr.aws/docker/library/rust:1.83.0-bullseye@sha256:24118f76a7da011b22a25b8e9dbdbb549ed29c1eba635d6aa4a9c9f5ed545066",
             },
         }
     },
