@@ -13,26 +13,26 @@
 # limitations under the License.
 
 [cells]
-  root = .
-  prelude = prelude
-  toolchains = toolchains
-  none = none
+root = .
+prelude = prelude
+toolchains = toolchains
+none = none
 
 [cell_aliases]
-  config = prelude
-  ovr_config = prelude
-  fbcode = none
-  fbsource = none
-  fbcode_macros = none
-  buck = none
+config = prelude
+ovr_config = prelude
+fbcode = none
+fbsource = none
+fbcode_macros = none
+buck = none
 
 # Uses a copy of the prelude bundled with the buck2 binary. You can alternatively delete this
 # section and vendor a copy of the prelude to the `prelude` directory of your project.
 [external_cells]
-  prelude = bundled
+prelude = bundled
 
 [parser]
-  target_platform_detector_spec = target:root//...->prelude//platforms:default
+target_platform_detector_spec = target:root//...->root//platforms:remote_platform
   
 [buck2]
 digest_algorithms = SHA256
@@ -44,7 +44,10 @@ cas_address          = <CLUSTER_NAME>.cluster.engflow.com
 http_headers         = <AUTH_HTTP_HEADERS>
 
 [build]
-  execution_platforms = root//platforms:remote_platform
+execution_platforms = root//platforms:remote_platform
 
 [project]
-  ignore = .git
+ignore = .git
+
+[re]
+remote_execution_test_build_mode = root//platforms:remote_execution_action_keys

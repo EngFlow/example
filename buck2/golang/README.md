@@ -13,7 +13,7 @@ It is based on three existing samples in the Buck2 upstream repo and the EngFlow
 In the `platforms` cell we specify:
 * The platform used for remote execution in this project `root//platforms:remote_platform`, which includes the definition of the Docker image used for remote execution, and that defines constraints for targets to run in the remote execution environment. This platform provides an `ExecutionPlatformRegistrationInfo`.
 * The action keys `root//platforms:remote_execution_action_keys`, which provides a default `BuildModeInfo` that is needed for RE of tests to function properly.
-* The platform `image` configured in `platforms/defs.bzl`, notably, uses a different image than other Buck2 samples in this repo. Specifically, it uses a public AWS image that has `go` preinstalled. This is because, unlike Bazel go rules, Buck2 go rules do not include a hermetic go binary.
+* The platform `image` configured in `platforms/defs.bzl`, notably, uses a different image than other Buck2 samples in this repo. Specifically, it uses a public AWS image that has `go` preinstalled. This is because, unlike Bazel go rules, Buck2 go rules do not include a hermetic go binary. Image details can be found in https://gallery.ecr.aws/docker/library/golang. he Dockerfile can be found in https://github.com/docker-library/golang/blob/master/1.23/bookworm/Dockerfile.
 
 In the `toolchains` cell we specify:
 
@@ -27,13 +27,13 @@ The `main` cell and `library` cell:
 To test this cell with RE run (after setting up `.buckconfig` as indicated below):
 
 ```
-buck2 test //go/greeting:greeting_test
+buck2 test --remote-only //go/greeting:greeting_test
 ```
 
 You can also build the `main` for this sample by running:
 
 ```
-buck2 build //go:hello 
+buck2 build --remote-only //go:hello
 ```
 
 ### Relevant configs in `.buckconfig`

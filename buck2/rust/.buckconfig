@@ -30,3 +30,6 @@ execution_platforms = root//platforms:remote_platform
 
 [project]
 ignore = .git
+
+[re]
+remote_execution_test_build_mode = root//platforms:remote_execution_action_keys

@@ -45,6 +45,7 @@ def _platforms(ctx):
     return [
         DefaultInfo(),
         ExecutionPlatformRegistrationInfo(platforms = [platform]),
+        PlatformInfo(label = str(name), configuration = configuration),
     ]
 
 def _action_keys(ctx):
@@ -54,7 +55,7 @@ def _action_keys(ctx):
     ]
 
 platforms = rule(
-    attrs = {}, 
+    attrs = {},
     impl = _platforms
 )
 

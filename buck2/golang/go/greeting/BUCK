@@ -21,5 +21,4 @@ go_library(
 go_test(
     name = "greeting_test",
     srcs = glob(["*.go"]),
-    remote_execution_action_key_providers = "//platforms:remote_execution_action_keys",
 )
