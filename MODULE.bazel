@@ -315,3 +315,25 @@ scala_deps = use_extension("//scala/extensions:deps.bzl", "scala_deps")
     # repo suffixes from rules_scala.
     for suffix in ["_" + v.replace(".", "_") for v in SCALA_VERSIONS]
 ]
+
+bazel_dep(name = "rules_foreign_cc", version = "0.14.0")
+
+_ALL_CONTENT = """\
+filegroup(
+    name = "all_srcs",
+    srcs = glob(["**"]),
+    visibility = ["//visibility:public"],
+)
+"""
+
+# pcre source code repository
+http_archive(
+    name = "pcre",
+    build_file_content = _ALL_CONTENT,
+    strip_prefix = "pcre-8.43",
+    urls = [
+	"https://mirror.bazel.build/ftp.pcre.org/pub/pcre/pcre-8.43.tar.gz",
+	"https://ftp.pcre.org/pub/pcre/pcre-8.43.tar.gz",
+    ],
+    sha256 = "0b8e7465dc5e98c757cc3650a20a7843ee4c3edf50aaf60bb33fd879690d2c73",
+)
