@@ -109,9 +109,14 @@ build:engflow --bes_results_url=https://${CLUSTER_ENDPOINT}/invocation/
 build:engflow --nogoogle_default_credentials
 build:engflow --bes_lifecycle_events
 
-# Configuration for your mTLS certificates (if required)
+# Configuration for your mTLS certificates (if required); otherwise ignore
+# these lines and use the auth helper configuration below.
 build:engflow --tls_client_certificate=/path/to/credentials/cert.crt
 build:engflow --tls_client_key=/path/to/credentials/cert.key
+
+# Configuration for your EngFlow auth helper (if required); otherwise ignore
+# this line and use the mTLS configuration above.
+build:engflow --credential_helper=${CLUSTER_ENDPOINT}=/path/to/engflow_auth
 
 # This ensures _all_ build and test runs will be remote. Comment this out
 # when building locally.
@@ -119,6 +124,9 @@ build --config=engflow
 ```
 
 ### Building on remote
+
+Add `--config=engflow` to the following commands if `build --config=engflow`
+isn't enabled in your `.bazelrc.user` file.
 
 - `cpp`,  `csharp`, `docker`, `genrules`, `go`, `java`, `kotlin`, `perl`,
   `python`, `scala`, or `typescript`:

@@ -1,4 +1,4 @@
-load("@io_bazel_rules_scala//scala:scala.bzl", "scala_library", "scala_test")
+load("@rules_scala//scala:scala.bzl", "scala_library", "scala_test")
 
 scala_library(
     name = "exampleScala",

@@ -1,11 +1,18 @@
 """EngFlow example project"""
 
-module(name = "engflow-example", version = "0.0.0")
-http_file = use_repo_rule(
-    "@bazel_tools//tools/build_defs/repo:http.bzl", "http_file"
+module(
+    name = "engflow-example",
+    version = "0.0.0",
 )
+
+http_file = use_repo_rule(
+    "@bazel_tools//tools/build_defs/repo:http.bzl",
+    "http_file",
+)
+
 http_archive = use_repo_rule(
-    "@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive"
+    "@bazel_tools//tools/build_defs/repo:http.bzl",
+    "http_archive",
 )
 
 # Some file dependencies
@@ -38,13 +45,17 @@ http_archive(
     url = "https://github.com/abseil/abseil-py/archive/refs/tags/v2.1.0.tar.gz",
 )
 
+register_toolchains("@rules_scala_protoc_toolchains//:all")
+
 bazel_dep(name = "bazel_skylib", version = "1.7.1")
-bazel_dep(name = "engflowapis-java", version = "2025.01.17-13.50.20")
-bazel_dep(name = "platforms", version = "0.0.10")
-bazel_dep(
-    name = "protobuf",
-    version = "23.1",
-    repo_name = "com_google_protobuf",
+bazel_dep(name = "engflowapis-java", version = "2025.03.14-12.58.52")
+bazel_dep(name = "platforms", version = "0.0.11")
+bazel_dep(name = "protobuf", version = "30.2")
+single_version_override(
+    module_name = "protobuf",
+    patch_strip = 1,
+    patches = ["//scala:0001-protobuf-19679-rm-protoc-dep.patch"],
+    version = "30.2",
 )
 
 # Per the instructions from:
@@ -53,24 +64,19 @@ bazel_dep(
 # If you also depend on `rules_cc`, `apple_support` must come _above_ `rules_cc`
 # in your `MODULE.bazel` or `WORKSPACE` file because Bazel selects toolchains
 # based on which is registered first.
-bazel_dep(
-    name = "apple_support",
-    version = "1.15.1",
-    repo_name = "build_bazel_apple_support",
-)
-bazel_dep(name = "rules_cc", version = "0.0.9")
+bazel_dep(name = "apple_support", version = "1.22.0")
+bazel_dep(name = "rules_cc", version = "0.1.1")
 
 # https://github.com/googleapis/googleapis/pull/855
 # https://github.com/bazelbuild/bazel-central-registry/pull/1699
 bazel_dep(
     name = "googleapis",
-    version = "0.0.0-20240326-1c8d509c5",
-    repo_name = "com_google_googleapis",
+    version = "0.0.0-20241220-5e258e33.bcr.1",
 )
-
-bazel_dep(name = "rules_python", version = "1.0.0")
+bazel_dep(name = "rules_python", version = "1.4.1")
 
 PYTHON_VERSION = "3.12"
+
 python = use_extension("@rules_python//python/extensions:python.bzl", "python")
 python.toolchain(
     is_default = True,
@@ -78,18 +84,15 @@ python.toolchain(
 )
 
 pip = use_extension("@rules_python//python/extensions:pip.bzl", "pip")
-
 pip.parse(
     hub_name = "pip",
     python_version = PYTHON_VERSION,
     requirements_lock = "//python:requirements_lock.txt",
 )
-
 use_repo(pip, "pip")
 
-bazel_dep(name = "rules_proto", version = "6.0.2")
-
-bazel_dep(name = "rules_dotnet", version = "0.18.1")
+bazel_dep(name = "rules_proto", version = "7.1.0")
+bazel_dep(name = "rules_dotnet", version = "0.18.2")
 
 dotnet = use_extension("@rules_dotnet//dotnet:extensions.bzl", "dotnet")
 dotnet.toolchain(dotnet_version = "8.0.200")
@@ -98,220 +101,76 @@ use_repo(dotnet, "dotnet_toolchains")
 register_toolchains("@dotnet_toolchains//:all")
 
 # https://github.com/bazelbuild/rules_go/blob/master/docs/go/core/bzlmod.md
-bazel_dep(name = "rules_go", version = "0.48.1")
-bazel_dep(name = "gazelle", version = "0.37.0")
+bazel_dep(name = "rules_go", version = "0.54.0")
+bazel_dep(name = "gazelle", version = "0.43.0")
 
-GO_VERSION = "1.22.5"
+GO_VERSION = "1.24.3"
 
 go_sdk = use_extension("@rules_go//go:extensions.bzl", "go_sdk")
 go_sdk.download(version = GO_VERSION)
 
 go_deps = use_extension("@gazelle//:extensions.bzl", "go_deps")
 go_deps.from_file(go_mod = "//:go.mod")
-
 use_repo(go_deps, "com_github_google_go_cmp")
 
-bazel_dep(name = "rules_java", version = "7.9.1")
+bazel_dep(name = "rules_java", version = "8.11.0")
 
 # https://github.com/bazelbuild/rules_jvm_external/blob/master/docs/bzlmod.md
-bazel_dep(name = "rules_jvm_external", version = "6.2")
-bazel_dep(
-    name = "grpc-java",
-    version = "1.64.0",
-    repo_name = "io_grpc_grpc_java",
-)
+bazel_dep(name = "rules_jvm_external", version = "6.7")
+bazel_dep(name = "grpc-java", version = "1.71.0")
 
 # Loads rules required to compile proto files
-bazel_dep(name = "rules_proto_grpc", version = "5.0.0-alpha2")
+bazel_dep(name = "rules_proto_grpc", version = "5.0.1")
 
 maven = use_extension("@rules_jvm_external//:extensions.bzl", "maven")
 maven.install(
     artifacts = [
-        "commons-cli:commons-cli:1.8.0",
-        "com.google.oauth-client:google-oauth-client:1.36.0",
-        "io.netty:netty-handler:4.1.111.Final",
+        "commons-cli:commons-cli:1.9.0",
+        "com.google.oauth-client:google-oauth-client:1.39.0",
+        "io.netty:netty-handler:4.1.121.Final",
     ],
 
     # When updating versions, run `REPIN=1 bazel run @maven//:pin`
     fail_if_repin_required = True,
     lock_file = "//:maven_install.json",
-
-    strict_visibility = True,
     repositories = [
         "https://repo.maven.apache.org/maven2/",
     ],
+    strict_visibility = True,
 )
 use_repo(maven, "maven")
 
-bazel_dep(name = "rules_kotlin", version = "1.9.6")
-bazel_dep(name = "rules_perl", version = "0.2.0")
-
-bazel_dep(
-    name = "rules_swift",
-    version = "1.18.0",
-    repo_name = "build_bazel_rules_swift"
-)
-
-bazel_dep(name = "aspect_rules_ts", version = "2.4.2")
+bazel_dep(name = "rules_kotlin", version = "2.1.4")
+bazel_dep(name = "rules_perl", version = "0.4.1")
+bazel_dep(name = "rules_swift", version = "2.8.2")
+bazel_dep(name = "aspect_rules_ts", version = "3.5.3")
 
 rules_ts_ext = use_extension(
     "@aspect_rules_ts//ts:extensions.bzl",
     "ext",
     dev_dependency = True,
 )
-
 rules_ts_ext.deps()
-
 use_repo(rules_ts_ext, "npm_typescript")
 
-# rules_scala is not yet bzlmod compatible:
-#
-# - https://github.com/bazelbuild/rules_scala/issues/1482
-# - https://github.com/bazelbuild/bazel-central-registry/issues/522
-#
-# This is due to the following differences between the WORKSPACE and bzlmod
-# models:
-#
-# - WORKSPACE executes http_archive, load, and any imported functions
-#   sequentially. This enables later expressions to refer to repos defined by
-#   expressions executed earlier in the WORKSPACE file. Also, WORKSPACE
-#   expressions can introduce repos to the global scope directly, without
-#   explicit import statements.
-#
-# - bzlmod enforces explicit repository declarations, with no expression
-#   referring to a repo defined in the same file. (The exception being arguments
-#   to register_toolchains(), and probably register_execution_platforms(), which
-#   don't appear to carry the risk of introducing circular definitions.)
-#
-#   MODULE.bazel also doesn't allow load() calls, and load()s must appear at the
-#   beginning of an extension file, before any function definitions or calls.
-#
-#   This enables bzlmod to build and verify an acyclic dependency graph from
-#   repo declarations alone, before and without executing any extension
-#   functions.
-#
-# As a result, importing the rules_scala repos into MODULE.bazel requires
-# separate files:
-#
-# - MODULE.bazel loads the rules_scala archive as @io_bazel_rules_scala.
-#
-# - The //scala/extensions:config.bzl extension defines
-#   @io_bazel_rules_scala_config, which depends on @io_bazel_rules_scala.
-#
-# - The //scala/extensions:deps.bzl extension defines the repos needed by the
-#   Scala rules, which depend on @io_bazel_rules_scala and
-#   @io_bazel_rules_scala_config.
-#
-# The following problems occur when trying to import everything directly in
-# MODULE.bazel, or in fewer extension files.
-#
-# ---
-#
-# In an extension, the http_archive call for rules_scala must still come first,
-# thereby rendering later load() calls invalid. This precludes encapsulating the
-# entire rules_scala configuration in a single extension.
-#
-# ---
-#
-# Defining @io_bazel_rules_scala_config using the following in MODULE.bazel:
-#
-#   scala_config = use_repo_rule(
-#     "@io_bazel_rules_scala//:scala_config.bzl", "scala_config"
-#   )
-#   scala_config(name = "io_bazel_rules_scala_config")
-#
-# would produce:
-#
-#   ERROR: Circular definition of repositories generated by module extensions
-#   and/or .bzl files:
-#   .-> @@_main~_repo_rules~io_bazel_rules_scala
-#   |   extension '_repo_rules' defined in //:MODULE.bazel
-#   |   @@_main~_repo_rules~io_bazel_rules_scala//:scala_config.bzl
-#   `-- @@_main~_repo_rules~io_bazel_rules_scala
-#   ERROR: cycles detected during target parsing
-#
-# ---
-#
-# Calling scala_config() and exporting @io_bazel_rules_scala_config from
-# //scala:deps.bzl would also produce a circular definition error:
-#
-#   ERROR: Circular definition of repositories generated by module extensions
-#   and/or .bzl files:
-#   .-> @@_main~scala_deps~io_bazel_rules_scala_config
-#   |   extension 'scala_deps' defined in //scala:deps.bzl
-#   |   //scala:deps.bzl
-#   |   @@_main~_repo_rules~io_bazel_rules_scala//testing:scalatest.bzl
-#   |   @@_main~_repo_rules~io_bazel_rules_scala//scalatest:scalatest.bzl
-#   |   @@_main~_repo_rules~io_bazel_rules_scala//third_party/repositories:repositories.bzl
-#   |   @@_main~scala_deps~io_bazel_rules_scala_config//:config.bzl
-#   `-- @@_main~scala_deps~io_bazel_rules_scala_config
-#   ERROR: cycles detected during target parsing
-#
-# This is because
-# @io_bazel_rules_scala//third_party/repositories:repositories.bzl contains a
-# load() statement depending on @io_bazel_rules_scala_config:
-#
-#   load(
-#     "@io_bazel_rules_scala_config//:config.bzl",
-#     "SCALA_MAJOR_VERSION",
-#     "SCALA_VERSION",
-#   )
-
-http_archive(
-    name = "io_bazel_rules_scala",
-    sha256 = "e734eef95cf26c0171566bdc24d83bd82bdaf8ca7873bec6ce9b0d524bdaf05d",
-    strip_prefix = "rules_scala-6.6.0",
-    url = "https://github.com/bazelbuild/rules_scala/releases/download/v6.6.0/rules_scala-v6.6.0.tar.gz",
-    patches = ["//scala:rules_scala-6.6.0.patch"],
-    patch_args = ["-p1"],
+bazel_dep(name = "rules_scala")
+archive_override(
+    module_name = "rules_scala",
+    sha256 = "a4700d6e6cdf13cf85e29029ec998e2ec3ba94791606ec83d2c96e3c5b0aebed",
+    strip_prefix = "rules_scala-7.0.0",
+    url = "https://github.com/bazelbuild/rules_scala/releases/download/v7.0.0/rules_scala-v7.0.0.tar.gz",
 )
 
-# This constant matches the default Scala version from rules_scala for now.
-SCALA_VERSION = "2.13.12"
-SCALA_VERSIONS = [SCALA_VERSION]
-
-scala_config = use_extension("//scala/extensions:config.bzl", "scala_config")
-scala_config.settings(
-    scala_version = SCALA_VERSION,
-    scala_versions = SCALA_VERSIONS,
+scala_deps = use_extension(
+    "@rules_scala//scala/extensions:deps.bzl",
+    "scala_deps",
 )
-use_repo(
-    scala_config,
-    "io_bazel_rules_scala_config",
+scala_deps.scala()
+scala_deps.scalatest()
+
+scala_protoc = use_extension(
+    "@rules_scala//scala/extensions:protoc.bzl",
+    "scala_protoc",
+    dev_dependency = True,
 )
-
-repos = [
-    "io_bazel_rules_scala_scala_compiler",
-    "io_bazel_rules_scala_scala_library",
-    "io_bazel_rules_scala_scala_parser_combinators",
-    "io_bazel_rules_scala_scala_reflect",
-    "io_bazel_rules_scala_scala_xml",
-    "io_bazel_rules_scala_scalactic",
-    "io_bazel_rules_scala_scalatest",
-    "io_bazel_rules_scala_scalatest_core",
-    "io_bazel_rules_scala_scalatest_compatible",
-    "io_bazel_rules_scala_scalatest_featurespec",
-    "io_bazel_rules_scala_scalatest_flatspec",
-    "io_bazel_rules_scala_scalatest_freespec",
-    "io_bazel_rules_scala_scalatest_funspec",
-    "io_bazel_rules_scala_scalatest_funsuite",
-    "io_bazel_rules_scala_scalatest_matchers_core",
-    "io_bazel_rules_scala_scalatest_mustmatchers",
-    "io_bazel_rules_scala_scalatest_shouldmatchers",
-]
-
-toolchains = [
-    "@io_bazel_rules_scala//scala:toolchain",
-    "@io_bazel_rules_scala//testing:scalatest_toolchain",
-]
-
-scala_deps = use_extension("//scala/extensions:deps.bzl", "scala_deps")
-[
-    (
-        [use_repo(scala_deps, repo + suffix) for repo in repos],
-        [register_toolchains(toolchain + suffix) for toolchain in toolchains],
-    )
-    # The v.replace() expression mimics the logic to generate version specific
-    # repo suffixes from rules_scala.
-    for suffix in ["_" + v.replace(".", "_") for v in SCALA_VERSIONS]
-]
+use_repo(scala_protoc, "rules_scala_protoc_toolchains")
