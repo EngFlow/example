@@ -50,11 +50,7 @@ register_toolchains("@rules_scala_protoc_toolchains//:all")
 bazel_dep(name = "bazel_skylib", version = "1.7.1")
 bazel_dep(name = "engflowapis-java", version = "2025.03.14-12.58.52")
 bazel_dep(name = "platforms", version = "0.0.11")
-bazel_dep(
-    name = "protobuf",
-    version = "30.2",
-    repo_name = "com_google_protobuf",
-)
+bazel_dep(name = "protobuf", version = "30.2")
 single_version_override(
     module_name = "protobuf",
     patch_strip = 1,
@@ -68,11 +64,7 @@ single_version_override(
 # If you also depend on `rules_cc`, `apple_support` must come _above_ `rules_cc`
 # in your `MODULE.bazel` or `WORKSPACE` file because Bazel selects toolchains
 # based on which is registered first.
-bazel_dep(
-    name = "apple_support",
-    version = "1.22.0",
-    repo_name = "build_bazel_apple_support",
-)
+bazel_dep(name = "apple_support", version = "1.22.0")
 bazel_dep(name = "rules_cc", version = "0.1.1")
 
 # https://github.com/googleapis/googleapis/pull/855
@@ -80,7 +72,6 @@ bazel_dep(name = "rules_cc", version = "0.1.1")
 bazel_dep(
     name = "googleapis",
     version = "0.0.0-20241220-5e258e33.bcr.1",
-    repo_name = "com_google_googleapis",
 )
 bazel_dep(name = "rules_python", version = "1.4.1")
 
@@ -126,11 +117,7 @@ bazel_dep(name = "rules_java", version = "8.11.0")
 
 # https://github.com/bazelbuild/rules_jvm_external/blob/master/docs/bzlmod.md
 bazel_dep(name = "rules_jvm_external", version = "6.7")
-bazel_dep(
-    name = "grpc-java",
-    version = "1.71.0",
-    repo_name = "io_grpc_grpc_java",
-)
+bazel_dep(name = "grpc-java", version = "1.71.0")
 
 # Loads rules required to compile proto files
 bazel_dep(name = "rules_proto_grpc", version = "5.0.1")
@@ -155,10 +142,7 @@ use_repo(maven, "maven")
 
 bazel_dep(name = "rules_kotlin", version = "2.1.4")
 bazel_dep(name = "rules_perl", version = "0.4.1")
-bazel_dep(
-    name = "rules_swift",
-    version = "2.8.2",
-)
+bazel_dep(name = "rules_swift", version = "2.8.2")
 bazel_dep(name = "aspect_rules_ts", version = "3.5.3")
 
 rules_ts_ext = use_extension(
