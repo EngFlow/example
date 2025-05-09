@@ -3,6 +3,11 @@ common --@aspect_rules_ts//ts:skipLibCheck=honor_tsconfig
 common --@aspect_rules_ts//ts:default_to_tsc_transpiler
 common --noincompatible_check_sharding_support
 
+# Remove once proto toolchainization becomes the default
+# - https://bazel.build/reference/command-line-reference#flag--incompatible_enable_proto_toolchain_resolution
+# - https://docs.google.com/document/d/1CE6wJHNfKbUPBr7-mmk_0Yo3a4TaqcTPE0OWNuQkhPs/edit
+common --incompatible_enable_proto_toolchain_resolution
+
 build --java_runtime_version=remotejdk_11
 build --java_language_version=11
 
@@ -28,8 +33,8 @@ build:ci --nobuild_runfile_links
 build:ci --keep_going
 
 # Additional clang toolchain options for automatically configured toolchains.
-build --cxxopt="-std=c++14"
-build --host_cxxopt="-std=c++14"
+build --cxxopt="-std=c++17"
+build --host_cxxopt="-std=c++17"
 build:clang --cxxopt="-fno-exceptions"
 build:clang --host_cxxopt="-fno-exceptions"
 build:clang --cxxopt="-fvisibility=hidden"
