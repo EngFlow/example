@@ -24,7 +24,7 @@ git show 79b5193:scala/extensions/deps.bzl
 git show 79b5193:scala/rules_scala-6.6.0.patch
 ```
 
-To see the content of the `scala/extensions` at that commit:
+To see the content of the `scala/extensions` directory at that commit:
 
 ```sh
 $ git show 79b5193:scala/extensions
