@@ -153,13 +153,13 @@ rules_ts_ext = use_extension(
 rules_ts_ext.deps()
 use_repo(rules_ts_ext, "npm_typescript")
 
-bazel_dep(name = "rules_scala")
-archive_override(
-    module_name = "rules_scala",
-    sha256 = "a4700d6e6cdf13cf85e29029ec998e2ec3ba94791606ec83d2c96e3c5b0aebed",
-    strip_prefix = "rules_scala-7.0.0",
-    url = "https://github.com/bazelbuild/rules_scala/releases/download/v7.0.0/rules_scala-v7.0.0.tar.gz",
+bazel_dep(name = "rules_scala", version = "7.0.0")
+
+scala_config = use_extension(
+    "@rules_scala//scala/extensions:config.bzl",
+    "scala_config",
 )
+scala_config.settings(scala_version = "2.13.16")
 
 scala_deps = use_extension(
     "@rules_scala//scala/extensions:deps.bzl",
