@@ -1,8 +1,14 @@
 # Note: Not our actual MODULE.bazel
-module(name = "engflow", version = "0.0.0")
+module(
+    name = "engflow",
+    version = "0.0.0",
+)
 
 bazel_dep(name = "frobozz")
-local_path_override(module_name = "frobozz", path = "../frobozz")
+local_path_override(
+    module_name = "frobozz",
+    path = "../frobozz",
+)
 
 bazel_dep(name = "rules_python", version = "0.34.0")
 

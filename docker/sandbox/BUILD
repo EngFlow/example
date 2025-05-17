@@ -1,3 +1,6 @@
+load("@rules_cc//cc:cc_binary.bzl", "cc_binary")
+load("@rules_java//java:java_binary.bzl", "java_binary")
+
 genrule(
     name = "hello",
     srcs = ["dep%d" % i for i in range(3)],

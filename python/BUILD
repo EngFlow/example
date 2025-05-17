@@ -19,13 +19,13 @@ py_binary(
 # `--test_filter` values are as in https://docs.python.org/3/library/unittest.html#cmdoption-unittest-k
 py_test(
     name = "hello_absl_test",
+    size = "small",
     srcs = ["hello_absl_test.py"],
     shard_count = 2,
     deps = [
         ":hello",
         "@io_abseil_py//absl/testing:absltest",
     ],
-    size = "small",
 )
 
 # This wrapper supports sharding, fast-failing and test filtering: try
@@ -33,18 +33,18 @@ py_test(
 # This corresponds to Pytest's `-k` flag: see https://docs.pytest.org/en/latest/reference/reference.html#command-line-flags
 pytest_test(
     name = "hello_pytest_test",
+    size = "small",
     srcs = ["hello_pytest_test.py"],
     shard_count = 2,
     tags = ["todo-pe1188-remote-incompatible"],
     deps = [":hello"],
-    size = "small",
 )
 
 py_test(
     name = "hello_unittest_test",
+    size = "small",
     srcs = ["hello_unittest_test.py"],
     deps = [":hello"],
-    size = "small",
 )
 
 # Utility to help re-generate requirements lock.

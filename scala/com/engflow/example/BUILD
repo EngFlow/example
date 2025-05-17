@@ -7,7 +7,7 @@ scala_library(
 
 scala_test(
     name = "exampleScalaTest",
+    size = "small",
     srcs = ["ScalaExampleTest.scala"],
     deps = [":exampleScala"],
-    size = "small",
 )

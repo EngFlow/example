@@ -1,5 +1,5 @@
-load(":cc_toolchain_config.bzl", "cc_toolchain_config")
 load("@rules_cc//cc:defs.bzl", "cc_toolchain", "cc_toolchain_suite")
+load(":cc_toolchain_config.bzl", "cc_toolchain_config")
 
 package(default_visibility = ["//visibility:public"])
 
@@ -33,13 +33,13 @@ toolchain(
 
 cc_toolchain_suite(
     name = "toolchain",
+    target_compatible_with = [
+        "@platforms//os:linux",
+    ],
     toolchains = {
         "k8|clang": ":cc-compiler-k8",
         "k8": ":cc-compiler-k8",
     },
-    target_compatible_with = [
-        "@platforms//os:linux",
-    ],
 )
 
 cc_toolchain(

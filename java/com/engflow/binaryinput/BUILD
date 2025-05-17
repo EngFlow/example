@@ -9,24 +9,37 @@ NUM_FILES = 100
     name = "Hello" + str(x),
     outs = ["Hello" + str(x) + ".java"],
     cmd_bash = "echo 'package com.engflow.binaryinput;" + "\n" +
-    "public class Hello" + str(x) +
-    " { public static void greetNum() { System.out.println(\"Hello " + str(x) + "\"); } }' > $@",
-) for x in range(1,NUM_FILES+1)]
+               "public class Hello" + str(x) +
+               " { public static void greetNum() { System.out.println(\"Hello " + str(x) + "\"); } }' > $@",
+) for x in range(
+    1,
+    NUM_FILES + 1,
+)]
 
 # Generates a java library that contains all the generated java files
 [java_library(
     name = "genbinary" + str(x),
-    srcs = [":Hello" + str(x) + ".java" for x in range(1,NUM_FILES+1)],
+    srcs = [":Hello" + str(x) + ".java" for x in range(
+        1,
+        NUM_FILES + 1,
+    )],
     visibility = ["//visibility:public"],
-) for x in range(1,NUM_FILES+1)]
+) for x in range(
+    1,
+    NUM_FILES + 1,
+)]
 
 # Main class
 java_binary(
     name = "main",
     srcs = ["Main.java"],
+    args = [str(NUM_FILES)],
     main_class = "com.engflow.binaryinput.Main",
     deps = [
-        ":genbinary" + str(x) for x in range(1,NUM_FILES+1)
+        ":genbinary" + str(x)
+        for x in range(
+            1,
+            NUM_FILES + 1,
+        )
     ],
-    args = [str(NUM_FILES)],
 )

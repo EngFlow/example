@@ -12,16 +12,16 @@
 # License for the specific language governing permissions and limitations under
 # the License.
 
+load("@bazel_skylib//rules:common_settings.bzl", "string_flag")
+load("@rules_js//js:defs.bzl", "js_binary")
 load(
     "//:repo-names.bzl",
     "canonical_repo",
-    "workspace_root",
-    "repo_name_variable",
-    "repo_dir_variable",
     "gen_js_constants",
+    "repo_dir_variable",
+    "repo_name_variable",
+    "workspace_root",
 )
-load("@bazel_skylib//rules:common_settings.bzl", "string_flag")
-load("@rules_js//js:defs.bzl", "js_binary")
 
 # This value propagates through the rules below.
 # Try it with other targets of your choosing!
@@ -37,8 +37,10 @@ genrule(
     name = "repo-macros",
     outs = ["repo-macros.txt"],
     cmd = "printf '%s\n  canonical_name: %s\n  workspace_root: %s\n' >$@" % (
-      repo_target, canonical_repo(repo_target), workspace_root(repo_target)
-    )
+        repo_target,
+        canonical_repo(repo_target),
+        workspace_root(repo_target),
+    ),
 )
 
 # Demonstrates the custom Make variable-based approach. Depends on the
@@ -54,7 +56,7 @@ genrule(
     toolchains = [
         ":repo-name",
         ":repo-dir",
-    ]
+    ],
 )
 
 # This alias demonstrates how the rules from `repo-names.bzl` work with resolved
@@ -97,22 +99,22 @@ repo_dir_variable(
 # - where the repo dir is found when running under `bazel run` vs `node`
 js_binary(
     name = "repo-dir-check",
-    entry_point = "repo-dir-check.mjs",
     data = [
-      ":constants-impl",
-      repo_target,
+        ":constants-impl",
+        repo_target,
     ],
+    entry_point = "repo-dir-check.mjs",
 )
 
 # Determines which rule generates the `constants.js` module used by
 # `:repo-dir-check`, based on the value of the `--//:constants` flag.
 genrule(
     name = "constants-impl",
-    outs = ["constants.js"],
     srcs = select({
-        ":genrule":     [":genrule-constants"],
+        ":genrule": [":genrule-constants"],
         ":custom-rule": [":custom-rule-constants"],
     }),
+    outs = ["constants.js"],
     cmd = "cp $< $@",
 )
 
@@ -120,11 +122,11 @@ genrule(
 # selects `:genrule-constants` or `:custom-rule-constants` as input.
 string_flag(
     name = "constants",
+    build_setting_default = "genrule",
     values = [
         "genrule",
         "custom-rule",
     ],
-    build_setting_default = "genrule",
 )
 
 config_setting(
@@ -152,7 +154,7 @@ genrule(
     name = "genrule-constants",
     srcs = [":repo-target"],
     outs = ["genrule-constants.js"],
-    cmd  = r"""printf 'module.exports.%%s;\n' \
+    cmd = r"""printf 'module.exports.%%s;\n' \
         'ruleName = "genrule-constants"' \
         'target = "%s"' \
         'binDir = "$(BINDIR)"' \
@@ -161,10 +163,10 @@ genrule(
         'macroDir = "%s"' \
         'repoName = "$(repo-name)"' \
         'repoDir = "$(repo-dir)"' >$@""" % (
-            repo_target,
-            canonical_repo(repo_target),
-            workspace_root(repo_target)
-        ),
+        repo_target,
+        canonical_repo(repo_target),
+        workspace_root(repo_target),
+    ),
     toolchains = [
         ":repo-name",
         ":repo-dir",
@@ -191,14 +193,14 @@ genrule(
 # Replacing `repo_target` with the string ":repo-target" in the macros below
 # will produce the empty string, since the macros won't see the resolved alias.
 gen_js_constants(
-    name  = "custom-rule-constants",
-    deps = [":repo-target"],
-    vars  = {
-        "target":    repo_target,
-        "location":  "$(rlocationpaths :repo-target)",
-        "macroName": canonical_repo(repo_target),
-        "macroDir":  workspace_root(repo_target),
-    },
+    name = "custom-rule-constants",
+    repo_dirs = {":repo-target": "repoDir"},
     repo_names = {":repo-target": "repoName"},
-    repo_dirs  = {":repo-target": "repoDir"},
+    vars = {
+        "target": repo_target,
+        "location": "$(rlocationpaths :repo-target)",
+        "macroName": canonical_repo(repo_target),
+        "macroDir": workspace_root(repo_target),
+    },
+    deps = [":repo-target"],
 )
