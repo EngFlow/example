@@ -61,14 +61,14 @@ platforms = rule(
     attrs = {
         "cpu_configuration": attrs.dep(providers = [ConfigurationInfo]),
         "os_configuration": attrs.dep(providers = [ConfigurationInfo]),
-    }, 
-    impl = _platforms
+    },
+    impl = _platforms,
 )
 
 action_keys = rule(
-     attrs = {
+    attrs = {
         "cell": attrs.string(),
         "mode": attrs.string(),
-     },
-     impl = _action_keys
+    },
+    impl = _action_keys,
 )

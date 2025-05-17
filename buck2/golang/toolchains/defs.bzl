@@ -17,7 +17,7 @@ load("@prelude//go_bootstrap:go_bootstrap.bzl", "GoBootstrapToolchainInfo")
 load("@prelude//utils:cmd_script.bzl", "ScriptOs", "cmd_script")
 
 def _remote_go_bootstrap_toolchain_impl(ctx):
-    go_arch = "amd64"  
+    go_arch = "amd64"
     go_os = "linux"
 
     script_os = ScriptOs("unix")
@@ -47,7 +47,7 @@ remote_go_bootstrap_toolchain = rule(
 )
 
 def _remote_go_toolchain_impl(ctx):
-    go_arch = "amd64"  
+    go_arch = "amd64"
     go_os = "linux"
 
     script_os = ScriptOs("unix")
@@ -76,7 +76,6 @@ def _remote_go_toolchain_impl(ctx):
             compiler_flags = [],
         ),
     ]
-   
 
 remote_go_toolchain = rule(
     impl = _remote_go_toolchain_impl,

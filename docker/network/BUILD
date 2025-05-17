@@ -12,6 +12,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+load("@rules_java//java:java_test.bzl", "java_test")
+load("@rules_java//java/toolchains:java_runtime.bzl", "java_runtime")
+
 # Built from "Dockerfile"
 # TODO: edit this value to match your Docker registry, image name, and digest
 DOCKER_JDK_PSQL = "docker://gcr.io/YOUR-IMAGE-NAME@sha256:b6ed8f68abd6e23409ee7a500c2c50a8064cea11071ac447a59b88e6afa4c220"

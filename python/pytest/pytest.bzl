@@ -14,7 +14,8 @@ def pytest_test(name, srcs = [], deps = [], args = [], **kwargs):
         # Avoid collecting tests automatically; use what's in `srcs`.
         "--ignore=.",
     ] + [
-        "$(location %s)" % src for src in srcs
+        "$(location %s)" % src
+        for src in srcs
     ] + args
 
     py_test(
