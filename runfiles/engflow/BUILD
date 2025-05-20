@@ -1,21 +1,23 @@
+load("@rules_python//python:defs.bzl", "py_binary")
+
 py_binary(
     name = "runfiles_demo",
     srcs = ["runfiles_demo.py"],
-    deps = ["@rules_python//python/runfiles"],
-    data = [
-        "//data",
-        "@frobozz//:files",
-    ],
     # Demonstrate using rlocationpaths in "args". If you prefer, you can put
     # all of these in "env".
     args = [
         "$(rlocationpaths //data)",
+    ],
+    data = [
+        "//data",
+        "@frobozz//:files",
     ],
     # Demonstrate using rlocationpaths in "env". If you prefer, you can put
     # all of these in "args".
     env = {
         "RUNFILE_PATHS": "$(rlocationpaths @frobozz//:files)",
     },
+    deps = ["@rules_python//python/runfiles"],
 )
 
 genrule(

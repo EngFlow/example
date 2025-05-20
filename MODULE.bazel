@@ -174,3 +174,5 @@ scala_protoc = use_extension(
     dev_dependency = True,
 )
 use_repo(scala_protoc, "rules_scala_protoc_toolchains")
+
+bazel_dep(name = "rules_shell", version = "0.4.1")

@@ -37,7 +37,8 @@ def _variable_info(ctx, value):
 
 repo_name_variable = rule(
     implementation = lambda ctx: _variable_info(
-        ctx, ctx.attr.dep.label.repo_name
+        ctx,
+        ctx.attr.dep.label.repo_name,
     ),
     doc = "Defines a custom variable for its dependency's repository name",
     attrs = {
@@ -50,7 +51,8 @@ repo_name_variable = rule(
 
 repo_dir_variable = rule(
     implementation = lambda ctx: _variable_info(
-        ctx, ctx.attr.dep.label.workspace_root
+        ctx,
+        ctx.attr.dep.label.workspace_root,
     ),
     doc = "Defines a custom variable for its dependency's repository dir",
     attrs = {
@@ -96,7 +98,7 @@ def _runfiles(ctx, sources, deps):
 
 def _gen_js_constants_impl(ctx):
     """Generate a JavaScript module exporting specified constants."""
-    items  = {"ruleName": ctx.attr.name, "binDir": ctx.bin_dir.path}
+    items = {"ruleName": ctx.attr.name, "binDir": ctx.bin_dir.path}
     items |= {k: ctx.expand_location(v) for k, v in ctx.attr.vars.items()}
     items |= {v: k.label.repo_name for k, v in ctx.attr.repo_names.items()}
     items |= {v: k.label.workspace_root for k, v in ctx.attr.repo_dirs.items()}
@@ -108,8 +110,8 @@ def _gen_js_constants_impl(ctx):
 
     sources = depset([outfile])
     deps = ctx.attr.deps + \
-        ctx.attr.repo_names.keys() + \
-        ctx.attr.repo_dirs.keys()
+           ctx.attr.repo_names.keys() + \
+           ctx.attr.repo_dirs.keys()
 
     return [
         _js_info(ctx.label, sources, deps),

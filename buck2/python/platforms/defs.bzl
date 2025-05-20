@@ -56,13 +56,13 @@ def _action_keys(ctx):
 
 platforms = rule(
     attrs = {},
-    impl = _platforms
+    impl = _platforms,
 )
 
 action_keys = rule(
-     attrs = {
+    attrs = {
         "cell": attrs.string(),
         "mode": attrs.string(),
-     },
-     impl = _action_keys
+    },
+    impl = _action_keys,
 )

@@ -12,9 +12,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+load("@prelude//cxx:cxx_toolchain_types.bzl", "LinkerType")
 load("@prelude//rust:rust_toolchain.bzl", "PanicRuntime", "RustToolchainInfo")
 load("@prelude//rust/tools:attrs.bzl", "internal_tool_attrs")
-load("@prelude//cxx:cxx_toolchain_types.bzl", "LinkerType")
 load("@prelude//toolchains:cxx.bzl", "CxxToolsInfo")
 
 # This def is similar to the one in https://github.com/facebook/buck2/blob/804d62242214455d51787f7c8c96a1e12c75ec32/prelude/toolchains/cxx/clang/tools.bzl
@@ -42,7 +42,7 @@ path_clang_tools = rule(
     attrs = {},
 )
 
-def _remote_rust_toolchain_impl(ctx):    
+def _remote_rust_toolchain_impl(ctx):
     return [
         DefaultInfo(),
         RustToolchainInfo(

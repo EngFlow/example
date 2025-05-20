@@ -2,6 +2,7 @@
 common --@aspect_rules_ts//ts:skipLibCheck=honor_tsconfig
 common --@aspect_rules_ts//ts:default_to_tsc_transpiler
 common --noincompatible_check_sharding_support
+common --incompatible_disable_autoloads_in_main_repo
 
 # Remove once proto toolchainization becomes the default
 # - https://bazel.build/reference/command-line-reference#flag--incompatible_enable_proto_toolchain_resolution
