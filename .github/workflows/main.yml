@@ -38,14 +38,14 @@ jobs:
             arch: arm64
             os_distribution: sonoma
             os_version: "14"
-            revision: dd17e52a1f04529abb97003e8093d356739980d7
+            revision: 8c27ba1624955003040780ea24a0ec25a3b5e309
             remote_execution: 'false'
 
           - os: macos
             arch: arm64
             os_distribution: sonoma
             os_version: "14"
-            revision: dd17e52a1f04529abb97003e8093d356739980d7
+            revision: 8c27ba1624955003040780ea24a0ec25a3b5e309
             remote_execution: 'true'
 
     steps:
