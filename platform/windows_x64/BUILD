@@ -1,5 +1,5 @@
-load("@rules_cc//cc:defs.bzl", "cc_toolchain", "cc_toolchain_suite")
 load(":windows_cc_toolchain_config.bzl", "cc_toolchain_config")
+load("@rules_cc//cc:defs.bzl", "cc_toolchain", "cc_toolchain_suite")
 
 package(default_visibility = ["//visibility:public"])
 
@@ -12,7 +12,7 @@ platform(
         "@rules_go//go/toolchain:cgo_off",
     ],
     exec_properties = {
-        "container-image": "docker://645088952840.dkr.ecr.eu-west-1.amazonaws.com/engflow-re/windows-x64:engflow_worker@sha256:6a53c6d5cbc82ca0782e9117482e457a676920227b697de5db90ff53e7afedbe",
+        "container-image": "<YOUR_WINDOWS_CONTAINER_IMAGE_URI>",
         "Pool": "windows",
     },
 )
@@ -35,13 +35,13 @@ toolchain(
 
 cc_toolchain_suite(
     name = "toolchain",
-    target_compatible_with = [
-        "@platforms//os:windows",
-    ],
     toolchains = {
         "x64_windows|msvc": ":msvc_cc_toolchain",
         "x64_windows": ":msvc_cc_toolchain",
     },
+    target_compatible_with = [
+        "@platforms//os:windows",
+    ],
 )
 
 cc_toolchain(
