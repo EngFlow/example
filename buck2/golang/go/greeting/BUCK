@@ -21,4 +21,6 @@ go_library(
 go_test(
     name = "greeting_test",
     srcs = glob(["*.go"]),
+    # Disable cgo as clang is not available in the container.
+    cgo_enabled = False,
 )

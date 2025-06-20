@@ -18,4 +18,6 @@ go_binary(
     deps = [
         "//go/greeting:greeting",
     ],
+    # Disable cgo as clang is not available in the container.
+    cgo_enabled = False,
 )
