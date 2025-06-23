@@ -49,7 +49,7 @@ register_toolchains("@rules_scala_protoc_toolchains//:all")
 
 bazel_dep(name = "bazel_skylib", version = "1.7.1")
 bazel_dep(name = "engflowapis-java", version = "2025.03.14-12.58.52")
-bazel_dep(name = "platforms", version = "0.0.11")
+bazel_dep(name = "platforms", version = "1.0.0")
 bazel_dep(name = "protobuf", version = "30.2")
 single_version_override(
     module_name = "protobuf",
@@ -92,7 +92,7 @@ pip.parse(
 use_repo(pip, "pip")
 
 bazel_dep(name = "rules_proto", version = "7.1.0")
-bazel_dep(name = "rules_dotnet", version = "0.18.2")
+bazel_dep(name = "rules_dotnet", version = "0.19.2")
 
 dotnet = use_extension("@rules_dotnet//dotnet:extensions.bzl", "dotnet")
 dotnet.toolchain(dotnet_version = "8.0.200")
@@ -113,7 +113,7 @@ go_deps = use_extension("@gazelle//:extensions.bzl", "go_deps")
 go_deps.from_file(go_mod = "//:go.mod")
 use_repo(go_deps, "com_github_google_go_cmp")
 
-bazel_dep(name = "rules_java", version = "8.11.0")
+bazel_dep(name = "rules_java", version = "8.12.0")
 
 # https://github.com/bazelbuild/rules_jvm_external/blob/master/docs/bzlmod.md
 bazel_dep(name = "rules_jvm_external", version = "6.7")
@@ -141,7 +141,7 @@ maven.install(
 use_repo(maven, "maven")
 
 bazel_dep(name = "rules_kotlin", version = "2.1.4")
-bazel_dep(name = "rules_perl", version = "0.4.1")
+bazel_dep(name = "rules_perl", version = "0.4.2")
 bazel_dep(name = "rules_swift", version = "2.8.2")
 bazel_dep(name = "aspect_rules_ts", version = "3.5.3")
 
@@ -175,4 +175,4 @@ scala_protoc = use_extension(
 )
 use_repo(scala_protoc, "rules_scala_protoc_toolchains")
 
-bazel_dep(name = "rules_shell", version = "0.4.1")
+bazel_dep(name = "rules_shell", version = "0.5.0")
