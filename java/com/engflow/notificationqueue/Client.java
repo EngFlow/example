@@ -146,7 +146,6 @@ class Client {
                    */
                   if (lifeCycleEvent.getKindCase().name().equals("INVOCATION_FINISHED")) {
                     String invocation = lifeCycleEvent.getInvocationFinished().getInvocationId();
-                    System.out.println("invocation: " + invocation);
                     try {
                       /**
                        * Fetch the invocation using the grpc {@link EventStoreGrpc} stub using the
