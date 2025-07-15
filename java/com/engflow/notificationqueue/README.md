@@ -18,7 +18,7 @@ getting lifecycle events from the cluster, we pull from the queue called `lifecy
 2. `--queue_name=eventstore/lifecycle-events` holds the name of the queue to listen
 
 Next, you must provide authentication information so the client can establish
-a connection to the engflow cluster, unless the cluster is totally open.
+a connection to the EngFlow cluster, unless the cluster is totally open.
 As for today, two authentication methods are available; certificates or
 authentication tokens. These arguments are optional and if they are not given
 but are required by the cluster, the connection is rejected.
@@ -106,28 +106,37 @@ bazel build //... '--remote_cache=grpcs://example.cluster.engflow.com' '--bes_ba
 You should see a series of notifications like this one
 
 ```json
-type_url: "type.googleapis.com/engflow.eventstore.v1.BuildLifecycleEventNotification"
-value: "\022$e03d2afe-1a78-4f14-a0f7-85ae65e7e856\"%user_keyword=engflow:StreamSource=BES\"/user_keyword=engflow:StreamType=ClientBEPStream\272\006&\n$1e4f34ee-4669-4ce0-a3fe-5e115ad4772e"
+{
+  type_url: "type.googleapis.com/engflow.eventstore.v1.BuildLifecycleEventNotification"
+  value: "\n\adefault\022$9608f439-4c3e-4909-8a0c-f78810322b6b\"\021command_name=test\"\021protocol_name=BEP\"0user_keyword=engflow:CiCdPipelineName=post-merge\"7user_keyword=engflow:CiCdJobName=ci-runners-test-matrix\"\'user_keyword=engflow:Requester=anfelbar\"%user_keyword=engflow:StreamSource=BES\"/user_keyword=engflow:StreamType=ClientBEPStream\272\006&\n$5173658c-4595-4978-8db0-2942b1e7ca13"
+}
 ```
 
-The value, with some garbage characters, contains the uuid for one invocation.
-Using this uuid we may get an invocation like this one
+The last value contains the `uuid` for one invocation. From the previous example the invocation `uuid` is `5173658c-4595-4978-8db0-2942b1e7ca13`.
+Using this `uuid` and the EventStore stub we get invocation data (see [getInvocations code in Client.java][getinvocations]):
 
 ```json
-StreamedBuildEvent: continuation_token: "CiQyMWFjMDlkNC0zZWIzLTQ2MzQtODI0MS0yMzk0Y2JhN2UwMGEQARjSCiAB"
+Invocation: continuation_token: "CiQwNzBkMjViZi0zZWFjLTRlYTYtODVhOC00ZjA2NDMxNjU2NTcQAA=="
 event {
   stream_id {
-    build_id: "c88d85cb-08c5-4227-9a24-8e6ea8f262d8"
-    component: TOOL
-    invocation_id: "21ac09d4-3eb3-4634-8241-2394cba7e00a"
+    build_id: "3a38c04f-233d-465f-a91d-f328c21ab832"
+    invocation_id: "070d25bf-3eac-4ea6-85a8-4f0643165657"
   }
+  service_level: INTERACTIVE
+  notification_keywords: "command_name=test"
+  notification_keywords: "protocol_name=BEP"
+  notification_keywords: "user_keyword=engflow:CiCdPipelineName=post-merge"
+  notification_keywords: "user_keyword=engflow:CiCdJobName=runners-matrix"
+  notification_keywords: "user_keyword=engflow:Requester=userxyz"
+  notification_keywords: "user_keyword=engflow:StreamSource=BES"
+  notification_keywords: "user_keyword=engflow:StreamType=ClientBEPStream"
   build_event {
     event_time {
-      seconds: 1658502561
-      nanos: 364000000
+      seconds: 1752547458
+      nanos: 781000000
     }
-    component_stream_finished {
-      type: FINISHED
+    invocation_attempt_started {
+      attempt_number: 1
     }
   }
 }
@@ -135,3 +144,4 @@ event {
 
 
 [server proto definition]: demoserver/server.proto
+[getinvocations]: https://github.com/EngFlow/example/blob/c9a30c214d487385313245cca24c6b7f3e867785/java/com/engflow/notificationqueue/Client.java#L201

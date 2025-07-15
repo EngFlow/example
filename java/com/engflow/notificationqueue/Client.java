@@ -153,11 +153,10 @@ class Client {
               BuildLifecycleEventNotification lifeCycleEvent =
                   notificationContent.unpack(BuildLifecycleEventNotification.class);
               /**
-               * Check if this is an invocation started event. Options are INVOCATION_STARTED and
-               * INVOCATION_FINISHED
+               * Check if this is an invocation finished event.
                */
-              if (lifeCycleEvent.getKindCase().name().equals("INVOCATION_STARTED")) {
-                String invocation = lifeCycleEvent.getInvocationStarted().getInvocationId();
+              if (lifeCycleEvent.getKindCase().name().equals("INVOCATION_FINISHED")) {
+                String invocation = lifeCycleEvent.getInvocationFinished().getInvocationId();
                 try {
                   /**
                    * Fetch the invocation using the grpc {@link EventStoreGrpc} stub using the
