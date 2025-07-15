@@ -155,7 +155,6 @@ class Client {
               /**
                * Check if this is an invocation finished event.
                */
-              System.out.println(lifeCycleEvent.getKindCase().name());
               if (lifeCycleEvent.getKindCase().name().equals("INVOCATION_FINISHED")) {
                 String invocation = lifeCycleEvent.getInvocationFinished().getInvocationId();
                 try {
