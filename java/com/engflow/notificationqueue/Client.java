@@ -84,9 +84,9 @@ class Client {
     }
     try {
       final Metadata header = new Metadata();
-      Metadata.Key<String> userKey =
+      Metadata.Key<String> methodKey =
           Metadata.Key.of("x-engflow-auth-method", Metadata.ASCII_STRING_MARSHALLER);
-      header.put(userKey, "jwt-v0");
+      header.put(methodKey, "jwt-v0");
       Metadata.Key<String> tokenKey =
           Metadata.Key.of("x-engflow-auth-token", Metadata.ASCII_STRING_MARSHALLER);
       header.put(tokenKey, clientOptions.getOption("token"));
