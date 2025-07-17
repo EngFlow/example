@@ -44,16 +44,12 @@ bazel run //java/com/engflow/notificationqueue:client  -- \
 ```
 
 
-### Using tokens to run the client
+### Using JWT to run the client
 
-In the second for case authentication you should have a token issued by a
-valid authority. In this example we use cluster used by the 
-[open-source envoy-mobile](https://github.com/envoyproxy/envoy-mobile) project. 
-It uses [GitHub tokens](https://docs.github.com/en/actions/security-guides/automatic-token-authentication) for authentication method but your server may support 
-other token provider. To execute the client against the envoy-mobile cluster add
-the argument
+In the second for case authentication you should have a valid token. On EngFlow clusters you may get a new access token by
+accessing the cluster's UI under the tab `Getting Started`. To execute the client against your cluster, add the argument
 
-1. `--token=token issued by valid authority`
+1. `--token=your-long-JWT-token`
    holds the authentication token.
    Needed for both `grpc://` and `grpcs://` connections
 
@@ -61,13 +57,10 @@ Run the client using
 
 ```bash
 bazel run //java/com/engflow/notificationqueue:client  -- \
-      '--notification_queue_endpoint=grpcs://envoy.cluster.engflow.com' '--queue_name=eventstore/lifecycle-events' \
-      '--token=ghs_vHu2hAHwhg2EjBXrs4koOxk5PfSKVb2lzAUM'
+      '--notification_queue_endpoint=grpcs://$CLUSTER.cluster.engflow.com' '--queue_name=eventstore/lifecycle-events' \
+      '--token=DKiJ3eic9l150dDmzdMsaiu0K5boBle0UlkCefbgwzBE7G7FItgi2AOFpz6pkcMUFV3SkpAGikMckcaQhTTKUmGeZKpLh9gT6vTsi0v'
 ```
 
-Note: The token provided in the example is not valid. You should count with a 
-valid envoy-mobile token to use envoy-cluster. Change your target cluster and
-acquire a valid token for executing the client.
 
 ### Forwarding data to external server
 

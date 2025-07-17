@@ -85,8 +85,11 @@ class Client {
     try {
       final Metadata header = new Metadata();
       Metadata.Key<String> userKey =
-          Metadata.Key.of("Authorization", Metadata.ASCII_STRING_MARSHALLER);
-      header.put(userKey, "Bearer " + clientOptions.getOption("token"));
+          Metadata.Key.of("x-engflow-auth-method", Metadata.ASCII_STRING_MARSHALLER);
+      header.put(userKey, "jwt-v0");
+      Metadata.Key<String> tokenKey =
+          Metadata.Key.of("x-engflow-auth-token", Metadata.ASCII_STRING_MARSHALLER);
+      header.put(tokenKey, clientOptions.getOption("token"));
       pull(channel, clientOptions.getOption("queue_name"), header, forwardChannel);
     } finally {
       if (channel != null) {
