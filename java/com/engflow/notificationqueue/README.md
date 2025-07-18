@@ -46,7 +46,7 @@ bazel run //java/com/engflow/notificationqueue:client  -- \
 
 ### Using JWT to run the client
 
-In the second for case authentication you should have a valid token. On EngFlow clusters you may get a new access token by
+In the second authentication case you should count with a valid token. On EngFlow clusters you may get a new access token by
 accessing the cluster's UI under the tab `Getting Started`. To execute the client against your cluster, add the argument
 
 1. `--token=your-long-JWT-token`
