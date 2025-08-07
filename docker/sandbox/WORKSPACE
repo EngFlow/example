@@ -2,7 +2,7 @@ load("@bazel_tools//tools/build_defs/repo:git.bzl", "git_repository")
 
 git_repository(
     name = "bazel_toolchains",
-    commit = "109dfdb8a8ffb47a45fa4b4dea58f0b21f708e70",  # Release 3.7.1
+    commit = "b085167745284726aa1882d7154e08fa4ab3061e",  # Release 3.7.1
     remote = "https://github.com/bazelbuild/bazel-toolchains.git",
 )
 
