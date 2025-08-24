@@ -93,3 +93,12 @@ build:pyrite_bes --bes_results_url=https://pyrite.cluster.engflow.com/invocation
 # You can obtain an mTLS certificate by visiting the cluster's "Getting Started"
 # page, after logging in.
 try-import .bazelrc.user
+
+# EngFlow Remote caching
+build:engflow-rc --remote_cache=grpc://127.0.0.1:8080
+# EngFlow BES forwarding
+build:engflow-bes --bes_backend=grpc://127.0.0.1:8080
+build:engflow-bes --bes_results_url=http://127.0.0.1:8080/invocation/
+# EngFlow Remote caching and BES forwarding
+build:engflow --config=engflow-rc
+build:engflow --config=engflow-bes
