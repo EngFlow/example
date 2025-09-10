@@ -23,6 +23,16 @@ build:engflow_common --grpc_keepalive_time=30s
 build:engflow_common --legacy_important_outputs=false
 build:engflow_common --action_env=BAZEL_DO_NOT_DETECT_CPP_TOOLCHAIN=1
 
+# Common options for RC only configs
+build:rc_common --disk_cache=
+build:rc_common --experimental_inmemory_dotd_files
+build:rc_common --experimental_inmemory_jdeps_files
+build:rc_common --incompatible_strict_action_env=true
+build:rc_common --remote_timeout=3600
+build:rc_common --grpc_keepalive_time=30s
+build:rc_common --legacy_important_outputs=false
+build:rc_common --action_env=BAZEL_DO_NOT_DETECT_CPP_TOOLCHAIN=1
+
 # Options for continuous testing.
 build:ci --color=yes
 build:ci --curses=yes
@@ -81,6 +91,11 @@ build:pyrite --remote_executor=grpcs://pyrite.cluster.engflow.com
 build:pyrite_bes --bes_backend=grpcs://pyrite.cluster.engflow.com
 build:pyrite_bes --bes_lifecycle_events
 build:pyrite_bes --bes_results_url=https://pyrite.cluster.engflow.com/invocation/
+
+build:magnesite --config=rc_common
+# This URL looks funny but is what magnesite currently uses
+build:magnesite --remote_cache=grpcs://to-do.fix.me:8080
+build:magnesite --config=magnesite_auth
 
 # To authenticate with the clusters above, create a .bazelrc.user file.
 # This file is not checked into Git because it refers to local file system paths.
