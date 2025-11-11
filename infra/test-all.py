@@ -24,7 +24,6 @@ def main():
         ]
     else:
         flags += [
-            "--platforms=//platform/" + os_arch,
             "--config=opal_bes",
             "--config=opal_auth",
         ]

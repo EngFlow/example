@@ -21,6 +21,7 @@ if __name__ == "__main__":
                 test_shard_index,
             ]
         )
+        with open(os.environ["TEST_SHARD_STATUS_FILE"], "wb"): pass
 
     # Support `--test_filter` on the command line.
     test_filter = os.environ.get("TESTBRIDGE_TEST_ONLY")
