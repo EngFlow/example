@@ -7,7 +7,7 @@ $InformationPreference = "Continue"
 $global:ProgressPreference = "SilentlyContinue"
 
 Write-Verbose "Installing VS Buildtools (needed for Bazel)..."
-Invoke-WebRequest -Uri "https://storage.googleapis.com/engflow-tools-public/vs_buildtools__859897378.1616711895.exe" -OutFile "c:/vs_buildtools__859897378.1616711895.exe"
+Invoke-WebRequest -Uri "https://aka.ms/vs/17/release/vs_buildtools.exe" -OutFile "c:/vs_buildtools.exe"
 $installArgs = @(
   '--quiet',
   '--wait',
@@ -27,5 +27,5 @@ $installArgs = @(
   '--remove',
   'Microsoft.VisualStudio.Component.Windows81SDK'
 )
-Start-Process c:/vs_buildtools__859897378.1616711895.exe -Wait -ArgumentList ($installArgs -join ' ')
-Remove-Item "c:/vs_buildtools__859897378.1616711895.exe" -Force
+Start-Process c:/vs_buildtools.exe -Wait -ArgumentList ($installArgs -join ' ')
+Remove-Item "c:/vs_buildtools.exe" -Force
