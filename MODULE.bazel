@@ -47,16 +47,10 @@ http_archive(
 
 register_toolchains("@rules_scala_protoc_toolchains//:all")
 
-bazel_dep(name = "bazel_skylib", version = "1.8.2")
+bazel_dep(name = "bazel_skylib", version = "1.9.0")
 bazel_dep(name = "engflowapis-java", version = "2025.03.14-12.58.52")
 bazel_dep(name = "platforms", version = "1.0.0")
-bazel_dep(name = "protobuf", version = "33.0")
-single_version_override(
-    module_name = "protobuf",
-    patch_strip = 1,
-    patches = ["//scala:0001-protobuf-19679-rm-protoc-dep.patch"],
-    version = "33.0",
-)
+bazel_dep(name = "protobuf", version = "33.4")
 
 # Per the instructions from:
 # https://github.com/bazelbuild/apple_support?tab=readme-ov-file#bazel-7-setup
@@ -64,8 +58,8 @@ single_version_override(
 # If you also depend on `rules_cc`, `apple_support` must come _above_ `rules_cc`
 # in your `MODULE.bazel` or `WORKSPACE` file because Bazel selects toolchains
 # based on which is registered first.
-bazel_dep(name = "apple_support", version = "1.24.2")
-bazel_dep(name = "rules_cc", version = "0.2.14")
+bazel_dep(name = "apple_support", version = "2.3.0")
+bazel_dep(name = "rules_cc", version = "0.2.17")
 
 # https://github.com/googleapis/googleapis/pull/855
 # https://github.com/bazelbuild/bazel-central-registry/pull/1699
@@ -118,7 +112,7 @@ go_deps = use_extension("@gazelle//:extensions.bzl", "go_deps")
 go_deps.from_file(go_mod = "//:go.mod")
 use_repo(go_deps, "com_github_google_go_cmp")
 
-bazel_dep(name = "rules_java", version = "9.0.3")
+bazel_dep(name = "rules_java", version = "9.6.1")
 
 # https://github.com/bazelbuild/rules_jvm_external/blob/master/docs/bzlmod.md
 bazel_dep(name = "rules_jvm_external", version = "6.9")
@@ -146,9 +140,9 @@ use_repo(maven, "maven")
 bazel_dep(name = "rules_kotlin", version = "2.1.10")
 bazel_dep(name = "rules_perl", version = "0.5.0")
 bazel_dep(name = "rules_swift", version = "3.3.0")
-bazel_dep(name = "rules_nodejs", version = "6.6.0")
-bazel_dep(name = "aspect_rules_ts", version = "3.7.1")
-bazel_dep(name = "aspect_bazel_lib", version = "2.21.2")
+bazel_dep(name = "rules_nodejs", version = "6.7.3")
+bazel_dep(name = "aspect_rules_ts", version = "3.8.6")
+bazel_dep(name = "aspect_bazel_lib", version = "2.22.5")
 
 rules_ts_ext = use_extension(
     "@aspect_rules_ts//ts:extensions.bzl",
@@ -158,13 +152,13 @@ rules_ts_ext = use_extension(
 rules_ts_ext.deps()
 use_repo(rules_ts_ext, "npm_typescript")
 
-bazel_dep(name = "rules_scala", version = "7.1.6")
+bazel_dep(name = "rules_scala", version = "7.2.4")
 
 scala_config = use_extension(
     "@rules_scala//scala/extensions:config.bzl",
     "scala_config",
 )
-scala_config.settings(scala_version = "2.13.17")
+scala_config.settings(scala_version = "2.13.18")
 
 scala_deps = use_extension(
     "@rules_scala//scala/extensions:deps.bzl",
