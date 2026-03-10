@@ -50,7 +50,7 @@ register_toolchains("@rules_scala_protoc_toolchains//:all")
 bazel_dep(name = "bazel_skylib", version = "1.9.0")
 bazel_dep(name = "engflowapis-java", version = "2025.03.14-12.58.52")
 bazel_dep(name = "platforms", version = "1.0.0")
-bazel_dep(name = "protobuf", version = "33.4")
+bazel_dep(name = "protobuf", version = "34.0.bcr.1")
 
 # Per the instructions from:
 # https://github.com/bazelbuild/apple_support?tab=readme-ov-file#bazel-7-setup
