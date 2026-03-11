@@ -45,8 +45,6 @@ http_archive(
     url = "https://github.com/abseil/abseil-py/archive/refs/tags/v2.1.0.tar.gz",
 )
 
-register_toolchains("@rules_scala_protoc_toolchains//:all")
-
 bazel_dep(name = "bazel_skylib", version = "1.9.0")
 bazel_dep(name = "engflowapis-java", version = "2025.03.14-12.58.52")
 bazel_dep(name = "platforms", version = "1.0.0")
@@ -166,12 +164,5 @@ scala_deps = use_extension(
 )
 scala_deps.scala()
 scala_deps.scalatest()
-
-scala_protoc = use_extension(
-    "@rules_scala//scala/extensions:protoc.bzl",
-    "scala_protoc",
-    dev_dependency = True,
-)
-use_repo(scala_protoc, "rules_scala_protoc_toolchains")
 
 bazel_dep(name = "rules_shell", version = "0.6.1")
