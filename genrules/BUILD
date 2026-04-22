@@ -45,6 +45,38 @@ UPPER_BOUND = 10
     tools = ["@emacs//file"],
 ) for x in range(1, UPPER_BOUND)]
 
+SYSBOX_EXEC_PROPERTIES = {
+    "container-image": "docker://645088952840.dkr.ecr.eu-west-1.amazonaws.com/engflow-ci/debian12-dind-x64@sha256:1389536c34990e6f49cb38575c2b4f9d08cd3a27e7c3e93c77b7af6260fc5f83",
+    "dockerRuntime": "sysbox-runc",
+    "Pool": "linux_sysbox_x64",
+    "dockerNetwork": "standard",
+}
+
+genrule(
+    name = "sysbox_cp_no_sudo",
+    srcs = ["test_input.txt"],
+    outs = ["sysbox_no_sudo.txt"],
+    cmd = "cp $(location test_input.txt) $@ && echo 'appended' >> $@",
+    exec_properties = SYSBOX_EXEC_PROPERTIES,
+    tags = ["manual"],
+)
+
+SYSBOX_ROOT_EXEC_PROPERTIES = {
+    "container-image": "docker://645088952840.dkr.ecr.eu-west-1.amazonaws.com/engflow-ci/sysbox-sudo-test@sha256:868e9c2cf3ed714191725630d115c15358097cbe9650ec312de7a2f69cdc80fd",
+    "dockerRuntime": "sysbox-runc",
+    "Pool": "linux_sysbox_x64",
+    "dockerNetwork": "standard",
+}
+
+genrule(
+    name = "sysbox_cp_as_root",
+    srcs = ["test_input.txt"],
+    outs = ["sysbox_root.txt"],
+    cmd = "cp $(location test_input.txt) $@ && echo 'appended' >> $@",
+    exec_properties = SYSBOX_ROOT_EXEC_PROPERTIES,
+    tags = ["manual"],
+)
+
 # Explicitlt specify the following target if
 # you want to add more load to the build.
 # Be aware that it downloads around 1.3GB.
