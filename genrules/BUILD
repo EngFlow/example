@@ -64,6 +64,7 @@ genrule(
 SYSBOX_ROOT_EXEC_PROPERTIES = {
     "container-image": "docker://645088952840.dkr.ecr.eu-west-1.amazonaws.com/engflow-ci/sysbox-sudo-test@sha256:868e9c2cf3ed714191725630d115c15358097cbe9650ec312de7a2f69cdc80fd",
     "dockerRuntime": "sysbox-runc",
+    "dockerRunAsRoot": "True",
     "Pool": "linux_sysbox_x64",
     "dockerNetwork": "standard",
 }
