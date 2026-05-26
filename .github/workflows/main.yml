@@ -74,7 +74,7 @@ jobs:
       - "remote_execution=${{ matrix.remote_execution }}"
       - "engflow-bento-name=example-gh-x64"
       - "engflow-cluster=glass"
-      - "engflow-job-name=ci-runners-test-matrix"
+      - "engflow-job-name=ci-runners-test-matrix-${{matrix.remote_execution}}_${{matrix.allow_bento_snapshot}}"
       - "engflow-job-type=${{github.event_name}}-${{github.ref_name}}"
       - "engflow-run-id=${{ github.run_id }}"
       # To avoid a race condition, among all the jobs that use the same Bento in the same repo, only
