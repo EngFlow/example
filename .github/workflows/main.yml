@@ -115,7 +115,7 @@ jobs:
       - self-hosted
       - "os=linux"
       - "arch=x64"
-      - "engflow-bento-name=example-gh-x64"
+      - "engflow-bento-name=example-gh-buck2-x64"
       - "engflow-cluster=glass"
       - "engflow-job-name=ci-runners-test-matrix"
       - "engflow-job-type=${{github.event_name}}-${{github.ref_name}}"
