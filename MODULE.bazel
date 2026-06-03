@@ -47,23 +47,13 @@ http_archive(
 
 bazel_dep(name = "bazel_skylib", version = "1.9.0")
 bazel_dep(name = "engflowapis-java", version = "2025.03.14-12.58.52")
-bazel_dep(name = "platforms", version = "1.0.0")
-bazel_dep(name = "protobuf", version = "34.0.bcr.1")
-
-# Per the instructions from:
-# https://github.com/bazelbuild/apple_support?tab=readme-ov-file#bazel-7-setup
-#
-# If you also depend on `rules_cc`, `apple_support` must come _above_ `rules_cc`
-# in your `MODULE.bazel` or `WORKSPACE` file because Bazel selects toolchains
-# based on which is registered first.
-bazel_dep(name = "apple_support", version = "2.3.0")
-bazel_dep(name = "rules_cc", version = "0.2.17")
-
-# https://github.com/googleapis/googleapis/pull/855
-# https://github.com/bazelbuild/bazel-central-registry/pull/1699
+bazel_dep(name = "platforms", version = "1.1.0")
+bazel_dep(name = "protobuf", version = "35.0")
+bazel_dep(name = "apple_support", version = "2.6.1")
+bazel_dep(name = "rules_cc", version = "0.2.19")
 bazel_dep(
     name = "googleapis",
-    version = "0.0.0-20260109-6145b5ff",
+    version = "0.0.0-20260525-ef19b7b7",
 )
 single_version_override(
     module_name = "googleapis",
@@ -71,9 +61,9 @@ single_version_override(
     patches = ["//:googleapis-loads.patch"],
 )
 
-bazel_dep(name = "rules_python", version = "1.7.0")
+bazel_dep(name = "rules_python", version = "2.0.2")
 
-PYTHON_VERSION = "3.12"
+PYTHON_VERSION = "3.14.4"
 
 python = use_extension("@rules_python//python/extensions:python.bzl", "python")
 python.toolchain(
@@ -98,10 +88,10 @@ use_repo(dotnet, "dotnet_toolchains")
 register_toolchains("@dotnet_toolchains//:all")
 
 # https://github.com/bazelbuild/rules_go/blob/master/docs/go/core/bzlmod.md
-bazel_dep(name = "rules_go", version = "0.59.0")
-bazel_dep(name = "gazelle", version = "0.46.0")
+bazel_dep(name = "rules_go", version = "0.61.0")
+bazel_dep(name = "gazelle", version = "0.51.1")
 
-GO_VERSION = "1.25.6"
+GO_VERSION = "1.26.4"
 
 go_sdk = use_extension("@rules_go//go:extensions.bzl", "go_sdk")
 go_sdk.download(version = GO_VERSION)
@@ -113,9 +103,9 @@ use_repo(go_deps, "com_github_google_go_cmp")
 bazel_dep(name = "rules_java", version = "9.6.1")
 
 # https://github.com/bazelbuild/rules_jvm_external/blob/master/docs/bzlmod.md
-bazel_dep(name = "rules_jvm_external", version = "6.9")
-bazel_dep(name = "grpc-java", version = "1.78.0")
-bazel_dep(name = "grpc", version = "1.76.0.bcr.1")
+bazel_dep(name = "rules_jvm_external", version = "7.0")
+bazel_dep(name = "grpc-java", version = "1.78.0.bcr.1")
+bazel_dep(name = "grpc", version = "1.81.0")
 
 maven = use_extension("@rules_jvm_external//:extensions.bzl", "maven")
 maven.install(
@@ -135,11 +125,11 @@ maven.install(
 )
 use_repo(maven, "maven")
 
-bazel_dep(name = "rules_kotlin", version = "2.1.10")
-bazel_dep(name = "rules_perl", version = "0.5.0")
-bazel_dep(name = "rules_swift", version = "3.3.0")
-bazel_dep(name = "rules_nodejs", version = "6.7.3")
-bazel_dep(name = "aspect_rules_ts", version = "3.8.6")
+bazel_dep(name = "rules_kotlin", version = "2.3.20")
+bazel_dep(name = "rules_perl", version = "1.1.1")
+bazel_dep(name = "rules_swift", version = "3.6.1")
+bazel_dep(name = "rules_nodejs", version = "6.7.4")
+bazel_dep(name = "aspect_rules_ts", version = "3.8.10")
 bazel_dep(name = "aspect_bazel_lib", version = "2.22.5")
 
 rules_ts_ext = use_extension(
@@ -150,7 +140,7 @@ rules_ts_ext = use_extension(
 rules_ts_ext.deps()
 use_repo(rules_ts_ext, "npm_typescript")
 
-bazel_dep(name = "rules_scala", version = "7.2.4")
+bazel_dep(name = "rules_scala", version = "7.2.5")
 
 scala_config = use_extension(
     "@rules_scala//scala/extensions:config.bzl",
@@ -165,4 +155,4 @@ scala_deps = use_extension(
 scala_deps.scala()
 scala_deps.scalatest()
 
-bazel_dep(name = "rules_shell", version = "0.6.1")
+bazel_dep(name = "rules_shell", version = "0.8.0")

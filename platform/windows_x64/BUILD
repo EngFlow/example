@@ -9,7 +9,6 @@ platform(
         "@platforms//os:windows",
         "@platforms//cpu:x86_64",
         "@bazel_tools//tools/cpp:msvc",
-        "@rules_go//go/toolchain:cgo_off",
     ],
     exec_properties = {
         "container-image": "docker://645088952840.dkr.ecr.eu-west-1.amazonaws.com/engflow-re/windows-x64:engflow_worker@sha256:6a53c6d5cbc82ca0782e9117482e457a676920227b697de5db90ff53e7afedbe",

@@ -5,7 +5,6 @@ platform(
     constraint_values = [
         "@platforms//os:macos",
         "@platforms//cpu:arm64",
-        "@rules_go//go/toolchain:cgo_off",
     ],
     exec_properties = {
         "Pool": "macos_arm_m2",
