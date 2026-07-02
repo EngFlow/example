@@ -15,7 +15,6 @@ ios_application(
         "ipad",
     ],
     minimum_os_version = "26.0",
-    tags = ["manual"],
     deps = [":HelloAppLibrary"],
 )
 
@@ -29,7 +28,6 @@ swift_library(
 ios_unit_test(
     name = "HelloTest",
     minimum_os_version = "26.0",
-    tags = ["manual"],
     deps = [":HelloTestLib"],
 )
 
@@ -47,7 +45,6 @@ ios_ui_test(
     name = "HelloAppUITest",
     minimum_os_version = "26.0",
     runner = "@rules_apple//apple/testing/default_runner:ios_xctestrun_ordered_runner",
-    tags = ["manual"],
     test_host = ":HelloApp",
     deps = [":HelloAppUITestLib"],
 )
