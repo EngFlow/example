@@ -1,0 +1,53 @@
+load("@rules_apple//apple:ios.bzl", "ios_application", "ios_ui_test", "ios_unit_test")
+load("@rules_swift//swift:swift.bzl", "swift_library")
+
+swift_library(
+    name = "HelloAppLibrary",
+    srcs = ["HelloApp.swift"],
+    tags = ["manual"],
+)
+
+ios_application(
+    name = "HelloApp",
+    bundle_id = "com.engflow.helloapp",
+    families = [
+        "iphone",
+        "ipad",
+    ],
+    minimum_os_version = "26.0",
+    tags = ["manual"],
+    deps = [":HelloAppLibrary"],
+)
+
+swift_library(
+    name = "HelloTestLib",
+    testonly = True,
+    srcs = ["HelloTest.swift"],
+    tags = ["manual"],
+)
+
+ios_unit_test(
+    name = "HelloTest",
+    minimum_os_version = "26.0",
+    tags = ["manual"],
+    deps = [":HelloTestLib"],
+)
+
+swift_library(
+    name = "HelloAppUITestLib",
+    testonly = True,
+    srcs = [
+        "HelloAppUITest.swift",
+    ],
+    module_name = "HelloAppUITest",
+    tags = ["manual"],
+)
+
+ios_ui_test(
+    name = "HelloAppUITest",
+    minimum_os_version = "26.0",
+    runner = "@rules_apple//apple/testing/default_runner:ios_xctestrun_ordered_runner",
+    tags = ["manual"],
+    test_host = ":HelloApp",
+    deps = [":HelloAppUITestLib"],
+)
