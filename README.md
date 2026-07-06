@@ -188,7 +188,7 @@ isn't enabled in your `.bazelrc.user` file.
 
   These can only be tested remotely on a macOS worker with the matching XCode installed.
 
-  **NOTE:** Currently, `ios_ui_test` on a remote cluster is not working due to a permissions mismatch, see BZL-74 for progress).
+  **NOTE:** Currently, `ios_ui_test` on a remote cluster is not working due to a permissions mismatch).
 
   ```sh
   bazel test --config=ios --config=remote_macos_arm64 //ios:all
