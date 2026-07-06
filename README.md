@@ -60,6 +60,13 @@ locally before attempting remote execution.
   bazel build //...
   ```
 
+- `ios`:
+
+  ```
+  # --config=ios is needed to properly set up the device simulators for testing
+  bazel build --config=ios //ios:all
+  ```
+
 - `swift`:
 
   ```sh
@@ -79,6 +86,14 @@ locally before attempting remote execution.
 
   ```sh
   bazel test //...
+  ```
+
+- `ios`:
+
+  This will only work on a macOS device with XCode (and the necessary iPhone simulators) installed.
+
+  ```sh
+  bazel test --config=ios //ios:all
   ```
 
 - `swift`:
@@ -141,6 +156,14 @@ isn't enabled in your `.bazelrc.user` file.
   bazel build //...
   ```
 
+- `ios`:
+
+  These can only be built remotely on a macOS worker with the matching XCode installed.
+
+  ```sh
+  bazel build --config=ios --config=remote_macos_arm64 --config=opal //ios:all
+  ```
+
 - `swift`:
 
   ```sh
@@ -159,6 +182,16 @@ isn't enabled in your `.bazelrc.user` file.
 
   ```sh
   bazel test //...
+  ```
+
+- `ios`:
+
+  These can only be tested remotely on a macOS worker with the matching XCode installed.
+
+  **NOTE:** Currently, `ios_ui_test` on a remote cluster is not working due to a permissions mismatch).
+
+  ```sh
+  bazel test --config=ios --config=remote_macos_arm64 //ios:all
   ```
 
 - `swift`:

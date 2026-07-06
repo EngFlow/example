@@ -5,9 +5,11 @@ import subprocess
 import sys
 
 def main():
-    # All targets that can run in any environment.
+    # All targets that can run in any environment, except ios examples.
     targets = [
         "//...",
+        # TODO: Add testing configuration for ios tests.
+        "-//ios/...",
     ]
 
     for key in ("ARCH", "OPAL_RPC_CREDENTIALS", "OS", "REMOTE_EXECUTION"):
