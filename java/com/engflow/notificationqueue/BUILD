@@ -1,3 +1,4 @@
+load("@bazel_skylib//rules:build_test.bzl", "build_test")
 load("@grpc-java//:java_grpc_library.bzl", "java_grpc_library")
 load("@rules_java//java:java_binary.bzl", "java_binary")
 
@@ -26,5 +27,12 @@ java_binary(
         "@maven//:io_netty_netty_handler",
         "@protobuf//:any_proto",
         "@protobuf//java/core",
+    ],
+)
+
+build_test(
+    name = "client_test",
+    targets = [
+        ":client",
     ],
 )

@@ -30,5 +30,8 @@ sh_test(
         # DO NOT ENABLE!!! "dockerPrivileged": "True",
         # sysbox containers will refuse to start
     },
-    tags = ["manual"],
+    tags = [
+        "no-local-ci",
+        "no-macos-ci",
+    ],
 )

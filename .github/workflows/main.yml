@@ -21,32 +21,32 @@ env:
   OPAL_RPC_CREDENTIALS: ${{ secrets.OPAL_RPC_CREDENTIALS }}
 
 jobs:
-  test-matrix:
+  macos-test-matrix:
     runs-on:
       - self-hosted
-      - "os=${{ matrix.os }}"
-      - "arch=${{ matrix.arch }}"
-      - "os_distribution=${{ matrix.os_distribution }}"
-      - "os_version=${{ matrix.os_version }}"
-      - "revision=${{ matrix.revision }}"
+      - "os=macos"
+      - "arch=arm64"
+      - "os_distribution=sonoma"
+      - "os_version=14"
+      - "revision=4edc10aa8f8ca239699aaf1078832208fb3b7efe"
     timeout-minutes: 10
     strategy:
       fail-fast: false
       matrix:
-        include:
-          - os: macos
-            arch: arm64
-            os_distribution: sonoma
-            os_version: "14"
-            revision: 4edc10aa8f8ca239699aaf1078832208fb3b7efe
-            remote_execution: 'false'
-
-          - os: macos
-            arch: arm64
-            os_distribution: sonoma
-            os_version: "14"
-            revision: 4edc10aa8f8ca239699aaf1078832208fb3b7efe
-            remote_execution: 'true'
+        test_package:
+          - cpp
+          - csharp
+          - docker
+          - genrules
+          - go
+          #- ios # TODO: fix ios builds
+          - java
+          - kotlin
+          - perl
+          - scala
+          - swift
+          - typescript
+        remote_execution: [true, false]
 
     steps:
       - uses: "actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd"
@@ -61,12 +61,12 @@ jobs:
 
       - name: Build and test
         env:
-          ARCH: ${{ matrix.arch }}
-          OS: ${{ matrix.os }}
+          ARCH: arm64
+          OS: macos
           REMOTE_EXECUTION: ${{ matrix.remote_execution }}
-        run: python3 infra/test-all.py
+        run: python3 infra/test-all.py --package=${{ matrix.test_package }}
 
-  ci-runners-test-matrix:
+  linux-test-matrix:
     runs-on:
       - self-hosted
       - "os=linux"
@@ -79,17 +79,32 @@ jobs:
       - "engflow-run-id=${{ github.run_id }}"
       # To avoid a race condition, among all the jobs that use the same Bento in the same repo, only
       # one should specify "engflow-bento-allow-save=true".
+      # In this case, it is linux-test-matrix(cpp, true, true)
       - "engflow-bento-allow-save=${{ matrix.allow_bento_snapshot }}"
 
     timeout-minutes: 10
     strategy:
       fail-fast: false
       matrix:
+        test_package:
+          - cpp
+          - csharp
+          - docker
+          - genrules
+          - go
+          #- ios # TODO: fix ios builds
+          - java
+          - kotlin
+          - perl
+          - scala
+          - swift
+          - typescript
+        remote_execution: [true, false]
+        allow_bento_snapshot: [false]
         include:
-          - remote_execution: 'false'
-            allow_bento_snapshot: 'false'
-
-          - remote_execution: 'true'
+          - test_package: 'cpp'
+            remote_execution: 'true'
+            # Only one job from the matrix should set allow_bento_snapshot.
             allow_bento_snapshot: 'true'
 
     steps:
@@ -108,7 +123,7 @@ jobs:
           ARCH: x64
           OS: linux
           REMOTE_EXECUTION: ${{ matrix.remote_execution }}
-        run: python3 infra/test-all.py
+        run: python3 infra/test-all.py --package=${{ matrix.test_package }}
 
   buck2-test:
     runs-on:
