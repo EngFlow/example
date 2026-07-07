@@ -1,3 +1,4 @@
+load("@bazel_skylib//rules:build_test.bzl", "build_test")
 load("@rules_cc//cc:cc_binary.bzl", "cc_binary")
 load("@rules_cc//cc:cc_library.bzl", "cc_library")
 load("@rules_cc//cc:cc_test.bzl", "cc_test")
@@ -13,6 +14,13 @@ cc_library(
     srcs = [
         "hello.cc",
         "hello.h",
+    ],
+)
+
+build_test(
+    name = "cpp_build_test",
+    targets = [
+        ":cpp",
     ],
 )
 

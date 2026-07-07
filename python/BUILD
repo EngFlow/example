@@ -1,3 +1,4 @@
+load("@bazel_skylib//rules:build_test.bzl", "build_test")
 load("@rules_python//python:defs.bzl", "py_binary", "py_library", "py_test")
 load("@rules_python//python:pip.bzl", "compile_pip_requirements")
 load("//python/pytest:pytest.bzl", "pytest_test")
@@ -56,4 +57,11 @@ compile_pip_requirements(
     requirements_in = "requirements.txt",
     requirements_txt = "requirements_lock.txt",
     tags = ["manual"],
+)
+
+build_test(
+    name = "python_test",
+    targets = [
+        ":python",
+    ],
 )

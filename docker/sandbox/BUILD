@@ -1,3 +1,4 @@
+load("@bazel_skylib//rules:build_test.bzl", "build_test")
 load("@rules_cc//cc:cc_binary.bzl", "cc_binary")
 load("@rules_java//java:java_binary.bzl", "java_binary")
 
@@ -24,4 +25,12 @@ java_binary(
 cc_binary(
     name = "hello-cc",
     srcs = ["hello.cc"],
+)
+
+build_test(
+    name = "hello_test",
+    tags = ["no-macos-ci"],
+    targets = [
+        ":hello",
+    ],
 )

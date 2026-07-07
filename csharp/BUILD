@@ -1,3 +1,4 @@
+load("@bazel_skylib//rules:build_test.bzl", "build_test")
 load("@rules_dotnet//dotnet:defs.bzl", "csharp_binary")
 
 csharp_binary(
@@ -7,5 +8,12 @@ csharp_binary(
     ],
     target_frameworks = [
         "net8.0",
+    ],
+)
+
+build_test(
+    name = "csharp_test",
+    targets = [
+        ":csharp.exe",
     ],
 )

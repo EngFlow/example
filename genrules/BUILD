@@ -16,6 +16,8 @@
 # on the user's input.
 # This can be used for stress testing your build infrastructure.
 # Change the upper bound of the range and enjoy!
+load("@bazel_skylib//rules:build_test.bzl", "build_test")
+
 UPPER_BOUND = 10
 
 [genrule(
@@ -31,7 +33,6 @@ UPPER_BOUND = 10
     name = "gnu-manifesto_PDF_76KB" + str(x),
     outs = ["gnu-manifesto" + str(x) + ".pdf"],
     cmd = "cp $(location gnu-manifesto.pdf) $@",
-    tags = ["manual"],
     tools = ["gnu-manifesto.pdf"],
 ) for x in range(1, UPPER_BOUND)]
 
@@ -41,7 +42,6 @@ UPPER_BOUND = 10
     name = "emacs_TARGZ_68MB" + str(x),
     outs = ["emacs" + str(x) + ".tar.gz"],
     cmd = "cp $(location @emacs//file) $@",
-    tags = ["manual"],
     tools = ["@emacs//file"],
 ) for x in range(1, UPPER_BOUND)]
 
@@ -52,6 +52,13 @@ UPPER_BOUND = 10
     name = "ubuntu_20.04_1.3GB" + str(x),
     outs = ["ubuntu_20.04_1.3GB" + str(x) + ".iso"],
     cmd = "cp $(location @ubuntu_20.04_1.3GB//file) $@",
-    tags = ["manual"],
     tools = ["@ubuntu_20.04_1.3GB//file"],
 ) for x in range(1, 2)]
+
+# Only test a few to ensure they build, without creating undue load.
+build_test(
+    name = "foo_TXT_test",
+    targets = [
+        ":foo_TXT_4KB_1",
+    ],
+)
