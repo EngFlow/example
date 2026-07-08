@@ -29,10 +29,10 @@ def find_tests(package):
     # Remove tests based on tags and environment
     query = f"""
     let t = tests(//{package}/...) in
-    $t - 
-    attr(tags, no-ci, $t) - 
-    attr(tags, no-{os_name}-ci, $t) - 
-    attr(tags, no-{remote}-ci, $t)
+    $t 
+    - attr(tags, no-ci, $t)
+    - attr(tags, no-{os_name}-ci, $t)
+    - attr(tags, no-{remote}-ci, $t)
     """.strip()
 
     print(f"Executing query to find test targets:\n{query}")
