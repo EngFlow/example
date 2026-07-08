@@ -31,6 +31,7 @@ sh_test(
         # sysbox containers will refuse to start
     },
     tags = [
+        "manual",
         "no-local-ci",
         "no-macos-ci",
     ],

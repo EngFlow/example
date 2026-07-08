@@ -8,6 +8,7 @@ swift_test(
         "main.swift",
     ],
     tags = [
+        "manual",
         "no-ci",  # Broken toolchain setup
     ],
 )

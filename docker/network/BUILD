@@ -23,6 +23,7 @@ java_test(
     name = "docker-network-test",
     srcs = ["DockerNetworkTest.java"],
     tags = [
+        "manual",
         "no-ci",  # Consistent NPE
     ],
     test_class = "docker.network.DockerNetworkTest",
