@@ -32,15 +32,15 @@ def report_error(msg):
 
 
 def validate_env():
-    for key in ("ARCH", "OS", "REMOTE_EXECUTION", "OPAL_RPC_CREDENTIALS"):
+    for key in ("ARCH", "OS", "EXECUTION_TYPE", "OPAL_RPC_CREDENTIALS"):
         if not os.getenv(key):
             report_error(f"{key} not set")
 
 
 def find_tests(package):
     os_name = os.getenv("OS")
-    remote = "remote" if os.getenv("REMOTE_EXECUTION") == "true" else "local"
-    # Remove no-ci tests and no-{os_name}-ci tests
+    remote = os.getenv("EXECUTION_type")
+    # Remove tests based on tags and environment
     query = f"""
     let t = tests(//{package}/...) in
     $t - 
@@ -64,7 +64,7 @@ def run_tests(package):
 
     os_arch = os.getenv("OS") + "_" + os.getenv("ARCH")
     flags = ["--config=ci"]
-    if os.getenv("REMOTE_EXECUTION") == "true":
+    if os.getenv("EXECUTION_TYPE") == "remote":
         flags += [
             "--config=remote_" + os_arch,
             "--config=opal",

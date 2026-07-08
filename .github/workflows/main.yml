@@ -46,7 +46,7 @@ jobs:
           - scala
           - swift
           - typescript
-        remote_execution: [true, false]
+        execution_type: [remote, local]
 
     steps:
       - uses: "actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd"
@@ -63,7 +63,7 @@ jobs:
         env:
           ARCH: arm64
           OS: macos
-          REMOTE_EXECUTION: ${{ matrix.remote_execution }}
+          EXECUTION_TYPE: ${{ matrix.execution_type }}
         run: python3 infra/test-all.py --package=${{ matrix.test_package }}
 
   linux-test-matrix:
@@ -99,13 +99,13 @@ jobs:
           - scala
           - swift
           - typescript
-        remote_execution: [true, false]
+        execution_type: [remote, local]
         allow_bento_snapshot: [false]
         include:
-          - test_package: 'cpp'
-            remote_execution: 'true'
+          - test_package: cpp
+            execution_type: remote
             # Only one job from the matrix should set allow_bento_snapshot.
-            allow_bento_snapshot: 'true'
+            allow_bento_snapshot: true
 
     steps:
       - uses: "actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd"
@@ -122,7 +122,7 @@ jobs:
         env:
           ARCH: x64
           OS: linux
-          REMOTE_EXECUTION: ${{ matrix.remote_execution }}
+          EXECUTION_TYPE: ${{ matrix.execution_type }}
         run: python3 infra/test-all.py --package=${{ matrix.test_package }}
 
   buck2-test:
