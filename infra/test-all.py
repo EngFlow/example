@@ -24,7 +24,7 @@ def validate_env():
 
 def find_tests(package):
     os_name = os.getenv("OS")
-    remote = os.getenv("EXECUTION_type")
+    remote = os.getenv("EXECUTION_TYPE")
 
     # Remove tests based on tags and environment
     query = f"""
