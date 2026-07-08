@@ -71,16 +71,12 @@ jobs:
       - self-hosted
       - "os=linux"
       - "arch=x64"
-      - "remote_execution=${{ matrix.remote_execution }}"
       - "engflow-bento-name=example-gh-x64"
       - "engflow-cluster=glass"
-      - "engflow-job-name=ci-runners-test-matrix-${{matrix.remote_execution}}_${{matrix.allow_bento_snapshot}}"
+      - "engflow-job-name=linux-test-matrix-${{matrix.execution_type}}"
       - "engflow-job-type=${{github.event_name}}-${{github.ref_name}}"
       - "engflow-run-id=${{ github.run_id }}"
-      # To avoid a race condition, among all the jobs that use the same Bento in the same repo, only
-      # one should specify "engflow-bento-allow-save=true".
-      # In this case, it is linux-test-matrix(cpp, true, true)
-      - "engflow-bento-allow-save=${{ matrix.allow_bento_snapshot }}"
+      - "engflow-bento-allow-save=false"
 
     timeout-minutes: 10
     strategy:
@@ -100,12 +96,45 @@ jobs:
           - swift
           - typescript
         execution_type: [remote, local]
-        allow_bento_snapshot: [false]
-        include:
-          - test_package: cpp
-            execution_type: remote
-            # Only one job from the matrix should set allow_bento_snapshot.
-            allow_bento_snapshot: true
+
+    steps:
+      - uses: "actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd"
+
+      - name: Set up authentication
+        shell: bash
+        run: cp infra/bazelrc .bazelrc.user
+
+      - name: Generate python requirements lock
+        shell: bash
+        run: bazel run //python:requirements.update
+
+      - name: Build and test
+        env:
+          ARCH: x64
+          OS: linux
+          EXECUTION_TYPE: ${{ matrix.execution_type }}
+        run: python3 infra/test-all.py --package=${{ matrix.test_package }}
+
+  bento-snapshot:
+    runs-on:
+      - self-hosted
+      - "os=linux"
+      - "arch=x64"
+      - "remote_execution=true"
+      - "engflow-bento-name=example-gh-x64"
+      - "engflow-cluster=glass"
+      - "engflow-job-name=bento-snapshot"
+      - "engflow-job-type=${{github.event_name}}-${{github.ref_name}}"
+      - "engflow-run-id=${{ github.run_id }}"
+      # To avoid a race condition, among all the jobs that use the same Bento in the same repo, only
+      # one should specify "engflow-bento-allow-save=true".
+      - "engflow-bento-allow-save=true"
+
+    timeout-minutes: 10
+    strategy:
+      fail-fast: false
+      test_package: cpp
+      execution_type: remote
 
     steps:
       - uses: "actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd"
