@@ -1,25 +1,57 @@
 #!/usr/bin/env python3
 
+import argparse
 import os
 import subprocess
 import sys
 
-def main():
-    # All targets that can run in any environment, except ios examples.
-    targets = [
-        "//...",
-        # TODO: Add testing configuration for ios tests.
-        "-//ios/...",
-    ]
+EXTRA_FLAGS = {
+    "ios": ["--config=ios"],
+    "swift": ["--config=clang"],
+}
 
-    for key in ("ARCH", "OPAL_RPC_CREDENTIALS", "OS", "REMOTE_EXECUTION"):
+
+def report_error(msg):
+    print(msg, file=sys.stderr)
+    sys.exit(1)
+
+
+def validate_env():
+    for key in ("ARCH", "OS", "EXECUTION_TYPE", "OPAL_RPC_CREDENTIALS"):
         if not os.getenv(key):
-            sys.stderr.write(f"{key} not set\n")
-            sys.exit(1)
+            report_error(f"{key} not set")
+
+
+def find_tests(package):
+    os_name = os.getenv("OS")
+    remote = os.getenv("EXECUTION_TYPE")
+
+    # Remove tests based on tags and environment
+    query = f"""
+    let t = tests(//{package}/...) in
+    $t 
+    - attr(tags, no-ci, $t)
+    - attr(tags, no-{os_name}-ci, $t)
+    - attr(tags, no-{remote}-ci, $t)
+    """.strip()
+
+    print(f"Executing query to find test targets:\n{query}")
+    args = ["bazel", "query", "--output=label", "--", query]
+    result = subprocess.run(args, capture_output=True)
+    output = result.stdout.decode()
+    return [t for t in output.split("\n") if t]
+
+
+def run_tests(package):
+    targets = find_tests(package)
+    if not targets:
+        print(f"No targets found for {package}, skipping.")
+        return 0
+    print(f"Executing tests {targets}")
 
     os_arch = os.getenv("OS") + "_" + os.getenv("ARCH")
     flags = ["--config=ci"]
-    if os.getenv("REMOTE_EXECUTION") == "true":
+    if os.getenv("EXECUTION_TYPE") == "remote":
         flags += [
             "--config=remote_" + os_arch,
             "--config=opal",
@@ -29,13 +61,44 @@ def main():
             "--config=opal_bes",
             "--config=opal_auth",
         ]
-    # The //docker/sysbox/... targets should only run in linux + remote
-    if os.getenv("REMOTE_EXECUTION") == "true" and os.getenv("OS") == "linux":
-        targets += ["//docker/sysbox/dind_test:check_docker",]
-    args = ["bazel", "test"] + flags + ["--"] + targets
 
-    result = subprocess.run(args)
-    sys.exit(result.returncode)
+    if package in EXTRA_FLAGS:
+        flags += EXTRA_FLAGS[package]
+
+    print(f"---------------\nTesting {package}...")
+    sys.stdout.flush()
+
+    args = ["bazel", "test"] + flags + ["--"] + targets
+    result = subprocess.run(args, check=False)
+    sys.stdout.flush()
+    sys.stderr.flush()
+    return result.returncode
+
+
+def main():
+    parser = argparse.ArgumentParser(
+        description="Runs example test suites", fromfile_prefix_chars="@"
+    )
+    parser.add_argument(
+        "--package",
+        required=False,
+        help="Package to test.",
+    )
+    parser.add_argument(
+        "--validate-env",
+        action=argparse.BooleanOptionalAction,
+        help="Whether to validate environment variables",
+    )
+    opts = parser.parse_args()
+
+    if opts.validate_env:
+        validate_env()
+
+    package = opts.package
+
+    returncode = run_tests(opts.package)
+    if returncode != 0:
+        sys.exit(returncode)
 
 
 if __name__ == "__main__":

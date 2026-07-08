@@ -22,7 +22,10 @@ DOCKER_JDK_PSQL = "docker://gcr.io/YOUR-IMAGE-NAME@sha256:b6ed8f68abd6e23409ee7a
 java_test(
     name = "docker-network-test",
     srcs = ["DockerNetworkTest.java"],
-    tags = ["manual"],
+    tags = [
+        "manual",
+        "no-ci",  # Consistent NPE
+    ],
     test_class = "docker.network.DockerNetworkTest",
 )
 

@@ -1,3 +1,4 @@
+load("@bazel_skylib//rules:build_test.bzl", "build_test")
 load("@grpc-java//:java_grpc_library.bzl", "java_grpc_library")
 load("@protobuf//bazel:java_proto_library.bzl", "java_proto_library")
 load("@protobuf//bazel:proto_library.bzl", "proto_library")
@@ -38,5 +39,12 @@ java_binary(
         "@grpc-java//api",
         "@grpc-java//netty",
         "@grpc-java//stub",
+    ],
+)
+
+build_test(
+    name = "server_test",
+    targets = [
+        ":server",
     ],
 )

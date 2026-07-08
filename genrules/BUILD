@@ -16,6 +16,8 @@
 # on the user's input.
 # This can be used for stress testing your build infrastructure.
 # Change the upper bound of the range and enjoy!
+load("@bazel_skylib//rules:build_test.bzl", "build_test")
+
 UPPER_BOUND = 10
 
 [genrule(
@@ -55,3 +57,11 @@ UPPER_BOUND = 10
     tags = ["manual"],
     tools = ["@ubuntu_20.04_1.3GB//file"],
 ) for x in range(1, 2)]
+
+# Only test a few to ensure they build, without creating undue load.
+build_test(
+    name = "foo_TXT_test",
+    targets = [
+        ":foo_TXT_4KB_1",
+    ],
+)

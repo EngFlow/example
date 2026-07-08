@@ -1,3 +1,4 @@
+load("@bazel_skylib//rules:build_test.bzl", "build_test")
 load("@rules_java//java:defs.bzl", "java_binary", "java_library")
 
 NUM_FILES = 100
@@ -41,5 +42,12 @@ java_binary(
             1,
             NUM_FILES + 1,
         )
+    ],
+)
+
+build_test(
+    name = "main_test",
+    targets = [
+        ":main",
     ],
 )
