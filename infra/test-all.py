@@ -40,6 +40,7 @@ def validate_env():
 def find_tests(package):
     os_name = os.getenv("OS")
     remote = os.getenv("EXECUTION_type")
+
     # Remove tests based on tags and environment
     query = f"""
     let t = tests(//{package}/...) in
@@ -48,6 +49,7 @@ def find_tests(package):
     attr(tags, no-{os_name}-ci, $t) - 
     attr(tags, no-{remote}-ci, $t)
     """.strip()
+
     print(f"Executing query to find test targets:\n{query}")
     args = ["bazel", "query", "--output=label", "--", query]
     result = subprocess.run(args, capture_output=True)
