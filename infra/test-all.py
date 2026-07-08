@@ -5,21 +5,6 @@ import os
 import subprocess
 import sys
 
-ALL_PACKAGES = [
-    "cpp",
-    "csharp",
-    "docker",
-    "genrules",
-    "go",
-    "ios",
-    "java",
-    "kotlin",
-    "perl",
-    "scala",
-    "swift",
-    "typescript",
-]
-
 EXTRA_FLAGS = {
     "ios": ["--config=ios"],
     "swift": ["--config=clang"],
@@ -110,9 +95,6 @@ def main():
         validate_env()
 
     package = opts.package
-
-    if opts.package not in ALL_PACKAGES:
-        report_error(f"Unknown package {opts.package}")
 
     returncode = run_tests(opts.package)
     if returncode != 0:
