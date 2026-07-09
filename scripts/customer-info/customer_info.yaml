@@ -1,0 +1,723 @@
+bazel version: bazel 5.2.0
+bazel_action_information:
+- &id001
+  'Aspects:':
+    //java/...:
+    - '  BazelJavaProtoAspect: 3'
+    - ''
+  'Configurations:':
+    //cpp/...:
+    - '  darwin-fastbuild: 8'
+    //csharp/...:
+    - '  darwin-fastbuild: 196'
+    //docker/...:
+    - '  darwin-fastbuild: 43'
+    //go/...:
+    - '  darwin-fastbuild: 5'
+    //java/...:
+    - '  darwin-fastbuild: 47'
+    //kotlin/...:
+    - '  darwin-fastbuild: 8'
+    //perl/...:
+    - '  darwin-fastbuild: 4'
+    //python/...:
+    - '  darwin-fastbuild: 6'
+    //scala/...:
+    - '  darwin-fastbuild: 16'
+    //typescript/...:
+    - '  darwin-fastbuild: 11'
+  'Execution Platforms:':
+    //cpp/...:
+    - '  @io_bazel_rules_dotnet//dotnet/toolchain:darwin_amd64_3.1.100: 8'
+    - ''
+    //csharp/...:
+    - '  @io_bazel_rules_dotnet//dotnet/toolchain:darwin_amd64_3.1.100: 196'
+    - ''
+    //docker/...:
+    - '  @io_bazel_rules_dotnet//dotnet/toolchain:darwin_amd64_3.1.100: 43'
+    - ''
+    //go/...:
+    - '  @io_bazel_rules_dotnet//dotnet/toolchain:darwin_amd64_3.1.100: 5'
+    - ''
+    //java/...:
+    - '  @io_bazel_rules_dotnet//dotnet/toolchain:darwin_amd64_3.1.100: 47'
+    //kotlin/...:
+    - '  @io_bazel_rules_dotnet//dotnet/toolchain:darwin_amd64_3.1.100: 8'
+    - ''
+    //perl/...:
+    - '  @io_bazel_rules_dotnet//dotnet/toolchain:darwin_amd64_3.1.100: 4'
+    - ''
+    //python/...:
+    - '  @io_bazel_rules_dotnet//dotnet/toolchain:darwin_amd64_3.1.100: 6'
+    - ''
+    //scala/...:
+    - '  @io_bazel_rules_dotnet//dotnet/toolchain:darwin_amd64_3.1.100: 16'
+    - ''
+    //typescript/...:
+    - '  @io_bazel_rules_dotnet//dotnet/toolchain:darwin_amd64_3.1.100: 11'
+    - ''
+  'Mnemonics:':
+    //cpp/...:
+    - '  CcStrip: 1'
+    - '  SymlinkTree: 1'
+    - '  Middleman: 1'
+    - '  CppLink: 1'
+    - '  SourceSymlinkManifest: 1'
+    - '  CppCompile: 1'
+    - '  FileWrite: 2'
+    //csharp/...:
+    - '  SymlinkTree: 1'
+    - '  Middleman: 1'
+    - '  SourceSymlinkManifest: 1'
+    - '  FileWrite: 1'
+    - '  Compile: 1'
+    - '  CopyLauncher: 1'
+    - '  CopyFile: 190'
+    //docker/...:
+    - '  CcStrip: 1'
+    - '  TestRunner: 1'
+    - '  CppLink: 1'
+    - '  CppCompile: 1'
+    - '  Javac: 2'
+    - '  TemplateExpand: 2'
+    - '  JavaDeployJar: 2'
+    - '  FileWrite: 4'
+    - '  JavaSourceJar: 4'
+    - '  Fail: 4'
+    - '  Middleman: 7'
+    - '  SymlinkTree: 7'
+    - '  SourceSymlinkManifest: 7'
+    //go/...:
+    - '  SymlinkTree: 1'
+    - '  Middleman: 1'
+    - '  SourceSymlinkManifest: 1'
+    - '  GoLink: 1'
+    - '  GoCompilePkg: 1'
+    //java/...:
+    - '  GenProto: 1'
+    - '  TestRunner: 1'
+    - '  GenProtoDescriptorSet: 1'
+    - '  Action: 3'
+    - '  Middleman: 3'
+    - '  FileWrite: 3'
+    - '  TemplateExpand: 3'
+    - '  SymlinkTree: 3'
+    - '  SourceSymlinkManifest: 3'
+    - '  JavaDeployJar: 3'
+    - '  Turbine: 5'
+    - '  Javac: 8'
+    - '  JavaSourceJar: 10'
+    //kotlin/...:
+    - '  SymlinkTree: 1'
+    - '  Middleman: 1'
+    - '  SourceSymlinkManifest: 1'
+    - '  TemplateExpand: 1'
+    - '  KotlinFoldJarsRuntime: 1'
+    - '  JdepsMerge: 1'
+    - '  KotlinCompile: 1'
+    - '  JavaSourceJar: 1'
+    //perl/...:
+    - '  SymlinkTree: 1'
+    - '  Middleman: 1'
+    - '  SourceSymlinkManifest: 1'
+    - '  TemplateExpand: 1'
+    //python/...:
+    - '  SymlinkTree: 1'
+    - '  Middleman: 1'
+    - '  SourceSymlinkManifest: 1'
+    - '  PythonZipper: 1'
+    - '  TemplateExpand: 2'
+    //scala/...:
+    - '  SymlinkTree: 1'
+    - '  Middleman: 1'
+    - '  TestRunner: 1'
+    - '  SourceSymlinkManifest: 1'
+    - '  TemplateExpand: 1'
+    - '  JavaIjar: 1'
+    - '  JavaSourceJar: 2'
+    - '  ScalaDeployJar: 2'
+    - '  Scalac: 2'
+    - '  FileWrite: 4'
+    //typescript/...:
+    - '  SymlinkTree: 1'
+    - '  Middleman: 1'
+    - '  TestRunner: 1'
+    - '  SourceSymlinkManifest: 1'
+    - '  FileWrite: 1'
+    - '  Genrule: 1'
+    - '  TsProject: 1'
+    - '  TsValidateOptions: 1'
+    - '  CopyFile: 3'
+  total_actions: 344
+- *id001
+- *id001
+- *id001
+- *id001
+- *id001
+- *id001
+- *id001
+- *id001
+- *id001
+bazel_targets:
+- &id002
+  2428b57:
+  - //csharp:csharp.exe
+  - //docker/network:jdk
+  - //docker/network:platform
+  - //docker/sandbox:dep0
+  - //docker/sandbox:dep1
+  - //docker/sandbox:dep2
+  - //docker/sandbox:hello
+  - //docker/sandbox:hello-cc
+  - //docker/sandbox:hello-java
+  - //python:python
+  - //scala/com/engflow/example:exampleScala
+  - //cpp:cpp
+  - //go:go
+  - //kotlin:kotlin
+  - //perl:perl
+  - //typescript:_validate_typescript_options
+  - //typescript:typescript
+  - //typescript:typesctript_test_0__deps
+  - //java/com/engflow/example:example
+  - //java/com/engflow/notificationqueue/demoserver:server
+  - //java/com/engflow/notificationqueue/demoserver:server_java_grpc_proto
+  - //java/com/engflow/notificationqueue/demoserver:server_java_proto
+  - //java/com/engflow/notificationqueue/demoserver:server_proto
+  - //java/com/engflow/notificationqueue:client
+  - //java/com/engflow/notificationqueue:engflowapis_java_proto
+  - //java/com/engflow/notificationqueue:eventstore_java_grpc
+  - //java/com/engflow/notificationqueue:notification_queue_java_grpc
+  d7452c8:
+  - //docker/network:docker-network-test
+  - //scala/com/engflow/example:exampleScalaTest
+  - //typescript:typesctript_test
+  - //java/com/engflow/example:ExampleTest
+- *id002
+- *id002
+- *id002
+- *id002
+- *id002
+- *id002
+- *id002
+- *id002
+- *id002
+relevant bazel flags and values:
+- &id003
+  - 2428b57:
+      compilation_mode: fastbuild
+      ? config.CoreOptions,com.google.devtools.build.lib.analysis.test.CoverageConfiguration$CoverageOptions],
+        com.google.devtools.build.lib.analysis.test.TestConfiguration
+      : '[com.google.devtools.build.lib.analysis.test.TestConfiguration$TestOptions],
+        com.google.devtools.build.lib.bazel.rules.BazelRuleClassProvider$StrictActionEnvConfiguration:
+        [com.google.devtools.build.lib.bazel.rules.BazelRuleClassProvider$StrictActionEnvOptions],
+        com.google.devtools.build.lib.bazel.rules.python.BazelPythonConfiguration:
+        [com.google.devtools.build.lib.bazel.rules.python.BazelPythonConfiguration$Options,com.google.devtools.build.lib.rules.python.PythonOptions],
+        com.google.devtools.build.lib.rules.android.AndroidConfiguration: [com.google.devtools.build.lib.rules.android.AndroidConfiguration$Options],
+        com.google.devtools.build.lib.rules.android.AndroidLocalTestConfiguration:
+        [com.google.devtools.build.lib.rules.android.AndroidLocalTestConfiguration$Options],
+        com.google.devtools.build.lib.rules.apple.AppleConfiguration: [com.google.devtools.build.lib.rules.apple.AppleCommandLineOptions],
+        com.google.devtools.build.lib.rules.apple.swift.SwiftConfiguration: [com.google.devtools.build.lib.rules.apple.swift.SwiftCommandLineOptions],
+        com.google.devtools.build.lib.rules.config.ConfigFeatureFlagConfiguration:
+        [com.google.devtools.build.lib.rules.config.ConfigFeatureFlagOptions], com.google.devtools.build.lib.rules.cpp.CppConfiguration:
+        [com.google.devtools.build.lib.rules.apple.AppleCommandLineOptions,com.google.devtools.build.lib.rules.cpp.CppOptions],
+        com.google.devtools.build.lib.rules.genquery.GenQueryConfiguration: [com.google.devtools.build.lib.rules.genquery.GenQueryConfiguration$GenQueryOptions],
+        com.google.devtools.build.lib.rules.java.JavaConfiguration: [com.google.devtools.build.lib.analysis.PlatformOptions,com.google.devtools.build.lib.rules.java.JavaOptions],
+        com.google.devtools.build.lib.rules.objc.J2ObjcConfiguration: [com.google.devtools.build.lib.rules.objc.J2ObjcCommandLineOptions],
+        com.google.devtools.build.lib.rules.objc.ObjcConfiguration: [com.google.devtools.build.lib.rules.cpp.CppOptions,com.google.devtools.build.lib.rules.objc.ObjcCommandLineOptions],
+        com.google.devtools.build.lib.rules.proto.ProtoConfiguration: [com.google.devtools.build.lib.rules.proto.ProtoConfiguration$Options],
+        com.google.devtools.build.lib.rules.python.PythonConfiguration: [com.google.devtools.build.lib.rules.python.PythonOptions], '
+      cxxopt: '[]'
+      experimental_action_listener: '[]'
+      experimental_one_version_enforcement_use_transitive_jars_for_binary_under_test: 'false'
+      explicit_java_test_deps: 'false'
+      host_cxxopt: '[]'
+      incompatible_enable_cc_toolchain_resolution: 'false'
+      incompatible_strict_action_env: 'false'
+      instrumentation_filter: -(?:(?>/javatests[/:])|(?>/test/java[/:]))
+      java_language_version: '8'
+      java_runtime_version: local_jdk
+      test_env: '[]'
+      tool_java_language_version: '8'
+      tool_java_runtime_version: remotejdk_11
+  - 2428b57:
+      compilation_mode: fastbuild
+      ? config.CoreOptions,com.google.devtools.build.lib.analysis.test.CoverageConfiguration$CoverageOptions],
+        com.google.devtools.build.lib.analysis.test.TestConfiguration
+      : '[com.google.devtools.build.lib.analysis.test.TestConfiguration$TestOptions],
+        com.google.devtools.build.lib.bazel.rules.BazelRuleClassProvider$StrictActionEnvConfiguration:
+        [com.google.devtools.build.lib.bazel.rules.BazelRuleClassProvider$StrictActionEnvOptions],
+        com.google.devtools.build.lib.bazel.rules.python.BazelPythonConfiguration:
+        [com.google.devtools.build.lib.bazel.rules.python.BazelPythonConfiguration$Options,com.google.devtools.build.lib.rules.python.PythonOptions],
+        com.google.devtools.build.lib.rules.android.AndroidConfiguration: [com.google.devtools.build.lib.rules.android.AndroidConfiguration$Options],
+        com.google.devtools.build.lib.rules.android.AndroidLocalTestConfiguration:
+        [com.google.devtools.build.lib.rules.android.AndroidLocalTestConfiguration$Options],
+        com.google.devtools.build.lib.rules.apple.AppleConfiguration: [com.google.devtools.build.lib.rules.apple.AppleCommandLineOptions],
+        com.google.devtools.build.lib.rules.apple.swift.SwiftConfiguration: [com.google.devtools.build.lib.rules.apple.swift.SwiftCommandLineOptions],
+        com.google.devtools.build.lib.rules.config.ConfigFeatureFlagConfiguration:
+        [com.google.devtools.build.lib.rules.config.ConfigFeatureFlagOptions], com.google.devtools.build.lib.rules.cpp.CppConfiguration:
+        [com.google.devtools.build.lib.rules.apple.AppleCommandLineOptions,com.google.devtools.build.lib.rules.cpp.CppOptions],
+        com.google.devtools.build.lib.rules.genquery.GenQueryConfiguration: [com.google.devtools.build.lib.rules.genquery.GenQueryConfiguration$GenQueryOptions],
+        com.google.devtools.build.lib.rules.java.JavaConfiguration: [com.google.devtools.build.lib.analysis.PlatformOptions,com.google.devtools.build.lib.rules.java.JavaOptions],
+        com.google.devtools.build.lib.rules.objc.J2ObjcConfiguration: [com.google.devtools.build.lib.rules.objc.J2ObjcCommandLineOptions],
+        com.google.devtools.build.lib.rules.objc.ObjcConfiguration: [com.google.devtools.build.lib.rules.cpp.CppOptions,com.google.devtools.build.lib.rules.objc.ObjcCommandLineOptions],
+        com.google.devtools.build.lib.rules.proto.ProtoConfiguration: [com.google.devtools.build.lib.rules.proto.ProtoConfiguration$Options],
+        com.google.devtools.build.lib.rules.python.PythonConfiguration: [com.google.devtools.build.lib.rules.python.PythonOptions], '
+      cxxopt: '[]'
+      experimental_action_listener: '[]'
+      experimental_one_version_enforcement_use_transitive_jars_for_binary_under_test: 'false'
+      explicit_java_test_deps: 'false'
+      host_cxxopt: '[]'
+      incompatible_enable_cc_toolchain_resolution: 'false'
+      incompatible_strict_action_env: 'false'
+      instrumentation_filter: -(?:(?>/javatests[/:])|(?>/test/java[/:]))
+      java_language_version: '8'
+      java_runtime_version: local_jdk
+      test_env: '[]'
+      tool_java_language_version: '8'
+      tool_java_runtime_version: remotejdk_11
+    d7452c8:
+      compilation_mode: fastbuild
+      ? config.CoreOptions,com.google.devtools.build.lib.analysis.test.CoverageConfiguration$CoverageOptions],
+        com.google.devtools.build.lib.analysis.test.TestConfiguration
+      : '[com.google.devtools.build.lib.analysis.test.TestConfiguration$TestOptions],
+        com.google.devtools.build.lib.bazel.rules.BazelRuleClassProvider$StrictActionEnvConfiguration:
+        [com.google.devtools.build.lib.bazel.rules.BazelRuleClassProvider$StrictActionEnvOptions],
+        com.google.devtools.build.lib.bazel.rules.python.BazelPythonConfiguration:
+        [com.google.devtools.build.lib.bazel.rules.python.BazelPythonConfiguration$Options,com.google.devtools.build.lib.rules.python.PythonOptions],
+        com.google.devtools.build.lib.rules.android.AndroidConfiguration: [com.google.devtools.build.lib.rules.android.AndroidConfiguration$Options],
+        com.google.devtools.build.lib.rules.android.AndroidLocalTestConfiguration:
+        [com.google.devtools.build.lib.rules.android.AndroidLocalTestConfiguration$Options],
+        com.google.devtools.build.lib.rules.apple.AppleConfiguration: [com.google.devtools.build.lib.rules.apple.AppleCommandLineOptions],
+        com.google.devtools.build.lib.rules.apple.swift.SwiftConfiguration: [com.google.devtools.build.lib.rules.apple.swift.SwiftCommandLineOptions],
+        com.google.devtools.build.lib.rules.config.ConfigFeatureFlagConfiguration:
+        [com.google.devtools.build.lib.rules.config.ConfigFeatureFlagOptions], com.google.devtools.build.lib.rules.cpp.CppConfiguration:
+        [com.google.devtools.build.lib.rules.apple.AppleCommandLineOptions,com.google.devtools.build.lib.rules.cpp.CppOptions],
+        com.google.devtools.build.lib.rules.genquery.GenQueryConfiguration: [com.google.devtools.build.lib.rules.genquery.GenQueryConfiguration$GenQueryOptions],
+        com.google.devtools.build.lib.rules.java.JavaConfiguration: [com.google.devtools.build.lib.analysis.PlatformOptions,com.google.devtools.build.lib.rules.java.JavaOptions],
+        com.google.devtools.build.lib.rules.objc.J2ObjcConfiguration: [com.google.devtools.build.lib.rules.objc.J2ObjcCommandLineOptions],
+        com.google.devtools.build.lib.rules.objc.ObjcConfiguration: [com.google.devtools.build.lib.rules.cpp.CppOptions,com.google.devtools.build.lib.rules.objc.ObjcCommandLineOptions],
+        com.google.devtools.build.lib.rules.proto.ProtoConfiguration: [com.google.devtools.build.lib.rules.proto.ProtoConfiguration$Options],
+        com.google.devtools.build.lib.rules.python.PythonConfiguration: [com.google.devtools.build.lib.rules.python.PythonOptions], '
+      cxxopt: '[]'
+      experimental_action_listener: '[]'
+      experimental_one_version_enforcement_use_transitive_jars_for_binary_under_test: 'false'
+      explicit_java_test_deps: 'false'
+      host_cxxopt: '[]'
+      incompatible_enable_cc_toolchain_resolution: 'false'
+      incompatible_strict_action_env: 'false'
+      instrumentation_filter: -(?:(?>/javatests[/:])|(?>/test/java[/:]))
+      java_language_version: '8'
+      java_runtime_version: local_jdk
+      test_env: '[]'
+      test_outputs: 'true'
+      tool_java_language_version: '8'
+      tool_java_runtime_version: remotejdk_11
+  - 2428b57:
+      compilation_mode: fastbuild
+      ? config.CoreOptions,com.google.devtools.build.lib.analysis.test.CoverageConfiguration$CoverageOptions],
+        com.google.devtools.build.lib.analysis.test.TestConfiguration
+      : '[com.google.devtools.build.lib.analysis.test.TestConfiguration$TestOptions],
+        com.google.devtools.build.lib.bazel.rules.BazelRuleClassProvider$StrictActionEnvConfiguration:
+        [com.google.devtools.build.lib.bazel.rules.BazelRuleClassProvider$StrictActionEnvOptions],
+        com.google.devtools.build.lib.bazel.rules.python.BazelPythonConfiguration:
+        [com.google.devtools.build.lib.bazel.rules.python.BazelPythonConfiguration$Options,com.google.devtools.build.lib.rules.python.PythonOptions],
+        com.google.devtools.build.lib.rules.android.AndroidConfiguration: [com.google.devtools.build.lib.rules.android.AndroidConfiguration$Options],
+        com.google.devtools.build.lib.rules.android.AndroidLocalTestConfiguration:
+        [com.google.devtools.build.lib.rules.android.AndroidLocalTestConfiguration$Options],
+        com.google.devtools.build.lib.rules.apple.AppleConfiguration: [com.google.devtools.build.lib.rules.apple.AppleCommandLineOptions],
+        com.google.devtools.build.lib.rules.apple.swift.SwiftConfiguration: [com.google.devtools.build.lib.rules.apple.swift.SwiftCommandLineOptions],
+        com.google.devtools.build.lib.rules.config.ConfigFeatureFlagConfiguration:
+        [com.google.devtools.build.lib.rules.config.ConfigFeatureFlagOptions], com.google.devtools.build.lib.rules.cpp.CppConfiguration:
+        [com.google.devtools.build.lib.rules.apple.AppleCommandLineOptions,com.google.devtools.build.lib.rules.cpp.CppOptions],
+        com.google.devtools.build.lib.rules.genquery.GenQueryConfiguration: [com.google.devtools.build.lib.rules.genquery.GenQueryConfiguration$GenQueryOptions],
+        com.google.devtools.build.lib.rules.java.JavaConfiguration: [com.google.devtools.build.lib.analysis.PlatformOptions,com.google.devtools.build.lib.rules.java.JavaOptions],
+        com.google.devtools.build.lib.rules.objc.J2ObjcConfiguration: [com.google.devtools.build.lib.rules.objc.J2ObjcCommandLineOptions],
+        com.google.devtools.build.lib.rules.objc.ObjcConfiguration: [com.google.devtools.build.lib.rules.cpp.CppOptions,com.google.devtools.build.lib.rules.objc.ObjcCommandLineOptions],
+        com.google.devtools.build.lib.rules.proto.ProtoConfiguration: [com.google.devtools.build.lib.rules.proto.ProtoConfiguration$Options],
+        com.google.devtools.build.lib.rules.python.PythonConfiguration: [com.google.devtools.build.lib.rules.python.PythonOptions], '
+      cxxopt: '[]'
+      experimental_action_listener: '[]'
+      experimental_one_version_enforcement_use_transitive_jars_for_binary_under_test: 'false'
+      explicit_java_test_deps: 'false'
+      host_cxxopt: '[]'
+      incompatible_enable_cc_toolchain_resolution: 'false'
+      incompatible_strict_action_env: 'false'
+      instrumentation_filter: -(?:(?>/javatests[/:])|(?>/test/java[/:]))
+      java_language_version: '8'
+      java_runtime_version: local_jdk
+      test_env: '[]'
+      tool_java_language_version: '8'
+      tool_java_runtime_version: remotejdk_11
+  - 2428b57:
+      compilation_mode: fastbuild
+      ? config.CoreOptions,com.google.devtools.build.lib.analysis.test.CoverageConfiguration$CoverageOptions],
+        com.google.devtools.build.lib.analysis.test.TestConfiguration
+      : '[com.google.devtools.build.lib.analysis.test.TestConfiguration$TestOptions],
+        com.google.devtools.build.lib.bazel.rules.BazelRuleClassProvider$StrictActionEnvConfiguration:
+        [com.google.devtools.build.lib.bazel.rules.BazelRuleClassProvider$StrictActionEnvOptions],
+        com.google.devtools.build.lib.bazel.rules.python.BazelPythonConfiguration:
+        [com.google.devtools.build.lib.bazel.rules.python.BazelPythonConfiguration$Options,com.google.devtools.build.lib.rules.python.PythonOptions],
+        com.google.devtools.build.lib.rules.android.AndroidConfiguration: [com.google.devtools.build.lib.rules.android.AndroidConfiguration$Options],
+        com.google.devtools.build.lib.rules.android.AndroidLocalTestConfiguration:
+        [com.google.devtools.build.lib.rules.android.AndroidLocalTestConfiguration$Options],
+        com.google.devtools.build.lib.rules.apple.AppleConfiguration: [com.google.devtools.build.lib.rules.apple.AppleCommandLineOptions],
+        com.google.devtools.build.lib.rules.apple.swift.SwiftConfiguration: [com.google.devtools.build.lib.rules.apple.swift.SwiftCommandLineOptions],
+        com.google.devtools.build.lib.rules.config.ConfigFeatureFlagConfiguration:
+        [com.google.devtools.build.lib.rules.config.ConfigFeatureFlagOptions], com.google.devtools.build.lib.rules.cpp.CppConfiguration:
+        [com.google.devtools.build.lib.rules.apple.AppleCommandLineOptions,com.google.devtools.build.lib.rules.cpp.CppOptions],
+        com.google.devtools.build.lib.rules.genquery.GenQueryConfiguration: [com.google.devtools.build.lib.rules.genquery.GenQueryConfiguration$GenQueryOptions],
+        com.google.devtools.build.lib.rules.java.JavaConfiguration: [com.google.devtools.build.lib.analysis.PlatformOptions,com.google.devtools.build.lib.rules.java.JavaOptions],
+        com.google.devtools.build.lib.rules.objc.J2ObjcConfiguration: [com.google.devtools.build.lib.rules.objc.J2ObjcCommandLineOptions],
+        com.google.devtools.build.lib.rules.objc.ObjcConfiguration: [com.google.devtools.build.lib.rules.cpp.CppOptions,com.google.devtools.build.lib.rules.objc.ObjcCommandLineOptions],
+        com.google.devtools.build.lib.rules.proto.ProtoConfiguration: [com.google.devtools.build.lib.rules.proto.ProtoConfiguration$Options],
+        com.google.devtools.build.lib.rules.python.PythonConfiguration: [com.google.devtools.build.lib.rules.python.PythonOptions], '
+      cxxopt: '[]'
+      experimental_action_listener: '[]'
+      experimental_one_version_enforcement_use_transitive_jars_for_binary_under_test: 'false'
+      explicit_java_test_deps: 'false'
+      host_cxxopt: '[]'
+      incompatible_enable_cc_toolchain_resolution: 'false'
+      incompatible_strict_action_env: 'false'
+      instrumentation_filter: -(?:(?>/javatests[/:])|(?>/test/java[/:]))
+      java_language_version: '8'
+      java_runtime_version: local_jdk
+      test_env: '[]'
+      tool_java_language_version: '8'
+      tool_java_runtime_version: remotejdk_11
+    d7452c8:
+      compilation_mode: fastbuild
+      ? config.CoreOptions,com.google.devtools.build.lib.analysis.test.CoverageConfiguration$CoverageOptions],
+        com.google.devtools.build.lib.analysis.test.TestConfiguration
+      : '[com.google.devtools.build.lib.analysis.test.TestConfiguration$TestOptions],
+        com.google.devtools.build.lib.bazel.rules.BazelRuleClassProvider$StrictActionEnvConfiguration:
+        [com.google.devtools.build.lib.bazel.rules.BazelRuleClassProvider$StrictActionEnvOptions],
+        com.google.devtools.build.lib.bazel.rules.python.BazelPythonConfiguration:
+        [com.google.devtools.build.lib.bazel.rules.python.BazelPythonConfiguration$Options,com.google.devtools.build.lib.rules.python.PythonOptions],
+        com.google.devtools.build.lib.rules.android.AndroidConfiguration: [com.google.devtools.build.lib.rules.android.AndroidConfiguration$Options],
+        com.google.devtools.build.lib.rules.android.AndroidLocalTestConfiguration:
+        [com.google.devtools.build.lib.rules.android.AndroidLocalTestConfiguration$Options],
+        com.google.devtools.build.lib.rules.apple.AppleConfiguration: [com.google.devtools.build.lib.rules.apple.AppleCommandLineOptions],
+        com.google.devtools.build.lib.rules.apple.swift.SwiftConfiguration: [com.google.devtools.build.lib.rules.apple.swift.SwiftCommandLineOptions],
+        com.google.devtools.build.lib.rules.config.ConfigFeatureFlagConfiguration:
+        [com.google.devtools.build.lib.rules.config.ConfigFeatureFlagOptions], com.google.devtools.build.lib.rules.cpp.CppConfiguration:
+        [com.google.devtools.build.lib.rules.apple.AppleCommandLineOptions,com.google.devtools.build.lib.rules.cpp.CppOptions],
+        com.google.devtools.build.lib.rules.genquery.GenQueryConfiguration: [com.google.devtools.build.lib.rules.genquery.GenQueryConfiguration$GenQueryOptions],
+        com.google.devtools.build.lib.rules.java.JavaConfiguration: [com.google.devtools.build.lib.analysis.PlatformOptions,com.google.devtools.build.lib.rules.java.JavaOptions],
+        com.google.devtools.build.lib.rules.objc.J2ObjcConfiguration: [com.google.devtools.build.lib.rules.objc.J2ObjcCommandLineOptions],
+        com.google.devtools.build.lib.rules.objc.ObjcConfiguration: [com.google.devtools.build.lib.rules.cpp.CppOptions,com.google.devtools.build.lib.rules.objc.ObjcCommandLineOptions],
+        com.google.devtools.build.lib.rules.proto.ProtoConfiguration: [com.google.devtools.build.lib.rules.proto.ProtoConfiguration$Options],
+        com.google.devtools.build.lib.rules.python.PythonConfiguration: [com.google.devtools.build.lib.rules.python.PythonOptions], '
+      cxxopt: '[]'
+      experimental_action_listener: '[]'
+      experimental_one_version_enforcement_use_transitive_jars_for_binary_under_test: 'false'
+      explicit_java_test_deps: 'false'
+      host_cxxopt: '[]'
+      incompatible_enable_cc_toolchain_resolution: 'false'
+      incompatible_strict_action_env: 'false'
+      instrumentation_filter: -(?:(?>/javatests[/:])|(?>/test/java[/:]))
+      java_language_version: '8'
+      java_runtime_version: local_jdk
+      test_env: '[]'
+      test_outputs: 'true'
+      tool_java_language_version: '8'
+      tool_java_runtime_version: remotejdk_11
+  - 2428b57:
+      compilation_mode: fastbuild
+      ? config.CoreOptions,com.google.devtools.build.lib.analysis.test.CoverageConfiguration$CoverageOptions],
+        com.google.devtools.build.lib.analysis.test.TestConfiguration
+      : '[com.google.devtools.build.lib.analysis.test.TestConfiguration$TestOptions],
+        com.google.devtools.build.lib.bazel.rules.BazelRuleClassProvider$StrictActionEnvConfiguration:
+        [com.google.devtools.build.lib.bazel.rules.BazelRuleClassProvider$StrictActionEnvOptions],
+        com.google.devtools.build.lib.bazel.rules.python.BazelPythonConfiguration:
+        [com.google.devtools.build.lib.bazel.rules.python.BazelPythonConfiguration$Options,com.google.devtools.build.lib.rules.python.PythonOptions],
+        com.google.devtools.build.lib.rules.android.AndroidConfiguration: [com.google.devtools.build.lib.rules.android.AndroidConfiguration$Options],
+        com.google.devtools.build.lib.rules.android.AndroidLocalTestConfiguration:
+        [com.google.devtools.build.lib.rules.android.AndroidLocalTestConfiguration$Options],
+        com.google.devtools.build.lib.rules.apple.AppleConfiguration: [com.google.devtools.build.lib.rules.apple.AppleCommandLineOptions],
+        com.google.devtools.build.lib.rules.apple.swift.SwiftConfiguration: [com.google.devtools.build.lib.rules.apple.swift.SwiftCommandLineOptions],
+        com.google.devtools.build.lib.rules.config.ConfigFeatureFlagConfiguration:
+        [com.google.devtools.build.lib.rules.config.ConfigFeatureFlagOptions], com.google.devtools.build.lib.rules.cpp.CppConfiguration:
+        [com.google.devtools.build.lib.rules.apple.AppleCommandLineOptions,com.google.devtools.build.lib.rules.cpp.CppOptions],
+        com.google.devtools.build.lib.rules.genquery.GenQueryConfiguration: [com.google.devtools.build.lib.rules.genquery.GenQueryConfiguration$GenQueryOptions],
+        com.google.devtools.build.lib.rules.java.JavaConfiguration: [com.google.devtools.build.lib.analysis.PlatformOptions,com.google.devtools.build.lib.rules.java.JavaOptions],
+        com.google.devtools.build.lib.rules.objc.J2ObjcConfiguration: [com.google.devtools.build.lib.rules.objc.J2ObjcCommandLineOptions],
+        com.google.devtools.build.lib.rules.objc.ObjcConfiguration: [com.google.devtools.build.lib.rules.cpp.CppOptions,com.google.devtools.build.lib.rules.objc.ObjcCommandLineOptions],
+        com.google.devtools.build.lib.rules.proto.ProtoConfiguration: [com.google.devtools.build.lib.rules.proto.ProtoConfiguration$Options],
+        com.google.devtools.build.lib.rules.python.PythonConfiguration: [com.google.devtools.build.lib.rules.python.PythonOptions], '
+      cxxopt: '[]'
+      experimental_action_listener: '[]'
+      experimental_one_version_enforcement_use_transitive_jars_for_binary_under_test: 'false'
+      explicit_java_test_deps: 'false'
+      host_cxxopt: '[]'
+      incompatible_enable_cc_toolchain_resolution: 'false'
+      incompatible_strict_action_env: 'false'
+      instrumentation_filter: -(?:(?>/javatests[/:])|(?>/test/java[/:]))
+      java_language_version: '8'
+      java_runtime_version: local_jdk
+      test_env: '[]'
+      tool_java_language_version: '8'
+      tool_java_runtime_version: remotejdk_11
+  - 2428b57:
+      compilation_mode: fastbuild
+      ? config.CoreOptions,com.google.devtools.build.lib.analysis.test.CoverageConfiguration$CoverageOptions],
+        com.google.devtools.build.lib.analysis.test.TestConfiguration
+      : '[com.google.devtools.build.lib.analysis.test.TestConfiguration$TestOptions],
+        com.google.devtools.build.lib.bazel.rules.BazelRuleClassProvider$StrictActionEnvConfiguration:
+        [com.google.devtools.build.lib.bazel.rules.BazelRuleClassProvider$StrictActionEnvOptions],
+        com.google.devtools.build.lib.bazel.rules.python.BazelPythonConfiguration:
+        [com.google.devtools.build.lib.bazel.rules.python.BazelPythonConfiguration$Options,com.google.devtools.build.lib.rules.python.PythonOptions],
+        com.google.devtools.build.lib.rules.android.AndroidConfiguration: [com.google.devtools.build.lib.rules.android.AndroidConfiguration$Options],
+        com.google.devtools.build.lib.rules.android.AndroidLocalTestConfiguration:
+        [com.google.devtools.build.lib.rules.android.AndroidLocalTestConfiguration$Options],
+        com.google.devtools.build.lib.rules.apple.AppleConfiguration: [com.google.devtools.build.lib.rules.apple.AppleCommandLineOptions],
+        com.google.devtools.build.lib.rules.apple.swift.SwiftConfiguration: [com.google.devtools.build.lib.rules.apple.swift.SwiftCommandLineOptions],
+        com.google.devtools.build.lib.rules.config.ConfigFeatureFlagConfiguration:
+        [com.google.devtools.build.lib.rules.config.ConfigFeatureFlagOptions], com.google.devtools.build.lib.rules.cpp.CppConfiguration:
+        [com.google.devtools.build.lib.rules.apple.AppleCommandLineOptions,com.google.devtools.build.lib.rules.cpp.CppOptions],
+        com.google.devtools.build.lib.rules.genquery.GenQueryConfiguration: [com.google.devtools.build.lib.rules.genquery.GenQueryConfiguration$GenQueryOptions],
+        com.google.devtools.build.lib.rules.java.JavaConfiguration: [com.google.devtools.build.lib.analysis.PlatformOptions,com.google.devtools.build.lib.rules.java.JavaOptions],
+        com.google.devtools.build.lib.rules.objc.J2ObjcConfiguration: [com.google.devtools.build.lib.rules.objc.J2ObjcCommandLineOptions],
+        com.google.devtools.build.lib.rules.objc.ObjcConfiguration: [com.google.devtools.build.lib.rules.cpp.CppOptions,com.google.devtools.build.lib.rules.objc.ObjcCommandLineOptions],
+        com.google.devtools.build.lib.rules.proto.ProtoConfiguration: [com.google.devtools.build.lib.rules.proto.ProtoConfiguration$Options],
+        com.google.devtools.build.lib.rules.python.PythonConfiguration: [com.google.devtools.build.lib.rules.python.PythonOptions], '
+      cxxopt: '[]'
+      experimental_action_listener: '[]'
+      experimental_one_version_enforcement_use_transitive_jars_for_binary_under_test: 'false'
+      explicit_java_test_deps: 'false'
+      host_cxxopt: '[]'
+      incompatible_enable_cc_toolchain_resolution: 'false'
+      incompatible_strict_action_env: 'false'
+      instrumentation_filter: -(?:(?>/javatests[/:])|(?>/test/java[/:]))
+      java_language_version: '8'
+      java_runtime_version: local_jdk
+      test_env: '[]'
+      tool_java_language_version: '8'
+      tool_java_runtime_version: remotejdk_11
+  - 2428b57:
+      compilation_mode: fastbuild
+      ? config.CoreOptions,com.google.devtools.build.lib.analysis.test.CoverageConfiguration$CoverageOptions],
+        com.google.devtools.build.lib.analysis.test.TestConfiguration
+      : '[com.google.devtools.build.lib.analysis.test.TestConfiguration$TestOptions],
+        com.google.devtools.build.lib.bazel.rules.BazelRuleClassProvider$StrictActionEnvConfiguration:
+        [com.google.devtools.build.lib.bazel.rules.BazelRuleClassProvider$StrictActionEnvOptions],
+        com.google.devtools.build.lib.bazel.rules.python.BazelPythonConfiguration:
+        [com.google.devtools.build.lib.bazel.rules.python.BazelPythonConfiguration$Options,com.google.devtools.build.lib.rules.python.PythonOptions],
+        com.google.devtools.build.lib.rules.android.AndroidConfiguration: [com.google.devtools.build.lib.rules.android.AndroidConfiguration$Options],
+        com.google.devtools.build.lib.rules.android.AndroidLocalTestConfiguration:
+        [com.google.devtools.build.lib.rules.android.AndroidLocalTestConfiguration$Options],
+        com.google.devtools.build.lib.rules.apple.AppleConfiguration: [com.google.devtools.build.lib.rules.apple.AppleCommandLineOptions],
+        com.google.devtools.build.lib.rules.apple.swift.SwiftConfiguration: [com.google.devtools.build.lib.rules.apple.swift.SwiftCommandLineOptions],
+        com.google.devtools.build.lib.rules.config.ConfigFeatureFlagConfiguration:
+        [com.google.devtools.build.lib.rules.config.ConfigFeatureFlagOptions], com.google.devtools.build.lib.rules.cpp.CppConfiguration:
+        [com.google.devtools.build.lib.rules.apple.AppleCommandLineOptions,com.google.devtools.build.lib.rules.cpp.CppOptions],
+        com.google.devtools.build.lib.rules.genquery.GenQueryConfiguration: [com.google.devtools.build.lib.rules.genquery.GenQueryConfiguration$GenQueryOptions],
+        com.google.devtools.build.lib.rules.java.JavaConfiguration: [com.google.devtools.build.lib.analysis.PlatformOptions,com.google.devtools.build.lib.rules.java.JavaOptions],
+        com.google.devtools.build.lib.rules.objc.J2ObjcConfiguration: [com.google.devtools.build.lib.rules.objc.J2ObjcCommandLineOptions],
+        com.google.devtools.build.lib.rules.objc.ObjcConfiguration: [com.google.devtools.build.lib.rules.cpp.CppOptions,com.google.devtools.build.lib.rules.objc.ObjcCommandLineOptions],
+        com.google.devtools.build.lib.rules.proto.ProtoConfiguration: [com.google.devtools.build.lib.rules.proto.ProtoConfiguration$Options],
+        com.google.devtools.build.lib.rules.python.PythonConfiguration: [com.google.devtools.build.lib.rules.python.PythonOptions], '
+      cxxopt: '[]'
+      experimental_action_listener: '[]'
+      experimental_one_version_enforcement_use_transitive_jars_for_binary_under_test: 'false'
+      explicit_java_test_deps: 'false'
+      host_cxxopt: '[]'
+      incompatible_enable_cc_toolchain_resolution: 'false'
+      incompatible_strict_action_env: 'false'
+      instrumentation_filter: -(?:(?>/javatests[/:])|(?>/test/java[/:]))
+      java_language_version: '8'
+      java_runtime_version: local_jdk
+      test_env: '[]'
+      tool_java_language_version: '8'
+      tool_java_runtime_version: remotejdk_11
+  - 2428b57:
+      compilation_mode: fastbuild
+      ? config.CoreOptions,com.google.devtools.build.lib.analysis.test.CoverageConfiguration$CoverageOptions],
+        com.google.devtools.build.lib.analysis.test.TestConfiguration
+      : '[com.google.devtools.build.lib.analysis.test.TestConfiguration$TestOptions],
+        com.google.devtools.build.lib.bazel.rules.BazelRuleClassProvider$StrictActionEnvConfiguration:
+        [com.google.devtools.build.lib.bazel.rules.BazelRuleClassProvider$StrictActionEnvOptions],
+        com.google.devtools.build.lib.bazel.rules.python.BazelPythonConfiguration:
+        [com.google.devtools.build.lib.bazel.rules.python.BazelPythonConfiguration$Options,com.google.devtools.build.lib.rules.python.PythonOptions],
+        com.google.devtools.build.lib.rules.android.AndroidConfiguration: [com.google.devtools.build.lib.rules.android.AndroidConfiguration$Options],
+        com.google.devtools.build.lib.rules.android.AndroidLocalTestConfiguration:
+        [com.google.devtools.build.lib.rules.android.AndroidLocalTestConfiguration$Options],
+        com.google.devtools.build.lib.rules.apple.AppleConfiguration: [com.google.devtools.build.lib.rules.apple.AppleCommandLineOptions],
+        com.google.devtools.build.lib.rules.apple.swift.SwiftConfiguration: [com.google.devtools.build.lib.rules.apple.swift.SwiftCommandLineOptions],
+        com.google.devtools.build.lib.rules.config.ConfigFeatureFlagConfiguration:
+        [com.google.devtools.build.lib.rules.config.ConfigFeatureFlagOptions], com.google.devtools.build.lib.rules.cpp.CppConfiguration:
+        [com.google.devtools.build.lib.rules.apple.AppleCommandLineOptions,com.google.devtools.build.lib.rules.cpp.CppOptions],
+        com.google.devtools.build.lib.rules.genquery.GenQueryConfiguration: [com.google.devtools.build.lib.rules.genquery.GenQueryConfiguration$GenQueryOptions],
+        com.google.devtools.build.lib.rules.java.JavaConfiguration: [com.google.devtools.build.lib.analysis.PlatformOptions,com.google.devtools.build.lib.rules.java.JavaOptions],
+        com.google.devtools.build.lib.rules.objc.J2ObjcConfiguration: [com.google.devtools.build.lib.rules.objc.J2ObjcCommandLineOptions],
+        com.google.devtools.build.lib.rules.objc.ObjcConfiguration: [com.google.devtools.build.lib.rules.cpp.CppOptions,com.google.devtools.build.lib.rules.objc.ObjcCommandLineOptions],
+        com.google.devtools.build.lib.rules.proto.ProtoConfiguration: [com.google.devtools.build.lib.rules.proto.ProtoConfiguration$Options],
+        com.google.devtools.build.lib.rules.python.PythonConfiguration: [com.google.devtools.build.lib.rules.python.PythonOptions], '
+      cxxopt: '[]'
+      experimental_action_listener: '[]'
+      experimental_one_version_enforcement_use_transitive_jars_for_binary_under_test: 'false'
+      explicit_java_test_deps: 'false'
+      host_cxxopt: '[]'
+      incompatible_enable_cc_toolchain_resolution: 'false'
+      incompatible_strict_action_env: 'false'
+      instrumentation_filter: -(?:(?>/javatests[/:])|(?>/test/java[/:]))
+      java_language_version: '8'
+      java_runtime_version: local_jdk
+      test_env: '[]'
+      tool_java_language_version: '8'
+      tool_java_runtime_version: remotejdk_11
+  - 2428b57:
+      compilation_mode: fastbuild
+      ? config.CoreOptions,com.google.devtools.build.lib.analysis.test.CoverageConfiguration$CoverageOptions],
+        com.google.devtools.build.lib.analysis.test.TestConfiguration
+      : '[com.google.devtools.build.lib.analysis.test.TestConfiguration$TestOptions],
+        com.google.devtools.build.lib.bazel.rules.BazelRuleClassProvider$StrictActionEnvConfiguration:
+        [com.google.devtools.build.lib.bazel.rules.BazelRuleClassProvider$StrictActionEnvOptions],
+        com.google.devtools.build.lib.bazel.rules.python.BazelPythonConfiguration:
+        [com.google.devtools.build.lib.bazel.rules.python.BazelPythonConfiguration$Options,com.google.devtools.build.lib.rules.python.PythonOptions],
+        com.google.devtools.build.lib.rules.android.AndroidConfiguration: [com.google.devtools.build.lib.rules.android.AndroidConfiguration$Options],
+        com.google.devtools.build.lib.rules.android.AndroidLocalTestConfiguration:
+        [com.google.devtools.build.lib.rules.android.AndroidLocalTestConfiguration$Options],
+        com.google.devtools.build.lib.rules.apple.AppleConfiguration: [com.google.devtools.build.lib.rules.apple.AppleCommandLineOptions],
+        com.google.devtools.build.lib.rules.apple.swift.SwiftConfiguration: [com.google.devtools.build.lib.rules.apple.swift.SwiftCommandLineOptions],
+        com.google.devtools.build.lib.rules.config.ConfigFeatureFlagConfiguration:
+        [com.google.devtools.build.lib.rules.config.ConfigFeatureFlagOptions], com.google.devtools.build.lib.rules.cpp.CppConfiguration:
+        [com.google.devtools.build.lib.rules.apple.AppleCommandLineOptions,com.google.devtools.build.lib.rules.cpp.CppOptions],
+        com.google.devtools.build.lib.rules.genquery.GenQueryConfiguration: [com.google.devtools.build.lib.rules.genquery.GenQueryConfiguration$GenQueryOptions],
+        com.google.devtools.build.lib.rules.java.JavaConfiguration: [com.google.devtools.build.lib.analysis.PlatformOptions,com.google.devtools.build.lib.rules.java.JavaOptions],
+        com.google.devtools.build.lib.rules.objc.J2ObjcConfiguration: [com.google.devtools.build.lib.rules.objc.J2ObjcCommandLineOptions],
+        com.google.devtools.build.lib.rules.objc.ObjcConfiguration: [com.google.devtools.build.lib.rules.cpp.CppOptions,com.google.devtools.build.lib.rules.objc.ObjcCommandLineOptions],
+        com.google.devtools.build.lib.rules.proto.ProtoConfiguration: [com.google.devtools.build.lib.rules.proto.ProtoConfiguration$Options],
+        com.google.devtools.build.lib.rules.python.PythonConfiguration: [com.google.devtools.build.lib.rules.python.PythonOptions], '
+      cxxopt: '[]'
+      experimental_action_listener: '[]'
+      experimental_one_version_enforcement_use_transitive_jars_for_binary_under_test: 'false'
+      explicit_java_test_deps: 'false'
+      host_cxxopt: '[]'
+      incompatible_enable_cc_toolchain_resolution: 'false'
+      incompatible_strict_action_env: 'false'
+      instrumentation_filter: -(?:(?>/javatests[/:])|(?>/test/java[/:]))
+      java_language_version: '8'
+      java_runtime_version: local_jdk
+      test_env: '[]'
+      tool_java_language_version: '8'
+      tool_java_runtime_version: remotejdk_11
+    d7452c8:
+      compilation_mode: fastbuild
+      ? config.CoreOptions,com.google.devtools.build.lib.analysis.test.CoverageConfiguration$CoverageOptions],
+        com.google.devtools.build.lib.analysis.test.TestConfiguration
+      : '[com.google.devtools.build.lib.analysis.test.TestConfiguration$TestOptions],
+        com.google.devtools.build.lib.bazel.rules.BazelRuleClassProvider$StrictActionEnvConfiguration:
+        [com.google.devtools.build.lib.bazel.rules.BazelRuleClassProvider$StrictActionEnvOptions],
+        com.google.devtools.build.lib.bazel.rules.python.BazelPythonConfiguration:
+        [com.google.devtools.build.lib.bazel.rules.python.BazelPythonConfiguration$Options,com.google.devtools.build.lib.rules.python.PythonOptions],
+        com.google.devtools.build.lib.rules.android.AndroidConfiguration: [com.google.devtools.build.lib.rules.android.AndroidConfiguration$Options],
+        com.google.devtools.build.lib.rules.android.AndroidLocalTestConfiguration:
+        [com.google.devtools.build.lib.rules.android.AndroidLocalTestConfiguration$Options],
+        com.google.devtools.build.lib.rules.apple.AppleConfiguration: [com.google.devtools.build.lib.rules.apple.AppleCommandLineOptions],
+        com.google.devtools.build.lib.rules.apple.swift.SwiftConfiguration: [com.google.devtools.build.lib.rules.apple.swift.SwiftCommandLineOptions],
+        com.google.devtools.build.lib.rules.config.ConfigFeatureFlagConfiguration:
+        [com.google.devtools.build.lib.rules.config.ConfigFeatureFlagOptions], com.google.devtools.build.lib.rules.cpp.CppConfiguration:
+        [com.google.devtools.build.lib.rules.apple.AppleCommandLineOptions,com.google.devtools.build.lib.rules.cpp.CppOptions],
+        com.google.devtools.build.lib.rules.genquery.GenQueryConfiguration: [com.google.devtools.build.lib.rules.genquery.GenQueryConfiguration$GenQueryOptions],
+        com.google.devtools.build.lib.rules.java.JavaConfiguration: [com.google.devtools.build.lib.analysis.PlatformOptions,com.google.devtools.build.lib.rules.java.JavaOptions],
+        com.google.devtools.build.lib.rules.objc.J2ObjcConfiguration: [com.google.devtools.build.lib.rules.objc.J2ObjcCommandLineOptions],
+        com.google.devtools.build.lib.rules.objc.ObjcConfiguration: [com.google.devtools.build.lib.rules.cpp.CppOptions,com.google.devtools.build.lib.rules.objc.ObjcCommandLineOptions],
+        com.google.devtools.build.lib.rules.proto.ProtoConfiguration: [com.google.devtools.build.lib.rules.proto.ProtoConfiguration$Options],
+        com.google.devtools.build.lib.rules.python.PythonConfiguration: [com.google.devtools.build.lib.rules.python.PythonOptions], '
+      cxxopt: '[]'
+      experimental_action_listener: '[]'
+      experimental_one_version_enforcement_use_transitive_jars_for_binary_under_test: 'false'
+      explicit_java_test_deps: 'false'
+      host_cxxopt: '[]'
+      incompatible_enable_cc_toolchain_resolution: 'false'
+      incompatible_strict_action_env: 'false'
+      instrumentation_filter: -(?:(?>/javatests[/:])|(?>/test/java[/:]))
+      java_language_version: '8'
+      java_runtime_version: local_jdk
+      test_env: '[]'
+      test_outputs: 'true'
+      tool_java_language_version: '8'
+      tool_java_runtime_version: remotejdk_11
+  - 2428b57:
+      compilation_mode: fastbuild
+      ? config.CoreOptions,com.google.devtools.build.lib.analysis.test.CoverageConfiguration$CoverageOptions],
+        com.google.devtools.build.lib.analysis.test.TestConfiguration
+      : '[com.google.devtools.build.lib.analysis.test.TestConfiguration$TestOptions],
+        com.google.devtools.build.lib.bazel.rules.BazelRuleClassProvider$StrictActionEnvConfiguration:
+        [com.google.devtools.build.lib.bazel.rules.BazelRuleClassProvider$StrictActionEnvOptions],
+        com.google.devtools.build.lib.bazel.rules.python.BazelPythonConfiguration:
+        [com.google.devtools.build.lib.bazel.rules.python.BazelPythonConfiguration$Options,com.google.devtools.build.lib.rules.python.PythonOptions],
+        com.google.devtools.build.lib.rules.android.AndroidConfiguration: [com.google.devtools.build.lib.rules.android.AndroidConfiguration$Options],
+        com.google.devtools.build.lib.rules.android.AndroidLocalTestConfiguration:
+        [com.google.devtools.build.lib.rules.android.AndroidLocalTestConfiguration$Options],
+        com.google.devtools.build.lib.rules.apple.AppleConfiguration: [com.google.devtools.build.lib.rules.apple.AppleCommandLineOptions],
+        com.google.devtools.build.lib.rules.apple.swift.SwiftConfiguration: [com.google.devtools.build.lib.rules.apple.swift.SwiftCommandLineOptions],
+        com.google.devtools.build.lib.rules.config.ConfigFeatureFlagConfiguration:
+        [com.google.devtools.build.lib.rules.config.ConfigFeatureFlagOptions], com.google.devtools.build.lib.rules.cpp.CppConfiguration:
+        [com.google.devtools.build.lib.rules.apple.AppleCommandLineOptions,com.google.devtools.build.lib.rules.cpp.CppOptions],
+        com.google.devtools.build.lib.rules.genquery.GenQueryConfiguration: [com.google.devtools.build.lib.rules.genquery.GenQueryConfiguration$GenQueryOptions],
+        com.google.devtools.build.lib.rules.java.JavaConfiguration: [com.google.devtools.build.lib.analysis.PlatformOptions,com.google.devtools.build.lib.rules.java.JavaOptions],
+        com.google.devtools.build.lib.rules.objc.J2ObjcConfiguration: [com.google.devtools.build.lib.rules.objc.J2ObjcCommandLineOptions],
+        com.google.devtools.build.lib.rules.objc.ObjcConfiguration: [com.google.devtools.build.lib.rules.cpp.CppOptions,com.google.devtools.build.lib.rules.objc.ObjcCommandLineOptions],
+        com.google.devtools.build.lib.rules.proto.ProtoConfiguration: [com.google.devtools.build.lib.rules.proto.ProtoConfiguration$Options],
+        com.google.devtools.build.lib.rules.python.PythonConfiguration: [com.google.devtools.build.lib.rules.python.PythonOptions], '
+      cxxopt: '[]'
+      experimental_action_listener: '[]'
+      experimental_one_version_enforcement_use_transitive_jars_for_binary_under_test: 'false'
+      explicit_java_test_deps: 'false'
+      host_cxxopt: '[]'
+      incompatible_enable_cc_toolchain_resolution: 'false'
+      incompatible_strict_action_env: 'false'
+      instrumentation_filter: -(?:(?>/javatests[/:])|(?>/test/java[/:]))
+      java_language_version: '8'
+      java_runtime_version: local_jdk
+      test_env: '[]'
+      tool_java_language_version: '8'
+      tool_java_runtime_version: remotejdk_11
+    d7452c8:
+      compilation_mode: fastbuild
+      ? config.CoreOptions,com.google.devtools.build.lib.analysis.test.CoverageConfiguration$CoverageOptions],
+        com.google.devtools.build.lib.analysis.test.TestConfiguration
+      : '[com.google.devtools.build.lib.analysis.test.TestConfiguration$TestOptions],
+        com.google.devtools.build.lib.bazel.rules.BazelRuleClassProvider$StrictActionEnvConfiguration:
+        [com.google.devtools.build.lib.bazel.rules.BazelRuleClassProvider$StrictActionEnvOptions],
+        com.google.devtools.build.lib.bazel.rules.python.BazelPythonConfiguration:
+        [com.google.devtools.build.lib.bazel.rules.python.BazelPythonConfiguration$Options,com.google.devtools.build.lib.rules.python.PythonOptions],
+        com.google.devtools.build.lib.rules.android.AndroidConfiguration: [com.google.devtools.build.lib.rules.android.AndroidConfiguration$Options],
+        com.google.devtools.build.lib.rules.android.AndroidLocalTestConfiguration:
+        [com.google.devtools.build.lib.rules.android.AndroidLocalTestConfiguration$Options],
+        com.google.devtools.build.lib.rules.apple.AppleConfiguration: [com.google.devtools.build.lib.rules.apple.AppleCommandLineOptions],
+        com.google.devtools.build.lib.rules.apple.swift.SwiftConfiguration: [com.google.devtools.build.lib.rules.apple.swift.SwiftCommandLineOptions],
+        com.google.devtools.build.lib.rules.config.ConfigFeatureFlagConfiguration:
+        [com.google.devtools.build.lib.rules.config.ConfigFeatureFlagOptions], com.google.devtools.build.lib.rules.cpp.CppConfiguration:
+        [com.google.devtools.build.lib.rules.apple.AppleCommandLineOptions,com.google.devtools.build.lib.rules.cpp.CppOptions],
+        com.google.devtools.build.lib.rules.genquery.GenQueryConfiguration: [com.google.devtools.build.lib.rules.genquery.GenQueryConfiguration$GenQueryOptions],
+        com.google.devtools.build.lib.rules.java.JavaConfiguration: [com.google.devtools.build.lib.analysis.PlatformOptions,com.google.devtools.build.lib.rules.java.JavaOptions],
+        com.google.devtools.build.lib.rules.objc.J2ObjcConfiguration: [com.google.devtools.build.lib.rules.objc.J2ObjcCommandLineOptions],
+        com.google.devtools.build.lib.rules.objc.ObjcConfiguration: [com.google.devtools.build.lib.rules.cpp.CppOptions,com.google.devtools.build.lib.rules.objc.ObjcCommandLineOptions],
+        com.google.devtools.build.lib.rules.proto.ProtoConfiguration: [com.google.devtools.build.lib.rules.proto.ProtoConfiguration$Options],
+        com.google.devtools.build.lib.rules.python.PythonConfiguration: [com.google.devtools.build.lib.rules.python.PythonOptions], '
+      cxxopt: '[]'
+      experimental_action_listener: '[]'
+      experimental_one_version_enforcement_use_transitive_jars_for_binary_under_test: 'false'
+      explicit_java_test_deps: 'false'
+      host_cxxopt: '[]'
+      incompatible_enable_cc_toolchain_resolution: 'false'
+      incompatible_strict_action_env: 'false'
+      instrumentation_filter: -(?:(?>/javatests[/:])|(?>/test/java[/:]))
+      java_language_version: '8'
+      java_runtime_version: local_jdk
+      test_env: '[]'
+      test_outputs: 'true'
+      tool_java_language_version: '8'
+      tool_java_runtime_version: remotejdk_11
+- *id003
+- *id003
+- *id003
+- *id003
+- *id003
+- *id003
+- *id003
+- *id003
+- *id003
