@@ -5,10 +5,9 @@ swift_test(
     size = "small",
     srcs = [
         "example.swift",
-        "main.swift",
+        #"main.swift",
     ],
     tags = [
-        "manual",
-        "no-ci",  # Broken toolchain setup
+        "no-linux-ci",  # No linux swift toolchains currently defined.
     ],
 )

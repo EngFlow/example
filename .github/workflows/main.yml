@@ -64,6 +64,7 @@ jobs:
           ARCH: arm64
           OS: macos
           EXECUTION_TYPE: ${{ matrix.execution_type }}
+          APPLE_SDK_VERSION_OVERRIDE: 26.5
         run: python3 infra/test-all.py --package=${{ matrix.test_package }}
 
   linux-test-matrix:
