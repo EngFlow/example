@@ -26,9 +26,9 @@ jobs:
       - self-hosted
       - "os=macos"
       - "arch=arm64"
-      - "os_distribution=sonoma"
-      - "os_version=14"
-      - "revision=4edc10aa8f8ca239699aaf1078832208fb3b7efe"
+      - "os_distribution=tahoe"
+      - "os_version=26"
+      - "revision=05f66c20d1c4f89119e612355c71ba44ae5d19a9"
     timeout-minutes: 10
     strategy:
       fail-fast: false
