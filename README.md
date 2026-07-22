@@ -71,7 +71,7 @@ locally before attempting remote execution.
 
   ```sh
   # --config=clang isn't required on macOS
-  bazel build --config=clang //swift:tests
+  bazel build --config=clang //swift/...
   ```
 
 ### Testing locally
@@ -100,7 +100,7 @@ locally before attempting remote execution.
 
   ```sh
   # --config=clang isn't required on macOS
-  bazel test --config=clang //swift:tests
+  bazel test --config=clang //swift/...
   ```
 
 ## Remote execution
