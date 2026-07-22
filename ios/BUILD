@@ -50,9 +50,6 @@ ios_ui_test(
     name = "HelloAppUITest",
     minimum_os_version = "26.0",
     runner = "@rules_apple//apple/testing/default_runner:ios_xctestrun_ordered_runner",
-    tags = [
-        "no-remote-ci",  # Investigating permissions error.
-    ],
     test_host = ":HelloApp",
     deps = [":HelloAppUITestLib"],
 )

@@ -62,6 +62,9 @@ locally before attempting remote execution.
 
 - `ios`:
 
+  This will only work on a macOS device with XCode (and the necessary iPhone
+  simulators) installed.
+
   ```
   # --config=ios is needed to properly set up the device simulators for testing
   bazel build --config=ios //ios:all
@@ -90,9 +93,11 @@ locally before attempting remote execution.
 
 - `ios`:
 
-  This will only work on a macOS device with XCode (and the necessary iPhone simulators) installed.
+  This will only work on a macOS device with XCode (and the necessary iPhone
+  simulators) installed.
 
   ```sh
+  # --config=ios is needed to properly set up the device simulators for testing
   bazel test --config=ios //ios:all
   ```
 
@@ -158,9 +163,12 @@ isn't enabled in your `.bazelrc.user` file.
 
 - `ios`:
 
-  These can only be built remotely on a macOS worker with the matching XCode installed.
+  These can only be tested remotely on a macOS worker with the matching XCode
+  installed. However, this means that the local bazel can be executed from linux
+  or macOS, since all work is done on the remote macOS worker.
 
   ```sh
+  # --config=ios is needed to properly set up the device simulators for testing
   bazel build --config=ios --config=remote_macos_arm64 --config=opal //ios:all
   ```
 
@@ -186,11 +194,12 @@ isn't enabled in your `.bazelrc.user` file.
 
 - `ios`:
 
-  These can only be tested remotely on a macOS worker with the matching XCode installed.
-
-  **NOTE:** Currently, `ios_ui_test` on a remote cluster is not working due to a permissions mismatch).
+  These can only be tested remotely on a macOS worker with the matching XCode
+  installed. However, this means that the local bazel can be executed from linux
+  or macOS, since all work is done on the remote macOS worker.
 
   ```sh
+  # --config=ios is needed to properly set up the device simulators for testing
   bazel test --config=ios --config=remote_macos_arm64 //ios:all
   ```
 

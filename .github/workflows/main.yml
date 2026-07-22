@@ -39,7 +39,7 @@ jobs:
           - docker
           - genrules
           - go
-          #- ios # TODO: fix ios builds
+          - ios
           - java
           - kotlin
           - perl
@@ -47,6 +47,9 @@ jobs:
           - swift
           - typescript
         execution_type: [remote, local]
+        include:
+          - arch: arm64
+          - os: macos
 
     steps:
       - uses: "actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd"
@@ -61,8 +64,8 @@ jobs:
 
       - name: Build and test
         env:
-          ARCH: arm64
-          OS: macos
+          ARCH: ${{ matrix.arch }}
+          OS: ${{ matrix.os }}
           EXECUTION_TYPE: ${{ matrix.execution_type }}
           APPLE_SDK_VERSION_OVERRIDE: 26.5
         run: python3 infra/test-all.py --package=${{ matrix.test_package }}
@@ -89,7 +92,7 @@ jobs:
           - docker
           - genrules
           - go
-          #- ios # TODO: fix ios builds
+          - ios
           - java
           - kotlin
           - perl
@@ -97,6 +100,19 @@ jobs:
           - swift
           - typescript
         execution_type: [remote, local]
+        include:
+          - arch: x64
+          - os: linux
+
+          # Override remote ios tests to use macos/arm64 in the remote executor.
+          - test_package: ios
+            execution_type: remote
+            arch: arm64
+            os: macos
+        exclude:
+          # Local ios tests are not supported on linux
+          - test_package: ios
+            execution_type: local
 
     steps:
       - uses: "actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd"
@@ -111,8 +127,8 @@ jobs:
 
       - name: Build and test
         env:
-          ARCH: x64
-          OS: linux
+          ARCH: ${{ matrix.arch }}
+          OS: ${{ matrix.os }}
           EXECUTION_TYPE: ${{ matrix.execution_type }}
         run: python3 infra/test-all.py --package=${{ matrix.test_package }}
 
