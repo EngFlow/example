@@ -1,5 +1,6 @@
 load("@bazel_skylib//rules:build_test.bzl", "build_test")
 load("@rules_apple//apple:ios.bzl", "ios_application", "ios_ui_test", "ios_unit_test")
+load("@rules_apple//apple:macos.bzl", "macos_unit_test")
 load("@rules_swift//swift:swift.bzl", "swift_library")
 
 swift_library(
@@ -55,4 +56,16 @@ ios_ui_test(
     ],
     test_host = ":HelloApp",
     deps = [":HelloAppUITestLib"],
+    exec_properties = {
+        "sandboxAllowed": "False",
+    },
+)
+
+macos_unit_test(
+    name = "HelloMacTest",
+    minimum_os_version = "14.0",
+    deps = [":HelloTestLib"],
+    exec_properties = {
+        "sandboxAllowed": "False",
+    },
 )
