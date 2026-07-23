@@ -1,0 +1,23 @@
+load("@apple_support//configs:platforms.bzl", "APPLE_PLATFORMS_CONSTRAINTS")
+
+_OSX_DEVELOPER_PLATFORM_CPUS = [
+    "arm64",
+    "x86_64",
+]
+
+[
+    toolchain(
+        name = "cc-toolchain-" + arch + "-" + cpu,
+        exec_compatible_with = [
+            # These only execute on macOS.
+            "@platforms//os:macos",
+            "@platforms//cpu:" + cpu,
+        ],
+        target_compatible_with = APPLE_PLATFORMS_CONSTRAINTS[arch],
+        toolchain = "//platform/macos_arm64/cc:cc-compiler-{}".format(arch),
+        toolchain_type = "@bazel_tools//tools/cpp:toolchain_type",
+        visibility = ["//visibility:public"],
+    )
+    for arch in APPLE_PLATFORMS_CONSTRAINTS.keys()
+    for cpu in _OSX_DEVELOPER_PLATFORM_CPUS
+]
