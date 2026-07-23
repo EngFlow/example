@@ -49,9 +49,7 @@ bazel_dep(name = "bazel_skylib", version = "1.9.0")
 bazel_dep(name = "engflowapis-java", version = "2025.03.14-12.58.52")
 bazel_dep(name = "platforms", version = "1.1.0")
 bazel_dep(name = "protobuf", version = "35.0")
-bazel_dep(name = "apple_support", version = "2.6.1")
 bazel_dep(name = "rules_cc", version = "0.2.19")
-bazel_dep(name = "rules_apple", version = "5.0.0-rc2")
 bazel_dep(
     name = "googleapis",
     version = "0.0.0-20260525-ef19b7b7",
@@ -128,7 +126,6 @@ use_repo(maven, "maven")
 
 bazel_dep(name = "rules_kotlin", version = "2.3.20")
 bazel_dep(name = "rules_perl", version = "1.1.1")
-bazel_dep(name = "rules_swift", version = "4.0.0-rc2")
 bazel_dep(name = "rules_nodejs", version = "6.7.4")
 bazel_dep(name = "aspect_rules_ts", version = "3.8.10")
 bazel_dep(name = "aspect_bazel_lib", version = "2.22.5")
@@ -157,3 +154,18 @@ scala_deps.scala()
 scala_deps.scalatest()
 
 bazel_dep(name = "rules_shell", version = "0.8.0")
+
+# Apple development support (swift and iOS)
+bazel_dep(name = "apple_support", version = "2.6.1")
+bazel_dep(name = "rules_apple", version = "5.0.0-rc2")
+bazel_dep(name = "rules_swift", version = "4.0.0-rc2")
+
+## idb is a separate simulator manager using rules_apple's testrunner support.
+bazel_dep(name = "rules_idb", version = "0.1.2")
+git_override(
+    # until rules_idb is published to the Bazel Central Registry
+    module_name = "rules_idb",
+    remote = "https://github.com/erneestoc/rules_idb.git",
+    tag = "v0.2.1",
+)
+
