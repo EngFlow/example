@@ -1,10 +1,8 @@
-import Testing
+import XCTest
 
-@Suite
-struct HelloTest {
-    @Test
-    func example() {
+class HelloTest: XCTestCase {
+    func testExample() {
         print("Hello from HelloTest")
-        #expect(1 + 1 == 2)
+        XCTAssertEqual(1 + 1, 2)
     }
 }
