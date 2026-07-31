@@ -129,6 +129,29 @@ use_repo(maven, "maven")
 bazel_dep(name = "rules_kotlin", version = "2.3.20")
 bazel_dep(name = "rules_perl", version = "1.1.1")
 bazel_dep(name = "rules_swift", version = "4.0.0-rc2")
+
+# Swift Package Manager deps, used by //tools/simulator_manager.
+bazel_dep(name = "rules_swift_package_manager", version = "1.22.0")
+
+swift_deps = use_extension(
+    "@rules_swift_package_manager//:extensions.bzl",
+    "swift_deps",
+)
+swift_deps.from_package(
+    declare_swift_deps_info = True,
+    resolved = "//tools/simulator_manager:Package.resolved",
+    swift = "//tools/simulator_manager:Package.swift",
+)
+use_repo(
+    swift_deps,
+    "swift_deps_info",
+    "swift_package",
+    "swiftpkg_shellout",
+    "swiftpkg_swift_argument_parser",
+    "swiftpkg_swift_nio",
+    "swiftpkg_swift_nio_extras",
+)
+
 bazel_dep(name = "rules_nodejs", version = "6.7.4")
 bazel_dep(name = "aspect_rules_ts", version = "3.8.10")
 bazel_dep(name = "aspect_bazel_lib", version = "2.22.5")
