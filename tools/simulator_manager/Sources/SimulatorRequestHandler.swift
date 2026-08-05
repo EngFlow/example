@@ -56,6 +56,13 @@ final class SimulatorRequestHandler {
           // FIXME: Get this from the error itself
           message: "PID \(leaser) has already leased another simulator: \(udid)"
         )
+      } catch SimulatorManagerError.leaserExited {
+        // Nobody is left to read this response, but answering rather than throwing
+        // keeps it out of the server's error path.
+        return .init(
+          status: .gone,
+          message: "PID \(leaser) exited before its simulator was provisioned"
+        )
       }
 
     case .DELETE:

@@ -1,9 +1,10 @@
 load("@rules_shell//shell:sh_binary.bzl", "sh_binary")
-load("@rules_swift//swift:swift.bzl", "swift_binary", "swift_test")
+load("@rules_swift//swift:swift.bzl", "swift_binary", "swift_library", "swift_test")
 
 # A daemon that hands out leases on iOS simulators. Ported from
 # https://github.com/bazelbuild/rules_apple/pull/2767, which builds it with an
-# internal `macos_swift_tool` macro; a plain swift_binary is equivalent here.
+# internal `macos_swift_tool` macro; a swift_library plus swift_binary is
+# equivalent, and lets the tests link the library.
 swift_binary(
     name = "simulator_manager",
     srcs = glob(["Sources/*.swift"]),
@@ -19,11 +20,26 @@ swift_binary(
     ],
 )
 
+# Compiles the daemon's sources directly rather than depending on the binary
+# above: linking a swift_binary into a swift_test duplicates `_main`. Main.swift
+# is excluded for the same reason.
 swift_test(
     name = "simulator_manager_test",
-    srcs = glob(["Tests/*.swift"]),
+    srcs = glob(["Tests/*.swift"]) + glob(
+        ["Sources/*.swift"],
+        exclude = ["Sources/Main.swift"],
+    ),
+    module_name = "simulator_manager",
     tags = ["no-linux-ci"],
-    deps = [":simulator_manager"],
+    deps = [
+        "@swiftpkg_shellout//:ShellOut",
+        "@swiftpkg_swift_argument_parser//:ArgumentParser",
+        "@swiftpkg_swift_nio//:NIO",
+        "@swiftpkg_swift_nio//:NIOCore",
+        "@swiftpkg_swift_nio//:NIOHTTP1",
+        "@swiftpkg_swift_nio//:NIOPosix",
+        "@swiftpkg_swift_nio_extras//:NIOExtras",
+    ],
 )
 
 sh_binary(

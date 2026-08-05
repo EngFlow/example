@@ -12,6 +12,7 @@ extension Logger {
 enum SimulatorManagerError: Error {
   case alreadyLeased(udid: SimulatorUDID)
   case noLease
+  case leaserExited
 }
 
 private struct SimulatorLease {
@@ -138,17 +139,48 @@ actor SimulatorManager {
       """
     )
 
+    // Check liveness before provisioning rather than after. `getSimulator()` can
+    // await for minutes while it clones, boots and runs the post-boot script, and
+    // a leaser that dies during that window (e.g. killed by its build tool's test
+    // timeout while queued for a simulator) used to be detected only afterwards --
+    // releasing the lease a millisecond after granting it, and deleting the device
+    // out from under a test that had already been handed the UDID.
+    //
+    // Only meaningful when we track leaser exit at all; otherwise the caller owns
+    // the lease lifetime and the PID need not be a live process.
+    if deleteOnPIDExit, kill(leaser, 0) != 0 {
+      Logger.simulatorManager.info(
+        "👋 PID \(leaser, privacy: .public) exited before its lease could be provisioned"
+      )
+      throw SimulatorManagerError.leaserExited
+    }
+
     // `getSimulator()` will increment the reference count for the simulator
     let (simulator, slotIndex) = try await getSimulator(for: config, exclusive: exclusive)
 
     _ = recentlyLeased.insert(config)
 
+    // Re-check now that provisioning is done: the leaser may have exited while we
+    // were cloning and booting. Record the lease first so `release` can unwind the
+    // reference count and put the device back in the idle pool, then hand it back
+    // rather than returning a UDID nobody will use.
     leases[leaser] = .init(
       udid: simulator,
       config: config,
       exclusive: exclusive,
       slotIndex: slotIndex
     )
+
+    if deleteOnPIDExit, kill(leaser, 0) != 0 {
+      Logger.simulatorManager.info(
+        """
+        👋 PID \(leaser, privacy: .public) exited while its simulator was being \
+        provisioned; returning \(simulator, privacy: .public) to the pool
+        """
+      )
+      try await release(for: leaser)
+      throw SimulatorManagerError.leaserExited
+    }
 
     Logger.simulatorManager.info(
       "🔒 Leased simulator \(simulator, privacy: .public) to PID \(leaser, privacy: .public)"

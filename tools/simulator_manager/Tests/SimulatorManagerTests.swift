@@ -1,4 +1,4 @@
-@testable import simulator_manager
+import Foundation
 import XCTest
 
 final class SimulatorManagerTests: XCTestCase {
@@ -134,6 +134,55 @@ final class SimulatorManagerTests: XCTestCase {
     // swiftformat:disable:next hoistAwait
     try await assertThrowsAsyncError(await simulatorManager.release(for: leaser))
   }
+
+  /// A leaser that exits while its simulator is still being provisioned must not
+  /// be handed a device.
+  ///
+  /// `getSimulator()` can await for minutes while it clones, boots and runs the
+  /// post-boot script. A leaser killed during that window (e.g. by its build
+  /// tool's test timeout while queued for a simulator) used to be noticed only
+  /// afterwards, so the lease was released a millisecond after being granted and
+  /// the device deleted out from under a test that had already been given the
+  /// UDID -- surfacing as "No matching device ... in set".
+  func test_lease_leaser_exits_during_provisioning() async throws {
+    let mockSimulatorControl = MockSimulatorControl()
+    let simulatorManager = SimulatorManager(
+      simulatorControl: mockSimulatorControl,
+      deleteRecentlyUsedIdleAfter: 0,
+      deleteIdleAfter: 0,
+      recentlyUsedCapacity: 1,
+      deleteOnPIDExit: true
+    )
+    let config = SimulatorConfig(deviceType: "iPhone 14", os: "iOS", version: "16.4")
+
+    // PID 1 is `launchd`, which is alive but not ours; use a PID that cannot be
+    // running so `kill(pid, 0)` fails. PID 0 is rejected, and very high PIDs are
+    // not portable, so reserve one by spawning a process and reaping it.
+    let deadLeaser = try spawnAndReapProcess()
+
+    // swiftformat:disable:next hoistAwait
+    await assertThrowsAsyncError(
+      try await simulatorManager.lease(to: deadLeaser, exclusive: true, config: config)
+    ) { error in
+      XCTAssertTrue(
+        error is SimulatorManagerError,
+        "expected SimulatorManagerError, got \(error)"
+      )
+    }
+
+    // No lease may be left behind for a leaser that never got a device.
+    // swiftformat:disable:next hoistAwait
+    try await assertThrowsAsyncError(await simulatorManager.release(for: deadLeaser))
+  }
+}
+
+/// Returns the PID of a process that has exited, so `kill(pid, 0)` fails.
+private func spawnAndReapProcess() throws -> PID {
+  let process = Process()
+  process.executableURL = URL(fileURLWithPath: "/usr/bin/true")
+  try process.run()
+  process.waitUntilExit()
+  return PID(process.processIdentifier)
 }
 
 func assertThrowsAsyncError(

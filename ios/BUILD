@@ -18,6 +18,17 @@ ios_xctestrun_runner(
     reuse_simulator = False,
 )
 
+# Non-exclusive leases: concurrent tests may share one simulator. Sharing is
+# opportunistic, not bounded — a request only joins a device that is already
+# active, so tests dispatched simultaneously can still each get their own.
+ios_xctestrun_runner(
+    name = "ios_shared_simulator_runner",
+    clean_up_simulator_action = "//tools/simulator_manager:release_simulator",
+    create_simulator_action = "//tools/simulator_manager:lease_simulator",
+    random = False,
+    reuse_simulator = True,
+)
+
 swift_library(
     name = "HelloAppLibrary",
     srcs = ["HelloApp.swift"],
@@ -93,6 +104,18 @@ ios_unit_test(
     name = "HelloConcurrentTest",
     minimum_os_version = "26.0",
     runner = ":ios_leased_simulator_runner",
+    tags = ["manual"],
+    timeout = "long",
+    deps = [":HelloConcurrentTestLib"],
+)
+
+# Same source, but leasing non-exclusively: several concurrent runs should
+# collapse onto fewer devices. Measured on a 16 GiB worker, 8 runs shared 2
+# simulators.
+ios_unit_test(
+    name = "HelloSharedSimulatorTest",
+    minimum_os_version = "26.0",
+    runner = ":ios_shared_simulator_runner",
     tags = ["manual"],
     timeout = "long",
     deps = [":HelloConcurrentTestLib"],
