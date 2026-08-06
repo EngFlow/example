@@ -176,6 +176,192 @@ final class SimulatorManagerTests: XCTestCase {
   }
 }
 
+/// A daemon restart discards all in-memory lease state -- `start.sh` will
+/// `kill -9` a daemon that does not stop within its shutdown timeout, and the
+/// `/shutdown` endpoint does not release or delete leased devices either. The
+/// devices themselves survive, so a fresh manager must recover them by name
+/// rather than leaving them untracked forever.
+final class SimulatorManagerRestartTests: XCTestCase {
+  private func makeManager(_ control: MockSimulatorControl) -> SimulatorManager {
+    SimulatorManager(
+      simulatorControl: control,
+      deleteRecentlyUsedIdleAfter: 0,
+      deleteIdleAfter: 0,
+      recentlyUsedCapacity: 1,
+      deleteOnPIDExit: false
+    )
+  }
+
+  /// After a restart the new manager adopts the device left behind by the old
+  /// one, instead of cloning a second device and orphaning the first.
+  func test_restart_adopts_existing_device() async throws {
+    let control = MockSimulatorControl()
+    let config = SimulatorConfig(deviceType: "iPhone 14", os: "iOS", version: "16.4")
+
+    let before = try await makeManager(control)
+      .lease(to: 1234, exclusive: true, config: config)
+
+    // The old manager is discarded without releasing: its leases, slot map and
+    // pending-deletion tasks are gone, but the device is still on the machine.
+    let devicesAfterCrash = await control.devicesByName
+    XCTAssertTrue(
+      devicesAfterCrash.values.contains(before),
+      "the leased device must outlive the manager"
+    )
+
+    let after = try await makeManager(control)
+      .lease(to: 5678, exclusive: true, config: config)
+
+    XCTAssertEqual(
+      after,
+      before,
+      "a restarted manager should adopt the existing device, not orphan it"
+    )
+  }
+
+  /// Releasing a lease the manager has no record of must fail rather than
+  /// deleting a device another test may be using. This is the 404 the release
+  /// hook gets when it runs after a restart.
+  func test_restart_release_of_unknown_lease_throws() async throws {
+    let control = MockSimulatorControl()
+    let config = SimulatorConfig(deviceType: "iPhone 14", os: "iOS", version: "16.4")
+
+    _ = try await makeManager(control).lease(to: 1234, exclusive: true, config: config)
+
+    let restarted = makeManager(control)
+    // swiftformat:disable:next hoistAwait
+    try await assertThrowsAsyncError(await restarted.release(for: 1234))
+
+    let deleted = await control.deletedSimulators
+    XCTAssertTrue(
+      deleted.isEmpty,
+      "an unknown lease must not delete a device that may still be in use"
+    )
+  }
+}
+
+/// `simctl` can report a device as invalid -- deleted out from under us, or
+/// corrupt after the machine was under load. The manager recovers by discarding
+/// that device and returning a fresh one, rather than handing the caller a UDID
+/// that will fail at launch with "No matching device".
+final class SimulatorManagerInvalidDeviceTests: XCTestCase {
+  private func makeManager(_ control: MockSimulatorControl) -> SimulatorManager {
+    SimulatorManager(
+      simulatorControl: control,
+      // Keep released clones around so the second lease reuses the first device
+      // and has to boot it again -- that is the path that detects invalidity.
+      deleteRecentlyUsedIdleAfter: 600,
+      deleteIdleAfter: 600,
+      recentlyUsedCapacity: 1,
+      deleteOnPIDExit: false
+    )
+  }
+
+  /// Exit code 148 is "Invalid device". Reusing such a device must replace it.
+  func test_reuse_of_invalid_device_returns_a_different_device() async throws {
+    let control = MockSimulatorControl()
+    let manager = makeManager(control)
+    let config = SimulatorConfig(deviceType: "iPhone 14", os: "iOS", version: "16.4")
+
+    let first = try await manager.lease(to: 1234, exclusive: true, config: config)
+    try await manager.release(for: 1234)
+
+    // The device goes bad while idle, the way a simulator can be lost when
+    // CoreSimulatorService is under pressure.
+    await control.failNextBoot(of: first, exitCode: 148)
+
+    let second = try await manager.lease(to: 5678, exclusive: true, config: config)
+
+    XCTAssertNotEqual(
+      second,
+      first,
+      "an invalid device must be replaced, not handed back to the caller"
+    )
+    let deleted = await control.deletedSimulators
+    XCTAssertTrue(deleted.contains(first), "the invalid device should be deleted")
+  }
+
+  /// Any other exit code is not a known-recoverable condition, so it propagates
+  /// instead of silently churning devices.
+  func test_reuse_propagates_unrecognised_boot_failure() async throws {
+    let control = MockSimulatorControl()
+    let manager = makeManager(control)
+    let config = SimulatorConfig(deviceType: "iPhone 14", os: "iOS", version: "16.4")
+
+    let first = try await manager.lease(to: 1234, exclusive: true, config: config)
+    try await manager.release(for: 1234)
+
+    await control.failNextBoot(of: first, exitCode: 1)
+
+    // swiftformat:disable:next hoistAwait
+    await assertThrowsAsyncError(
+      try await manager.lease(to: 5678, exclusive: true, config: config)
+    ) { error in
+      XCTAssertEqual((error as? ProcessError)?.exitCode, 1)
+    }
+  }
+}
+
+final class LRUSetTests: XCTestCase {
+  /// With capacity 1, leasing a second configuration evicts the first -- which
+  /// flips the first config's released devices from `delete-recently-used-idle-after`
+  /// to `delete-idle-after`. On a worker configured 0/60 that means devices for
+  /// any config other than the most recent are deleted immediately on release, so
+  /// a repo testing more than `recently-used-capacity` configurations never gets
+  /// a warm device.
+  func test_capacity_one_evicts_previous_config() {
+    var set = LRUSet<String>(capacity: 1)
+
+    XCTAssertNil(set.insert("iPhone 11_26.5"))
+    XCTAssertTrue(set.contains("iPhone 11_26.5"))
+
+    let evicted = set.insert("iPad Air_26.5")
+    XCTAssertEqual(evicted, "iPhone 11_26.5")
+    XCTAssertFalse(
+      set.contains("iPhone 11_26.5"),
+      "the evicted config now takes the short idle timer"
+    )
+    XCTAssertTrue(set.contains("iPad Air_26.5"))
+  }
+
+  /// Raising the capacity keeps both configurations warm.
+  func test_capacity_two_keeps_both_configs() {
+    var set = LRUSet<String>(capacity: 2)
+
+    XCTAssertNil(set.insert("iPhone 11_26.5"))
+    XCTAssertNil(set.insert("iPad Air_26.5"))
+
+    XCTAssertTrue(set.contains("iPhone 11_26.5"))
+    XCTAssertTrue(set.contains("iPad Air_26.5"))
+
+    // A third config evicts the least recently used, not the most recent.
+    XCTAssertEqual(set.insert("iPhone 17_26.5"), "iPhone 11_26.5")
+    XCTAssertTrue(set.contains("iPad Air_26.5"))
+    XCTAssertTrue(set.contains("iPhone 17_26.5"))
+  }
+
+  /// Re-inserting an existing element must refresh its recency without evicting
+  /// anything. `insert` reports the element it removed from the ordering array,
+  /// which for a re-insert is the element itself -- callers must not treat that
+  /// as an eviction.
+  func test_reinsert_does_not_evict() {
+    var set = LRUSet<String>(capacity: 2)
+
+    _ = set.insert("a")
+    _ = set.insert("b")
+
+    // Re-inserting "a" makes it most recent; "b" must stay.
+    _ = set.insert("a")
+    XCTAssertTrue(set.contains("a"))
+    XCTAssertTrue(set.contains("b"))
+
+    // So a third insert evicts "b", the genuinely least recently used.
+    XCTAssertEqual(set.insert("c"), "b")
+    XCTAssertFalse(set.contains("b"))
+    XCTAssertTrue(set.contains("a"))
+  }
+}
+
 /// Returns the PID of a process that has exited, so `kill(pid, 0)` fails.
 private func spawnAndReapProcess() throws -> PID {
   let process = Process()
@@ -210,6 +396,12 @@ actor MockSimulatorControl: SimulatorControl {
   var baseSimulators: [SimulatorConfig: [SimulatorUDID]] = [:]
   var baseForClones: [SimulatorUDID: SimulatorUDID] = [:]
 
+  /// Devices that exist as far as `simctl` is concerned, keyed by name. Survives
+  /// a `SimulatorManager` being discarded, the way real devices survive a daemon
+  /// restart.
+  var devicesByName: [String: SimulatorUDID] = [:]
+  var deletedSimulators: [SimulatorUDID] = []
+
   func createBase(
     name: String,
     with config: SimulatorConfig,
@@ -217,6 +409,7 @@ actor MockSimulatorControl: SimulatorControl {
   ) async throws -> SimulatorUDID {
     let simulator = UUID().uuidString
     baseSimulators[config, default: []].append(simulator)
+    devicesByName[name] = simulator
     return simulator
   }
 
@@ -227,16 +420,43 @@ actor MockSimulatorControl: SimulatorControl {
     runtimeIdentifier: String,
     postBoot: String?
   ) async throws -> SimulatorUDID {
+    // Mirrors the real implementation, which looks for an existing device of this
+    // name first so that a clone left behind by a killed manager is adopted rather
+    // than duplicated.
+    if let existing = devicesByName[name] {
+      return existing
+    }
+
     let clone = UUID().uuidString
     baseForClones[clone] = simulator
+    devicesByName[name] = clone
     return clone
+  }
+
+  /// UDIDs whose next `ensureBooted` should fail, and the exit code to fail with.
+  /// Consumed on use, so a retry against a fresh device succeeds.
+  var bootFailures: [SimulatorUDID: Int32] = [:]
+  var ensureBootedCalls: [SimulatorUDID] = []
+
+  func failNextBoot(of simulator: SimulatorUDID, exitCode: Int32) {
+    bootFailures[simulator] = exitCode
   }
 
   func ensureBooted(
     _ simulator: SimulatorUDID,
     context: @escaping @autoclosure () -> String?
   ) async throws {
-    return
+    ensureBootedCalls.append(simulator)
+
+    if let exitCode = bootFailures.removeValue(forKey: simulator) {
+      throw ProcessError(
+        command: "xcrun simctl bootstatus \(simulator) -b",
+        context: context(),
+        exitCode: exitCode,
+        stdOut: "",
+        stdErr: "An error was encountered processing the command (domain=com.apple.CoreSimulator.SimError, code=148)"
+      )
+    }
   }
 
   func cleanTempFiles(in simulator: SimulatorUDID) {
@@ -248,7 +468,10 @@ actor MockSimulatorControl: SimulatorControl {
     name: String,
     context: @escaping @autoclosure () -> String?
   ) async throws {
-    return
+    deletedSimulators.append(simulator)
+    if devicesByName[name] == simulator {
+      devicesByName.removeValue(forKey: name)
+    }
   }
 
   func getExisting(
@@ -257,6 +480,6 @@ actor MockSimulatorControl: SimulatorControl {
     runtimeIdentifier: String,
     context: @escaping @autoclosure () -> String?
   ) async throws -> String? {
-    return nil
+    return devicesByName[name]
   }
 }
