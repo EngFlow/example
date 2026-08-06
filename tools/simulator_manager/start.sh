@@ -10,7 +10,8 @@ set -euo pipefail
 # changes will impact all executors in the default pool.
 #
 #!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! WARNING !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-readonly non_staging_version=41
+# 42: liveness check for a leaser that exits during provisioning.
+readonly non_staging_version=42
 
 if [[ -z "${EXAMPLE_CI_STAGING_VERSION:-}" ]]; then
   readonly expected_version="$non_staging_version"
