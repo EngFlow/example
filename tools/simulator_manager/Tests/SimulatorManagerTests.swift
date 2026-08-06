@@ -302,6 +302,116 @@ final class SimulatorManagerInvalidDeviceTests: XCTestCase {
   }
 }
 
+/// `getBase` caches the in-flight base-creation task so concurrent leases share
+/// one device rather than racing to create several.
+final class SimulatorManagerBaseTaskTests: XCTestCase {
+  private func makeManager(_ control: MockSimulatorControl) -> SimulatorManager {
+    SimulatorManager(
+      simulatorControl: control,
+      deleteRecentlyUsedIdleAfter: 600,
+      deleteIdleAfter: 600,
+      recentlyUsedCapacity: 1,
+      deleteOnPIDExit: false
+    )
+  }
+
+  /// A failed base creation must not poison the cache: the next lease has to try
+  /// again rather than await the failed task forever, or every subsequent test on
+  /// the worker would fail for the life of the daemon.
+  func test_failed_base_creation_does_not_poison_the_cache() async throws {
+    let control = MockSimulatorControl()
+    let manager = makeManager(control)
+    let config = SimulatorConfig(deviceType: "iPhone 14", os: "iOS", version: "16.4")
+
+    await control.setFailNextCreateBase()
+
+    // swiftformat:disable:next hoistAwait
+    try await assertThrowsAsyncError(
+      await manager.lease(to: 1234, exclusive: true, config: config)
+    )
+
+    // The retry must reach `createBase` again and succeed.
+    let recovered = try await manager.lease(to: 5678, exclusive: true, config: config)
+    XCTAssertFalse(recovered.isEmpty)
+
+    let calls = await control.createBaseCalls
+    XCTAssertEqual(calls, 2, "the second lease must retry base creation")
+  }
+
+  /// Concurrent leases for the same configuration share one base simulator.
+  func test_concurrent_leases_share_one_base() async throws {
+    let control = MockSimulatorControl()
+    let manager = makeManager(control)
+    let config = SimulatorConfig(deviceType: "iPhone 14", os: "iOS", version: "16.4")
+
+    // Fire several exclusive leases at once. Each needs its own clone, but all
+    // clones must come from a single base.
+    let leased = try await withThrowingTaskGroup(of: SimulatorUDID.self) { group in
+      for pid in PID(9000) ..< PID(9004) {
+        group.addTask {
+          try await manager.lease(to: pid, exclusive: true, config: config)
+        }
+      }
+
+      var results: [SimulatorUDID] = []
+      for try await udid in group {
+        results.append(udid)
+      }
+      return results
+    }
+
+    XCTAssertEqual(Set(leased).count, 4, "exclusive leases must not share a device")
+
+    let bases = await control.baseSimulators[config] ?? []
+    XCTAssertEqual(bases.count, 1, "all clones should come from one base simulator")
+
+    let baseForClones = await control.baseForClones
+    for clone in leased {
+      XCTAssertEqual(baseForClones[clone], bases.first)
+    }
+  }
+}
+
+/// A device whose deletion timer is running can still be leased: the lease
+/// cancels the timer. If that hand-off were lost, a test would be handed a UDID
+/// that a pending deletion then removed -- the "No matching device" failure.
+final class SimulatorManagerPendingDeletionTests: XCTestCase {
+  func test_lease_during_pending_deletion_keeps_the_device() async throws {
+    let control = MockSimulatorControl()
+    // A one-second window: long enough to lease into, short enough that the test
+    // can outlive it and prove the timer was cancelled rather than merely slow.
+    let manager = SimulatorManager(
+      simulatorControl: control,
+      deleteRecentlyUsedIdleAfter: 1,
+      deleteIdleAfter: 1,
+      recentlyUsedCapacity: 1,
+      deleteOnPIDExit: false
+    )
+    let config = SimulatorConfig(deviceType: "iPhone 14", os: "iOS", version: "16.4")
+
+    let first = try await manager.lease(to: 1234, exclusive: true, config: config)
+    try await manager.release(for: 1234)
+
+    // Claim it back while the deletion is still pending.
+    let second = try await manager.lease(to: 5678, exclusive: true, config: config)
+    XCTAssertEqual(second, first, "the pending deletion should be reclaimed")
+
+    // Outlive the original deadline. The device must still be ours.
+    //
+    // This is a real sleep against a real deadline, so it is the one timing-
+    // dependent test here: the margin is 1s of slack against a 1s window, and a
+    // heavily loaded machine could in principle narrow that. Widen both values
+    // rather than removing the wait, since the point is to outlive the deadline.
+    try await Task.sleep(for: .seconds(2))
+
+    let deleted = await control.deletedSimulators
+    XCTAssertFalse(
+      deleted.contains(first),
+      "leasing a device must cancel its pending deletion, not merely delay it"
+    )
+  }
+}
+
 final class LRUSetTests: XCTestCase {
   /// With capacity 1, leasing a second configuration evicts the first -- which
   /// flips the first config's released devices from `delete-recently-used-idle-after`
@@ -407,6 +517,19 @@ actor MockSimulatorControl: SimulatorControl {
     with config: SimulatorConfig,
     runtimeIdentifier: String
   ) async throws -> SimulatorUDID {
+    createBaseCalls += 1
+
+    if failNextCreateBase {
+      failNextCreateBase = false
+      throw ProcessError(
+        command: "xcrun simctl create \(name)",
+        context: "createBase",
+        exitCode: 149,
+        stdOut: "",
+        stdErr: "Invalid runtime"
+      )
+    }
+
     let simulator = UUID().uuidString
     baseSimulators[config, default: []].append(simulator)
     devicesByName[name] = simulator
@@ -437,6 +560,14 @@ actor MockSimulatorControl: SimulatorControl {
   /// Consumed on use, so a retry against a fresh device succeeds.
   var bootFailures: [SimulatorUDID: Int32] = [:]
   var ensureBootedCalls: [SimulatorUDID] = []
+
+  /// When set, the next `createBase` throws instead of creating a device.
+  var failNextCreateBase = false
+  var createBaseCalls = 0
+
+  func setFailNextCreateBase() {
+    failNextCreateBase = true
+  }
 
   func failNextBoot(of simulator: SimulatorUDID, exitCode: Int32) {
     bootFailures[simulator] = exitCode
