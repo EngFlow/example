@@ -10,8 +10,10 @@ set -euo pipefail
 # changes will impact all executors in the default pool.
 #
 #!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! WARNING !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+# 43: install the post-boot script with `cp -f`, so an upgrade can overwrite the
+#     read-only copy a previous version left in place.
 # 42: liveness check for a leaser that exits during provisioning.
-readonly non_staging_version=42
+readonly non_staging_version=43
 
 if [[ -z "${EXAMPLE_CI_STAGING_VERSION:-}" ]]; then
   readonly expected_version="$non_staging_version"
@@ -194,8 +196,12 @@ if [[ -z "$version" ]]; then
   #   shell-init: error retrieving current directory: getcwd: cannot access parent directories: No such file or directory
   #   chdir: error retrieving current directory: getcwd: cannot access parent directories: No such file or directory
   readonly prepare_simulator="$scripts_path/prepare_simulator.sh"
-  mkdir -p "$scripts_path"
-  cp "$bazel_prepare_simulator" "$prepare_simulator"
+  # Only reached when starting a daemon, so the destination exists whenever this
+  # is an upgrade rather than a first start -- see the script for why that needs
+  # care.
+  "$(rlocation _main/tools/simulator_manager/install_post_boot_script)" \
+    "$bazel_prepare_simulator" \
+    "$prepare_simulator"
 
   # Run server in background, in a new process group
   # Adjust `PATH` since it's limited when the simulator manager is started in a

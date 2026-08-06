@@ -1,4 +1,5 @@
 load("@rules_shell//shell:sh_binary.bzl", "sh_binary")
+load("@rules_shell//shell:sh_test.bzl", "sh_test")
 load("@rules_swift//swift:swift.bzl", "swift_binary", "swift_library", "swift_test")
 
 # A daemon that hands out leases on iOS simulators. Ported from
@@ -46,10 +47,26 @@ sh_binary(
     name = "start",
     srcs = ["start.sh"],
     data = [
+        ":install_post_boot_script",
         ":prepare_simulator",
         ":simulator_manager",
     ],
     visibility = ["//visibility:public"],
+    deps = ["@bazel_tools//tools/bash/runfiles"],
+)
+
+# Copies the post-boot script somewhere that outlives the action. Split out of
+# start.sh so it can be tested on its own: the copy only runs on the
+# daemon-start path, which is skipped whenever a current daemon is already up.
+sh_binary(
+    name = "install_post_boot_script",
+    srcs = ["install_post_boot_script.sh"],
+)
+
+sh_test(
+    name = "install_post_boot_script_test",
+    srcs = ["install_post_boot_script_test.sh"],
+    data = [":install_post_boot_script"],
     deps = ["@bazel_tools//tools/bash/runfiles"],
 )
 
