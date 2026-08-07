@@ -121,3 +121,57 @@ ios_unit_test(
     deps = [":HelloConcurrentTestLib"],
 )
 
+swift_library(
+    name = "HelloDyingHostTestLib",
+    testonly = True,
+    srcs = ["HelloDyingHostTest.swift"],
+    module_name = "HelloDyingHostTest",
+)
+
+# Kills its own test host to check whether that alone produces the
+# "doesn't have a simulator leased" warning. Hosted, so the lease is held by the
+# rules_apple runner script rather than the test host -- see the test source.
+#
+#     bazel test --config=ios --config=opal --config=remote_macos_arm64 \
+#       --test_env=SIMULATOR_MANAGER_DEATH_MODE=signal //ios:HelloDyingHostTest
+ios_unit_test(
+    name = "HelloDyingHostTest",
+    minimum_os_version = "26.0",
+    runner = ":ios_leased_simulator_runner",
+    tags = ["manual"],
+    test_host = ":HelloApp",
+    deps = [":HelloDyingHostTestLib"],
+    exec_properties = {
+        "sandboxAllowed": "False",
+    },
+)
+
+swift_library(
+    name = "HelloHostedSnapshotTestLib",
+    testonly = True,
+    srcs = ["HelloHostedSnapshotTest.swift"],
+    module_name = "HelloHostedSnapshotTest",
+)
+
+# Hosted so rules_apple drives it with `xcodebuild -destination id=`, and leasing
+# exclusively so each concurrent action gets its own device.
+# Run with a high --runs_per_test to put more concurrent actions on a worker than it has
+# simulators:
+#
+#     bazel test --config=ios --config=opal --config=remote_macos_arm64 \
+#       --runs_per_test=8 //ios:HelloHostedSnapshotTest
+#
+# Manual for the same reason as HelloConcurrentTest: sensitive to worker memory.
+ios_unit_test(
+    name = "HelloHostedSnapshotTest",
+    minimum_os_version = "26.0",
+    runner = ":ios_leased_simulator_runner",
+    tags = ["manual"],
+    test_host = ":HelloApp",
+    timeout = "long",
+    deps = [":HelloHostedSnapshotTestLib"],
+    exec_properties = {
+        "sandboxAllowed": "False",
+    },
+)
+

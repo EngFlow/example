@@ -22,6 +22,19 @@ private struct SimulatorLease {
   let slotIndex: Int
 }
 
+/// Whether `pid` is still running.
+///
+/// `kill(pid, 0)` reports failure for two unrelated reasons, and only one of them
+/// means the process is gone: `ESRCH` (no such process) versus `EPERM` (it exists
+/// but we may not signal it). Treating `EPERM` as death would release a live
+/// leaser's device out from under it, so only `ESRCH` counts.
+func processIsRunning(_ pid: PID) -> Bool {
+  if kill(pid, 0) == 0 {
+    return true
+  }
+  return errno != ESRCH
+}
+
 private enum SimulatorSlot {
   case empty
   case pendingCreation(Task<SimulatorUDID, Error>, exclusive: Bool)
@@ -148,7 +161,7 @@ actor SimulatorManager {
     //
     // Only meaningful when we track leaser exit at all; otherwise the caller owns
     // the lease lifetime and the PID need not be a live process.
-    if deleteOnPIDExit, kill(leaser, 0) != 0 {
+    if deleteOnPIDExit, !processIsRunning(leaser) {
       Logger.simulatorManager.info(
         "👋 PID \(leaser, privacy: .public) exited before its lease could be provisioned"
       )
@@ -171,7 +184,7 @@ actor SimulatorManager {
       slotIndex: slotIndex
     )
 
-    if deleteOnPIDExit, kill(leaser, 0) != 0 {
+    if deleteOnPIDExit, !processIsRunning(leaser) {
       Logger.simulatorManager.info(
         """
         👋 PID \(leaser, privacy: .public) exited while its simulator was being \
@@ -479,7 +492,7 @@ actor SimulatorManager {
 
     // Check to see if the process is already dead and cancel the source if it is, which will
     // trigger `setCancelHandler`, which releases the simulator
-    guard kill(leaser, 0) == 0 else {
+    guard processIsRunning(leaser) else {
       processSource.cancel()
       onExitHandler()
       return

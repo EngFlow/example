@@ -176,6 +176,345 @@ final class SimulatorManagerTests: XCTestCase {
   }
 }
 
+/// Liveness of a leaser decides whether its device is reclaimed, so misjudging it
+/// either strands devices or pulls one out from under a running test.
+final class ProcessIsRunningTests: XCTestCase {
+  func test_live_process_is_running() {
+    XCTAssertTrue(processIsRunning(PID(getpid())))
+  }
+
+  func test_reaped_process_is_not_running() throws {
+    XCTAssertFalse(processIsRunning(try spawnAndReapProcess()))
+  }
+
+  /// PID 1 (`launchd`) is alive but unsignalable by a non-root user, so
+  /// `kill(1, 0)` fails with `EPERM` rather than succeeding. A liveness check that
+  /// only tests `kill(...) != 0` reads that as "exited" and releases the lease of
+  /// a process that is still running -- which is exactly the
+  /// "PID N doesn't have a simulator leased" warning, reported against a live
+  /// leaser.
+  ///
+  /// The daemon runs as `engflow` on workers, not root, so this is reachable
+  /// there; when the tests happen to run as root `kill` succeeds outright and the
+  /// distinction is moot, hence the guard.
+  func test_unsignalable_but_live_process_is_running() throws {
+    try XCTSkipIf(getuid() == 0, "as root, kill(1, 0) succeeds and EPERM never arises")
+
+    errno = 0
+    XCTAssertNotEqual(kill(1, 0), 0, "precondition: kill(1, 0) should fail for non-root")
+    XCTAssertEqual(errno, EPERM, "precondition: the failure should be EPERM, not ESRCH")
+
+    XCTAssertTrue(
+      processIsRunning(1),
+      "an EPERM from kill() means alive-but-unsignalable, not exited"
+    )
+  }
+}
+
+/// The release path as the test runner actually drives it.
+final class SimulatorManagerReleaseTests: XCTestCase {
+  private func makeManager(_ control: MockSimulatorControl) -> SimulatorManager {
+    SimulatorManager(
+      simulatorControl: control,
+      deleteRecentlyUsedIdleAfter: 0,
+      deleteIdleAfter: 0,
+      recentlyUsedCapacity: 1,
+      deleteOnPIDExit: false
+    )
+  }
+
+  /// The healthy case: a leaser that is still alive releases its own lease and
+  /// gets no warning. Verified by hand against a live daemon, so it is pinned
+  /// here to stay that way.
+  func test_live_leaser_releases_successfully() async throws {
+    let control = MockSimulatorControl()
+    let manager = makeManager(control)
+    let config = SimulatorConfig(deviceType: "iPhone 14", os: "iOS", version: "16.4")
+
+    _ = try await manager.lease(to: 1234, exclusive: true, config: config)
+    try await manager.release(for: 1234)
+  }
+
+  /// Releasing twice must report no-lease the second time rather than
+  /// double-decrementing the reference count and deleting a device that a
+  /// subsequent lease of the same slot is using.
+  func test_double_release_reports_no_lease() async throws {
+    let control = MockSimulatorControl()
+    let manager = makeManager(control)
+    let config = SimulatorConfig(deviceType: "iPhone 14", os: "iOS", version: "16.4")
+
+    _ = try await manager.lease(to: 1234, exclusive: true, config: config)
+    try await manager.release(for: 1234)
+
+    // swiftformat:disable:next hoistAwait
+    try await assertThrowsAsyncError(await manager.release(for: 1234))
+  }
+
+  /// One leaser's release must not disturb another's device. Guards the
+  /// reference-counting when several tests share a worker.
+  func test_release_does_not_affect_other_leases() async throws {
+    let control = MockSimulatorControl()
+    let manager = makeManager(control)
+    let config = SimulatorConfig(deviceType: "iPhone 14", os: "iOS", version: "16.4")
+
+    let first = try await manager.lease(to: 1234, exclusive: true, config: config)
+    let second = try await manager.lease(to: 5678, exclusive: true, config: config)
+    XCTAssertNotEqual(first, second)
+
+    try await manager.release(for: 1234)
+
+    let deleted = await control.deletedSimulators
+    XCTAssertFalse(
+      deleted.contains(second),
+      "releasing one lease must not delete another leaser's device"
+    )
+  }
+
+  /// A non-exclusive device shared by two leasers survives the first release: the
+  /// second holder is still using it. Deleting on the first release is what would
+  /// produce "No matching device" for the test still running.
+  func test_shared_device_survives_first_release() async throws {
+    let control = MockSimulatorControl()
+    let manager = makeManager(control)
+    let config = SimulatorConfig(deviceType: "iPhone 14", os: "iOS", version: "16.4")
+
+    let first = try await manager.lease(to: 1234, exclusive: false, config: config)
+    let second = try await manager.lease(to: 5678, exclusive: false, config: config)
+    XCTAssertEqual(first, second, "precondition: non-exclusive leases share a device")
+
+    try await manager.release(for: 1234)
+
+    let deletedAfterFirst = await control.deletedSimulators
+    XCTAssertFalse(
+      deletedAfterFirst.contains(first),
+      "a device still leased by another PID must not be deleted"
+    )
+
+    // Once the last holder releases, the device may go.
+    try await manager.release(for: 5678)
+    let deletedAfterSecond = await control.deletedSimulators
+    XCTAssertTrue(
+      deletedAfterSecond.contains(first),
+      "the last release should retire the device"
+    )
+  }
+}
+
+/// The invariant a user actually feels: two exclusive leases must never name
+/// the same device at the same time, and a device must never be deleted while a
+/// lease still references it.
+final class SimulatorManagerExclusivityTests: XCTestCase {
+  /// Records overlaps as they happen rather than inferring them afterwards, so a
+  /// failure names the device that was double-leased.
+  private actor HeldDevices {
+    private var held: Set<SimulatorUDID> = []
+    private(set) var overlaps: [SimulatorUDID] = []
+
+    func acquire(_ udid: SimulatorUDID) {
+      if held.contains(udid) {
+        overlaps.append(udid)
+      }
+      held.insert(udid)
+    }
+
+    func relinquish(_ udid: SimulatorUDID) {
+      held.remove(udid)
+    }
+  }
+
+  /// Rounds of lease/release, so devices go back to the pool and get handed out
+  /// again. Reuse is where a stale slot index or a botched reference count would
+  /// surface as two tests sharing one device.
+  func test_exclusive_leases_never_overlap_under_churn() async throws {
+    let control = MockSimulatorControl()
+    let manager = SimulatorManager(
+      simulatorControl: control,
+      // Keep released devices warm so they are reused rather than deleted, which
+      // is the path that exercises slot reuse.
+      deleteRecentlyUsedIdleAfter: 600,
+      deleteIdleAfter: 600,
+      recentlyUsedCapacity: 1,
+      deleteOnPIDExit: false
+    )
+    let config = SimulatorConfig(deviceType: "iPhone 14", os: "iOS", version: "16.4")
+    let held = HeldDevices()
+
+    for round in 0 ..< 4 {
+      try await withThrowingTaskGroup(of: Void.self) { group in
+        for offset in 0 ..< 8 {
+          let pid = PID(20_000 + round * 100 + offset)
+          group.addTask {
+            let udid = try await manager.lease(to: pid, exclusive: true, config: config)
+            await held.acquire(udid)
+
+            // Hold across a suspension: an overlap is only observable if two
+            // leases are live at once.
+            try await Task.sleep(for: .milliseconds(5))
+
+            // A device handed to a live lease must still exist. This is the
+            // `No matching device` failure, caught at the moment it would happen.
+            let deleted = await control.deletedSimulators
+            XCTAssertFalse(
+              deleted.contains(udid),
+              "device \(udid) was deleted while PID \(pid) still held its lease"
+            )
+
+            await held.relinquish(udid)
+            try await manager.release(for: pid)
+          }
+        }
+        try await group.waitForAll()
+      }
+    }
+
+    let overlaps = await held.overlaps
+    XCTAssertTrue(
+      overlaps.isEmpty,
+      "exclusive leases overlapped on \(Set(overlaps).count) device(s): \(Set(overlaps))"
+    )
+  }
+
+  /// Non-exclusive leases are *allowed* to share, but sharing must be bounded by
+  /// reference counting: the device may only be retired once the last holder lets
+  /// go. This is a shared-runner configuration.
+  func test_shared_device_is_not_deleted_while_any_holder_remains() async throws {
+    let control = MockSimulatorControl()
+    let manager = SimulatorManager(
+      simulatorControl: control,
+      deleteRecentlyUsedIdleAfter: 0,
+      deleteIdleAfter: 0,
+      recentlyUsedCapacity: 1,
+      deleteOnPIDExit: false
+    )
+    let config = SimulatorConfig(deviceType: "iPhone 14", os: "iOS", version: "16.4")
+
+    let pids: [PID] = [31_001, 31_002, 31_003, 31_004]
+    var devices: [PID: SimulatorUDID] = [:]
+    for pid in pids {
+      devices[pid] = try await manager.lease(to: pid, exclusive: false, config: config)
+    }
+
+    // Release all but the last, checking after each that the shared device stands.
+    for pid in pids.dropLast() {
+      try await manager.release(for: pid)
+
+      let deleted = await control.deletedSimulators
+      XCTAssertFalse(
+        deleted.contains(devices[pids.last!]!),
+        "the shared device was deleted while PID \(pids.last!) still held it"
+      )
+    }
+
+    try await manager.release(for: pids.last!)
+    let deleted = await control.deletedSimulators
+    XCTAssertTrue(
+      deleted.contains(devices[pids.last!]!),
+      "the last release should retire the shared device"
+    )
+  }
+}
+
+/// Distinguishes the two ways a log can fill with
+/// "doesn't have a simulator leased": lease-holder death, versus the daemon
+/// losing its state. They are told apart by *which* actions warn, so the
+/// signature is worth pinning.
+final class SimulatorManagerWarningSignatureTests: XCTestCase {
+  /// If the daemon loses state, every release warns -- including releases from
+  /// tests that passed.
+  func test_state_loss_makes_every_release_report_no_lease() async throws {
+    let control = MockSimulatorControl()
+    let config = SimulatorConfig(deviceType: "iPhone 14", os: "iOS", version: "16.4")
+    let pids: [PID] = [41_001, 41_002, 41_003, 41_004]
+
+    let before = SimulatorManager(
+      simulatorControl: control,
+      deleteRecentlyUsedIdleAfter: 600,
+      deleteIdleAfter: 600,
+      recentlyUsedCapacity: 1,
+      deleteOnPIDExit: false
+    )
+    for pid in pids {
+      _ = try await before.lease(to: pid, exclusive: true, config: config)
+    }
+
+    // The daemon is replaced without releasing anything, as a crash or a
+    // `kill -9` from start.sh's shutdown timeout would leave it.
+    let after = SimulatorManager(
+      simulatorControl: control,
+      deleteRecentlyUsedIdleAfter: 600,
+      deleteIdleAfter: 600,
+      recentlyUsedCapacity: 1,
+      deleteOnPIDExit: false
+    )
+
+    for pid in pids {
+      // swiftformat:disable:next hoistAwait
+      try await assertThrowsAsyncError(await after.release(for: pid)) { error in
+        XCTAssertTrue(
+          error is SimulatorManagerError,
+          "expected a no-lease error for PID \(pid), got \(error)"
+        )
+      }
+    }
+
+    // None of those failed releases may delete a device: the devices survived the
+    // restart and a live test could still be using one.
+    let deleted = await control.deletedSimulators
+    XCTAssertTrue(
+      deleted.isEmpty,
+      "releases against lost state must not delete devices, deleted: \(deleted)"
+    )
+  }
+
+  /// A leaser that exits mid-provisioning must not strand its device. Stranding
+  /// would shrink the usable pool for the life of the daemon, so later tests pile
+  /// onto fewer and fewer devices.
+  func test_leaser_exit_during_provisioning_does_not_strand_the_device() async throws {
+    let control = MockSimulatorControl()
+    let manager = SimulatorManager(
+      simulatorControl: control,
+      // Retire released devices at once, so a device that is *not* deleted here is
+      // genuinely stranded rather than merely idle.
+      deleteRecentlyUsedIdleAfter: 0,
+      deleteIdleAfter: 0,
+      recentlyUsedCapacity: 1,
+      deleteOnPIDExit: true
+    )
+    let config = SimulatorConfig(deviceType: "iPhone 14", os: "iOS", version: "16.4")
+
+    let deadLeaser = try spawnAndReapProcess()
+    // swiftformat:disable:next hoistAwait
+    await assertThrowsAsyncError(
+      try await manager.lease(to: deadLeaser, exclusive: true, config: config)
+    )
+
+    // Whatever was provisioned before the exit was noticed must be accounted for:
+    // either never created, or created and cleaned up. Site 1 of the liveness
+    // check normally rejects a dead leaser before any clone exists, so record
+    // which case this was rather than letting an empty set pass silently.
+    let created = await control.baseForClones.keys
+    let deleted = await control.deletedSimulators
+    if created.isEmpty {
+      let baseCalls = await control.createBaseCalls
+      XCTAssertEqual(
+        baseCalls,
+        0,
+        "a dead leaser should be rejected before provisioning starts, not midway"
+      )
+    }
+    for clone in created {
+      XCTAssertTrue(
+        deleted.contains(clone),
+        "clone \(clone) was provisioned for a dead leaser and never cleaned up"
+      )
+    }
+
+    // The pool must still work afterwards.
+    let recovered = try await manager.lease(to: PID(getpid()), exclusive: true, config: config)
+    XCTAssertFalse(recovered.isEmpty)
+  }
+}
+
 /// A daemon restart discards all in-memory lease state -- `start.sh` will
 /// `kill -9` a daemon that does not stop within its shutdown timeout, and the
 /// `/shutdown` endpoint does not release or delete leased devices either. The

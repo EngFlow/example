@@ -9,8 +9,8 @@
 #   cp: /tmp/simulator_manager.scripts/prepare_simulator.sh: Permission denied
 #
 # Locally, runfiles are user-writable, so these tests set the read-only mode
-# themselves rather than relying on the environment to produce it. That is the
-# whole reason the bug reached a customer: it cannot reproduce on a dev machine.
+# themselves rather than relying on the environment to produce it. Without that,
+# the bug cannot reproduce on a dev machine at all -- it only appears on RBE.
 
 set -uo pipefail
 
@@ -58,7 +58,7 @@ function new_readonly_src() {
   echo "$src"
 }
 
-# The regression test. Without `cp -f` this is the customer-visible failure.
+# The regression test. Without `cp -f` this is the failure quoted above.
 function test_overwrites_read_only_destination() {
   local -r dir="$(new_tmpdir)"
   local -r src="$(new_readonly_src "$dir" v2)"
