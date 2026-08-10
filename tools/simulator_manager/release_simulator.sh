@@ -11,7 +11,9 @@
 
 set -euo pipefail
 
-readonly socket="/tmp/simulator_manager.sock"
+# Overridable only so the test can point at its own socket; production callers
+# leave it unset and get the well-known path.
+readonly socket="${SIMULATOR_MANAGER_SOCKET:-/tmp/simulator_manager.sock}"
 readonly lease_pid="${XCTESTRUN_RUNNER_PID:-$$}"
 
 if ! response=$(

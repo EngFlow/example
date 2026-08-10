@@ -10,10 +10,12 @@ set -euo pipefail
 # changes will impact all executors in the default pool.
 #
 #!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! WARNING !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+# 44: mirror leases to disk and adopt them on startup, so replacing the daemon
+#     does not strand tests that are still running.
 # 43: install the post-boot script with `cp -f`, so an upgrade can overwrite the
 #     read-only copy a previous version left in place.
 # 42: liveness check for a leaser that exits during provisioning.
-readonly non_staging_version=43
+readonly non_staging_version=44
 
 if [[ -z "${EXAMPLE_CI_STAGING_VERSION:-}" ]]; then
   readonly expected_version="$non_staging_version"
@@ -52,10 +54,18 @@ readonly mutex_timeout=60
 readonly shutdown_timeout=45
 readonly startup_timeout=10
 readonly stale_mutex_seconds=120
-readonly socket="/tmp/simulator_manager.sock"
-readonly pid_path="/tmp/simulator_manager.pid"
-readonly mutex_path="/tmp/simulator_manager_start.lock"
-readonly scripts_path="/tmp/simulator_manager.scripts"
+# Overridable only so tests can drive a daemon on their own paths instead of the
+# well-known ones; production callers leave these unset. A test that reused the
+# real paths would fight the worker's live daemon.
+readonly state_prefix="${SIMULATOR_MANAGER_STATE_PREFIX:-/tmp/simulator_manager}"
+readonly socket="${state_prefix}.sock"
+readonly pid_path="${state_prefix}.pid"
+readonly mutex_path="${state_prefix}_start.lock"
+readonly scripts_path="${state_prefix}.scripts"
+# Deliberately outlives any single daemon: a replacement reads it to adopt the
+# leases of tests that are still running. Unlike the socket and pid file, this is
+# never removed on restart.
+readonly lease_path="${state_prefix}.leases"
 
 function exitMutex() {
   rmdir "$mutex_path" 2> /dev/null || true
@@ -119,6 +129,12 @@ else
   version=""
 fi
 
+# A restart is safe even while tests are running: the daemon mirrors its leases to
+# `$lease_path` on every change, and its replacement adopts the ones whose process
+# is still alive. So this shuts the old daemon down without waiting for in-flight
+# tests to finish, which is what makes an upgrade possible on a busy worker at all
+# -- waiting instead would need the daemon to stop accepting leases, and
+# lease_simulator.sh runs this script before every single lease.
 if check_need_shutdown "$version"; then
   echo "$(date '+[%H:%M:%S]') Shutting down existing simulator manager to" \
     "upgrade to version $expected_version"
@@ -223,6 +239,8 @@ if [[ -z "$version" ]]; then
     "$recently_used_capacity" \
     "--post-boot" \
     "$prepare_simulator" \
+    --lease-path \
+    "$lease_path" \
     > /dev/null 2>&1 \
     &
 

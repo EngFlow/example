@@ -8,7 +8,7 @@ extension Logger {
   static let simulatorControl = simulatorManager(category: "control")
 }
 
-struct SimulatorConfig: Hashable, Equatable {
+struct SimulatorConfig: Hashable, Equatable, Codable {
   let deviceType: String
   let os: String
   let version: String

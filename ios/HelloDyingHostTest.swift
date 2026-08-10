@@ -17,10 +17,11 @@ import XCTest
 ///    establishing connection".
 ///  * `exit` -- a zero exit, matching "The test runner exited with code 0 before
 ///    establishing connection".
-///  * `runner` -- SIGKILL to the rules_apple runner script, i.e. the process that
-///    actually holds the lease. `signal` and `exit` only kill the test host,
-///    which the script outlives, so the script still releases its own live lease
-///    successfully. This mode targets the lease holder itself.
+///  * `memory` -- allocate and touch pages until the kernel's memory-pressure
+///    killer reaps the process, standing in for a worker running several
+///    simulators at once.
+///  * `hang` -- sleep past the action's timeout, so the test is killed from
+///    outside rather than dying on its own.
 ///
 /// Unset means don't die, so the target is also a control.
 class HelloDyingHostTest: XCTestCase {
@@ -41,8 +42,37 @@ class HelloDyingHostTest: XCTestCase {
             kill(getpid(), SIGKILL)
         case "exit":
             exit(0)
+        case "memory":
+            exhaustMemory()
+        case "hang":
+            // Longer than any timeout this target is given, so the kill comes from
+            // the harness rather than from here.
+            sleep(3600)
         default:
             break
+        }
+    }
+
+    /// Allocates in chunks and writes to every page, so the pages are resident
+    /// rather than merely reserved -- a lazily-mapped allocation does not trigger
+    /// the memory-pressure killer.
+    ///
+    /// Prints progress so the log records how far it got: if the process is
+    /// reaped, the last line is the high-water mark.
+    private func exhaustMemory() {
+        let chunkBytes = 64 * 1024 * 1024
+        var chunks: [UnsafeMutableRawPointer] = []
+
+        while true {
+            guard let chunk = malloc(chunkBytes) else {
+                print("DYING_HOST_MALLOC_FAILED_AT_MB=\(chunks.count * 64)")
+                fflush(stdout)
+                return
+            }
+            memset(chunk, 1, chunkBytes)
+            chunks.append(chunk)
+            print("DYING_HOST_RESIDENT_MB=\(chunks.count * 64)")
+            fflush(stdout)
         }
     }
 }

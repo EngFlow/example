@@ -152,7 +152,13 @@ final class HTTPServer {
         message: version
       )
 
+    case "leases":
+      let count = await simulatorRequestHandler.liveLeaseCount()
+      return .init(status: .ok, message: String(count))
+
     case "shutdown":
+      // Shutting down with leases outstanding is safe: they are mirrored to disk,
+      // and the replacement daemon adopts the ones whose process is still running.
       Logger.httpServer.info("⚠️ Shutdown request received")
       serverShutdownHandler?()
       return .init(status: .ok, message: "Server shutting down")

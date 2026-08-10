@@ -43,6 +43,15 @@ struct Main: AsyncParsableCommand {
   @Option(help: "Path to an executable that will run after a simulator clone is booted")
   var postBoot: String
 
+  @Option(
+    help: """
+    Path to a file where leases are mirrored, so that a simulator manager started \
+    to replace this one adopts the leases of tests that are still running. Omit to \
+    keep leases only in memory, in which case a restart loses them.
+    """
+  )
+  var leasePath: String?
+
   func validate() throws {
     guard recentlyUsedCapacity > 0 else {
       throw ValidationError(
@@ -65,8 +74,14 @@ struct Main: AsyncParsableCommand {
       recentlyUsedCapacity: recentlyUsedCapacity,
       deleteOnPIDExit: true,
       startupProcesses: startupProcesses,
-      postBoot: postBoot
+      postBoot: postBoot,
+      leaseStore: leasePath.map { FileLeaseStore(path: $0) }
     )
+
+    // Before serving, so the first release to arrive already sees the leases this
+    // daemon inherited.
+    await simulatorManager.restoreLeases()
+
     try await simulatorManager.startChildProcesses()
 
     try await HTTPServer(

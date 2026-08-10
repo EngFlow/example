@@ -90,3 +90,30 @@ sh_binary(
     srcs = ["release_simulator.sh"],
     visibility = ["//visibility:public"],
 )
+
+sh_test(
+    name = "release_simulator_test",
+    srcs = ["release_simulator_test.sh"],
+    data = [":release_simulator"],
+    deps = ["@bazel_tools//tools/bash/runfiles"],
+)
+
+# Drives a real daemon over a unix socket, so it cannot run in the sandbox and
+# must not run concurrently with another copy of itself.
+sh_test(
+    name = "start_restart_test",
+    srcs = ["start_restart_test.sh"],
+    data = [
+        ":release_simulator",
+        ":start",
+    ],
+    tags = [
+        "local",
+        "no-linux-ci",
+        "no-sandbox",
+    ],
+    # Each lease provisions and boots a real simulator, and each case deletes the
+    # devices it made so the next one cannot adopt them.
+    timeout = "long",
+    deps = ["@bazel_tools//tools/bash/runfiles"],
+)

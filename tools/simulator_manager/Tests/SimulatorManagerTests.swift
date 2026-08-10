@@ -418,6 +418,12 @@ final class SimulatorManagerExclusivityTests: XCTestCase {
 /// "doesn't have a simulator leased": lease-holder death, versus the daemon
 /// losing its state. They are told apart by *which* actions warn, so the
 /// signature is worth pinning.
+///
+/// These build managers with no `LeaseStore`, which is deliberate: they pin the
+/// behavior of a daemon that cannot hand its leases over, both to describe
+/// versions predating the handover and to keep the signature readable for anyone
+/// diagnosing a log from one. `SimulatorManagerLeaseHandoverTests` covers what a
+/// daemon with a store does instead.
 final class SimulatorManagerWarningSignatureTests: XCTestCase {
   /// If the daemon loses state, every release warns -- including releases from
   /// tests that passed.
@@ -464,6 +470,61 @@ final class SimulatorManagerWarningSignatureTests: XCTestCase {
       deleted.isEmpty,
       "releases against lost state must not delete devices, deleted: \(deleted)"
     )
+  }
+
+  /// The signature that distinguishes a mid-flight daemon restart from wholesale
+  /// state loss: only the tests whose lease *predates* the restart warn on
+  /// release. Tests that lease afterwards are unaffected.
+  ///
+  /// This matters because it is the only mechanism found so far that produces the
+  /// warning on a subset of tests while the runner script is still alive. Total
+  /// state loss makes every release warn, including releases from tests that
+  /// passed, so it cannot explain a log where only some releases warn.
+  func test_only_leases_predating_a_restart_report_no_lease() async throws {
+    let control = MockSimulatorControl()
+    let config = SimulatorConfig(deviceType: "iPhone 14", os: "iOS", version: "16.4")
+    let before: [PID] = [42_001, 42_002]
+    let after: [PID] = [42_003, 42_004]
+
+    func makeManager() -> SimulatorManager {
+      SimulatorManager(
+        simulatorControl: control,
+        deleteRecentlyUsedIdleAfter: 600,
+        deleteIdleAfter: 600,
+        recentlyUsedCapacity: 1,
+        deleteOnPIDExit: false
+      )
+    }
+
+    let oldDaemon = makeManager()
+    for pid in before {
+      _ = try await oldDaemon.lease(to: pid, exclusive: true, config: config)
+    }
+
+    // start.sh replaces the daemon when a concurrent action wants a different
+    // version. The in-flight tests above are not told, and their runner scripts
+    // keep running. Without a store there is nothing for the successor to read,
+    // so their leases are gone -- which is the signature being pinned.
+    let newDaemon = makeManager()
+    for pid in after {
+      _ = try await newDaemon.lease(to: pid, exclusive: true, config: config)
+    }
+
+    for pid in before {
+      // swiftformat:disable:next hoistAwait
+      try await assertThrowsAsyncError(await newDaemon.release(for: pid)) { error in
+        XCTAssertTrue(
+          error is SimulatorManagerError,
+          "expected a no-lease error for pre-restart PID \(pid), got \(error)"
+        )
+      }
+    }
+
+    // The discriminating half: these must succeed. If they also threw, the
+    // mechanism would be indistinguishable from total state loss.
+    for pid in after {
+      try await newDaemon.release(for: pid)
+    }
   }
 
   /// A leaser that exits mid-provisioning must not strand its device. Stranding
@@ -576,6 +637,339 @@ final class SimulatorManagerRestartTests: XCTestCase {
       deleted.isEmpty,
       "an unknown lease must not delete a device that may still be in use"
     )
+  }
+}
+
+/// A `LeaseStore` held in memory, standing in for the file a real daemon writes.
+///
+/// Guarded by a lock rather than actor isolation: `LeaseStore` is synchronous, and
+/// making the fake an actor would force `save` to defer its write, so a test could
+/// observe the store before the write it just triggered had landed.
+private final class FakeLeaseStore: LeaseStore, @unchecked Sendable {
+  private let lock = NSLock()
+  private var stored: [PersistedLease] = []
+
+  /// Hands `load()` something the daemon never wrote, for the cases where the file
+  /// is corrupt, hand-edited or written by another version.
+  func preload(_ leases: [PersistedLease]) {
+    lock.withLock { stored = leases }
+  }
+
+  func contents() -> [PersistedLease] {
+    return lock.withLock { stored }
+  }
+
+  func save(_ leases: [PersistedLease]) {
+    lock.withLock { stored = leases }
+  }
+
+  func load() -> [PersistedLease] {
+    return contents()
+  }
+}
+
+/// Leases are mirrored to disk so that a daemon replacing another can adopt the
+/// ones whose tests are still running. Without that handover, `start.sh` -- which
+/// runs before every lease and restarts on any version change -- silently dropped
+/// the bookkeeping for in-flight tests, whose release then reported
+/// "doesn't have a simulator leased".
+final class SimulatorManagerLeaseHandoverTests: XCTestCase {
+  private func makeManager(
+    _ control: MockSimulatorControl,
+    store: LeaseStore?,
+    deleteOnPIDExit: Bool = false
+  ) -> SimulatorManager {
+    SimulatorManager(
+      simulatorControl: control,
+      deleteRecentlyUsedIdleAfter: 0,
+      deleteIdleAfter: 0,
+      recentlyUsedCapacity: 1,
+      deleteOnPIDExit: deleteOnPIDExit,
+      leaseStore: store
+    )
+  }
+
+  private let config = SimulatorConfig(deviceType: "iPhone 14", os: "iOS", version: "16.4")
+
+  /// The case from the bug: a live leaser's release must succeed against the
+  /// daemon that replaced the one it leased from.
+  func test_successor_honors_a_release_for_an_adopted_lease() async throws {
+    let control = MockSimulatorControl()
+    let store = FakeLeaseStore()
+
+    // This process is by definition alive, so it stands in for a runner script
+    // still running while the daemon underneath it is replaced.
+    let leaser = getpid()
+    let udid = try await makeManager(control, store: store)
+      .lease(to: leaser, exclusive: true, config: config)
+
+    let successor = makeManager(control, store: store)
+    await successor.restoreLeases()
+
+    // Would throw `noLease` -- the 404 behind the warning -- without the handover.
+    try await successor.release(for: leaser)
+
+    let deleted = await control.deletedSimulators
+    XCTAssertEqual(
+      deleted,
+      [udid],
+      "releasing an adopted lease should return its device, as a normal release does"
+    )
+  }
+
+  /// A lease is only useful to a successor if it is on disk before the daemon
+  /// dies, since `start.sh` escalates to `kill -9` and runs no cleanup.
+  func test_a_lease_is_persisted_as_soon_as_it_is_granted() async throws {
+    let control = MockSimulatorControl()
+    let store = FakeLeaseStore()
+
+    let udid = try await makeManager(control, store: store)
+      .lease(to: 4242, exclusive: false, config: config)
+
+    let persisted = store.contents()
+    XCTAssertEqual(persisted.count, 1)
+    XCTAssertEqual(persisted.first?.pid, 4242)
+    XCTAssertEqual(persisted.first?.udid, udid)
+    XCTAssertEqual(persisted.first?.config, config)
+    XCTAssertEqual(persisted.first?.exclusive, false)
+  }
+
+  /// A lease whose process is gone must not be adopted: nobody is left to release
+  /// it, so it would hold a device until the daemon restarted again.
+  func test_a_dead_leasers_lease_is_not_adopted() async throws {
+    let control = MockSimulatorControl()
+    let store = FakeLeaseStore()
+
+    // PID 1 is `launchd`: it is running but is certainly not our leaser, and its
+    // start time will not match a fabricated one. That is the recycled-PID case.
+    store.preload([
+      .init(
+        pid: 1,
+        leaserStartTime: 999,
+        udid: "DEAD-DEVICE",
+        config: config,
+        exclusive: true,
+        slotIndex: 0
+      ),
+    ])
+
+    let manager = makeManager(control, store: store)
+    await manager.restoreLeases()
+
+    let live = await manager.liveLeaseCount()
+    XCTAssertEqual(live, 0, "a recycled PID must not inherit the original's lease")
+
+    // swiftformat:disable:next hoistAwait
+    try await assertThrowsAsyncError(await manager.release(for: 1))
+  }
+
+  /// The same PID with a matching start time is the original process, so its lease
+  /// is adopted. Pairs with the test above: together they show the start-time check
+  /// discriminates rather than rejecting everything.
+  func test_a_live_leasers_lease_is_adopted() async throws {
+    let control = MockSimulatorControl()
+    let store = FakeLeaseStore()
+
+    let leaser = getpid()
+    store.preload([
+      .init(
+        pid: leaser,
+        leaserStartTime: processStartTime(leaser),
+        udid: "LIVE-DEVICE",
+        config: config,
+        exclusive: true,
+        slotIndex: 0
+      ),
+    ])
+
+    let manager = makeManager(control, store: store)
+    await manager.restoreLeases()
+
+    let live = await manager.liveLeaseCount()
+    XCTAssertEqual(live, 1)
+  }
+
+  /// Dropped leases must not linger on disk, or a later restart would reconsider
+  /// them after their PIDs had been recycled.
+  func test_dropped_leases_are_removed_from_the_store() async throws {
+    let control = MockSimulatorControl()
+    let store = FakeLeaseStore()
+
+    store.preload([
+      .init(
+        pid: 1,
+        leaserStartTime: 999,
+        udid: "DEAD-DEVICE",
+        config: config,
+        exclusive: true,
+        slotIndex: 0
+      ),
+    ])
+
+    await makeManager(control, store: store).restoreLeases()
+
+    // The rewrite is asynchronous in the fake, so let the save land.
+    try await Task.sleep(for: .milliseconds(100))
+    let remaining = store.contents()
+    XCTAssertTrue(remaining.isEmpty, "a dropped lease should not be reconsidered later")
+  }
+
+  /// Two leases claiming one exclusive device cannot both be true. Adopting both
+  /// would hand the same simulator to two tests, so the conflict is dropped.
+  func test_conflicting_exclusive_leases_are_not_both_adopted() async throws {
+    let control = MockSimulatorControl()
+    let store = FakeLeaseStore()
+
+    let leaser = getpid()
+    let start = processStartTime(leaser)
+    store.preload([
+      .init(
+        pid: leaser,
+        leaserStartTime: start,
+        udid: "SHARED-DEVICE",
+        config: config,
+        exclusive: true,
+        slotIndex: 0
+      ),
+      .init(
+        pid: leaser,
+        leaserStartTime: start,
+        udid: "SHARED-DEVICE",
+        config: config,
+        exclusive: true,
+        slotIndex: 1
+      ),
+    ])
+
+    let manager = makeManager(control, store: store)
+    await manager.restoreLeases()
+
+    let live = await manager.liveLeaseCount()
+    XCTAssertEqual(live, 1, "only one lease can hold an exclusive device")
+  }
+
+  /// Persistence is opt-in. Without a store the manager behaves as it always did,
+  /// which is what the tests above this class rely on.
+  func test_without_a_store_nothing_is_restored() async throws {
+    let control = MockSimulatorControl()
+
+    let leaser = getpid()
+    _ = try await makeManager(control, store: nil)
+      .lease(to: leaser, exclusive: true, config: config)
+
+    let successor = makeManager(control, store: nil)
+    await successor.restoreLeases()
+
+    // swiftformat:disable:next hoistAwait
+    try await assertThrowsAsyncError(await successor.release(for: leaser))
+  }
+}
+
+/// The on-disk format has to survive a real round trip, since a successor daemon
+/// is a different process reading what this one wrote.
+final class FileLeaseStoreTests: XCTestCase {
+  private func temporaryPath() -> String {
+    return FileManager.default.temporaryDirectory
+      .appendingPathComponent("leases-\(UUID().uuidString).json")
+      .path
+  }
+
+  func test_leases_round_trip_through_a_file() throws {
+    let path = temporaryPath()
+    defer { try? FileManager.default.removeItem(atPath: path) }
+
+    let store = FileLeaseStore(path: path)
+    let leases: [PersistedLease] = [
+      .init(
+        pid: 501,
+        leaserStartTime: 1234,
+        udid: "UDID-A",
+        config: .init(deviceType: "iPhone 16", os: "iOS", version: "26.4"),
+        exclusive: true,
+        slotIndex: 0
+      ),
+      .init(
+        pid: 502,
+        leaserStartTime: nil,
+        udid: "UDID-B",
+        config: .init(deviceType: "iPad", os: "iOS", version: "18.0"),
+        exclusive: false,
+        slotIndex: 3
+      ),
+    ]
+
+    store.save(leases)
+
+    XCTAssertEqual(FileLeaseStore(path: path).load(), leases)
+  }
+
+  /// A missing file is the first-ever start, not an error.
+  func test_a_missing_file_loads_as_empty() {
+    XCTAssertEqual(FileLeaseStore(path: temporaryPath()).load(), [])
+  }
+
+  /// A corrupt file must not stop the daemon from starting; the worst case is the
+  /// old behavior, where leases predating the restart are unknown.
+  func test_a_corrupt_file_loads_as_empty() throws {
+    let path = temporaryPath()
+    defer { try? FileManager.default.removeItem(atPath: path) }
+
+    try "not json".write(toFile: path, atomically: true, encoding: .utf8)
+
+    XCTAssertEqual(FileLeaseStore(path: path).load(), [])
+  }
+
+  /// Saving replaces rather than appends, so a released lease does not come back.
+  func test_saving_replaces_the_previous_contents() {
+    let path = temporaryPath()
+    defer { try? FileManager.default.removeItem(atPath: path) }
+
+    let store = FileLeaseStore(path: path)
+    store.save([
+      .init(
+        pid: 1,
+        leaserStartTime: nil,
+        udid: "OLD",
+        config: .init(deviceType: "iPhone 16", os: "iOS", version: "26.4"),
+        exclusive: true,
+        slotIndex: 0
+      ),
+    ])
+    store.save([])
+
+    XCTAssertEqual(store.load(), [])
+  }
+
+  /// A save leaves only the lease file behind. `.atomic` already writes via an
+  /// auxiliary file and renames it into place, so doing that by hand here would be
+  /// redundant -- and would strand a file of our own naming if the daemon died
+  /// between the write and the rename.
+  func test_saving_leaves_no_other_files_behind() throws {
+    let directory = FileManager.default.temporaryDirectory
+      .appendingPathComponent("lease-store-\(UUID().uuidString)")
+    try FileManager.default.createDirectory(
+      at: directory,
+      withIntermediateDirectories: true
+    )
+    defer { try? FileManager.default.removeItem(at: directory) }
+
+    let name = "leases.json"
+    let store = FileLeaseStore(path: directory.appendingPathComponent(name).path)
+    store.save([
+      .init(
+        pid: 1,
+        leaserStartTime: nil,
+        udid: "UDID-A",
+        config: .init(deviceType: "iPhone 16", os: "iOS", version: "26.4"),
+        exclusive: true,
+        slotIndex: 0
+      ),
+    ])
+    // Twice, since the interesting case is overwriting an existing file.
+    store.save([])
+
+    let contents = try FileManager.default.contentsOfDirectory(atPath: directory.path)
+    XCTAssertEqual(contents, [name])
   }
 }
 

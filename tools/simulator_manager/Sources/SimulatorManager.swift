@@ -20,6 +20,11 @@ private struct SimulatorLease {
   let config: SimulatorConfig
   let exclusive: Bool
   let slotIndex: Int
+  /// When the leasing process started, captured at lease time.
+  ///
+  /// Persisted so a successor daemon can tell a still-running leaser from a
+  /// recycled PID. Nil when it could not be read.
+  let leaserStartTime: UInt64?
 }
 
 /// Whether `pid` is still running.
@@ -88,6 +93,10 @@ actor SimulatorManager {
   private let deleteRecentlyUsedIdleAfter: UInt16
   private let deleteOnPIDExit: Bool
 
+  /// Where leases are mirrored so a successor daemon can adopt them. Nil disables
+  /// persistence, which is the default in tests that do not care about it.
+  private let leaseStore: LeaseStore?
+
   private var recentlyLeased: LRUSet<SimulatorConfig>
 
   private var startupProcessPaths: [String]
@@ -102,7 +111,8 @@ actor SimulatorManager {
     recentlyUsedCapacity: Int,
     deleteOnPIDExit: Bool,
     startupProcesses: [String] = [],
-    postBoot: String? = nil
+    postBoot: String? = nil,
+    leaseStore: LeaseStore? = nil
   ) {
     self.simulatorControl = simulatorControl
     self.deleteIdleAfter = deleteIdleAfter
@@ -111,6 +121,7 @@ actor SimulatorManager {
     self.recentlyLeased = LRUSet(capacity: recentlyUsedCapacity)
     self.startupProcessPaths = startupProcesses
     self.postBoot = postBoot
+    self.leaseStore = leaseStore
 
     // Change the working directory to some place stable, since on RBE the runfiles directory can
     // get cleaned up
@@ -133,6 +144,154 @@ actor SimulatorManager {
     for path in startupProcessPaths {
       childProcessTasks.append(createStartChildProcessTask(path: path))
     }
+  }
+
+  /// Adopts the leases a previous daemon left behind.
+  ///
+  /// Leases used to live only in this actor's memory, so replacing the daemon --
+  /// which `start.sh` does on any version change, on every lease -- lost the
+  /// bookkeeping for tests that were still running. Their release calls then
+  /// reached a daemon that had never heard of them and reported "doesn't have a
+  /// simulator leased".
+  ///
+  /// Restoring rebuilds enough state for `release` to work: the lease itself, the
+  /// slot holding the device, a reference count, and an exit listener so a leaser
+  /// that dies during the handover is still cleaned up.
+  ///
+  /// Leases whose process is gone are dropped rather than adopted. The device they
+  /// held is left alone: `createBase`/`clone` find existing devices by name, so it
+  /// gets picked up and reference counted by the next lease of that config.
+  func restoreLeases() {
+    guard let leaseStore else { return }
+
+    let persisted = leaseStore.load()
+    guard !persisted.isEmpty else { return }
+
+    var adopted = 0
+    var dropped = 0
+
+    for lease in persisted {
+      guard leaserSurvived(lease) else {
+        dropped += 1
+        continue
+      }
+
+      // Two leases cannot share an exclusive device, and a slot cannot hold two
+      // different devices. A file that says otherwise is inconsistent -- possibly
+      // hand-edited, or written by a version with different slot semantics -- so
+      // prefer dropping the lease over corrupting the slot bookkeeping.
+      guard canAdopt(lease) else {
+        Logger.simulatorManager.error(
+          """
+          ❌ Not restoring conflicting lease for PID \(lease.pid, privacy: .public) \
+          on \(lease.udid, privacy: .public)
+          """
+        )
+        dropped += 1
+        continue
+      }
+
+      leases[lease.pid] = .init(
+        udid: lease.udid,
+        config: lease.config,
+        exclusive: lease.exclusive,
+        slotIndex: lease.slotIndex,
+        leaserStartTime: lease.leaserStartTime
+      )
+
+      // Recreate the slot the device occupies, so it is neither handed to an
+      // incompatible lease nor deleted as idle while its owner is still running.
+      var slots = simulatorSlots[lease.config] ?? []
+      while slots.count <= lease.slotIndex {
+        slots.append(.empty)
+      }
+      slots[lease.slotIndex] = .active(lease.udid, exclusive: lease.exclusive)
+      simulatorSlots[lease.config] = slots
+
+      incrementReferenceCount(for: lease.udid)
+
+      if deleteOnPIDExit {
+        registerReleaseOnExit(for: lease.pid)
+      }
+
+      adopted += 1
+    }
+
+    Logger.simulatorManager.info(
+      """
+      ♻️ Restored \(adopted, privacy: .public) lease(s) from a previous simulator \
+      manager; dropped \(dropped, privacy: .public) whose process had exited
+      """
+    )
+
+    // The dropped entries are gone for good, so rewrite the file rather than let a
+    // later crash re-adopt them.
+    persistLeases()
+  }
+
+  /// Whether the process that took `lease` is the one still running under that
+  /// PID, rather than an unrelated process that reused the number.
+  private func leaserSurvived(_ lease: PersistedLease) -> Bool {
+    guard processIsRunning(lease.pid) else { return false }
+
+    // A record without a start time predates that field. Fall back to liveness
+    // alone: adopting on a PID collision costs one device held until that process
+    // exits, which is better than dropping every lease on a mixed-version upgrade.
+    guard let persistedStart = lease.leaserStartTime else { return true }
+
+    guard let currentStart = processStartTime(lease.pid) else { return false }
+
+    guard currentStart == persistedStart else {
+      Logger.simulatorManager.info(
+        """
+        👻 PID \(lease.pid, privacy: .public) is running but started at a different \
+        time than the lease recorded; treating the leaser as exited
+        """
+      )
+      return false
+    }
+
+    return true
+  }
+
+  /// Whether `lease` can be adopted without contradicting one already restored.
+  private func canAdopt(_ lease: PersistedLease) -> Bool {
+    for existing in leases.values {
+      if existing.udid == lease.udid, existing.exclusive || lease.exclusive {
+        return false
+      }
+
+      if existing.config == lease.config,
+         existing.slotIndex == lease.slotIndex,
+         existing.udid != lease.udid {
+        return false
+      }
+    }
+
+    return true
+  }
+
+  /// Mirrors the current leases to disk.
+  ///
+  /// Called on every change rather than at shutdown, because the daemon is not
+  /// always shut down politely: `start.sh` escalates to `kill -9`, which runs no
+  /// cleanup. Each lease costs a small JSON write, against provisioning a
+  /// simulator that takes seconds.
+  private func persistLeases() {
+    guard let leaseStore else { return }
+
+    leaseStore.save(
+      leases.map { pid, lease in
+        .init(
+          pid: pid,
+          leaserStartTime: lease.leaserStartTime,
+          udid: lease.udid,
+          config: lease.config,
+          exclusive: lease.exclusive,
+          slotIndex: lease.slotIndex
+        )
+      }
+    )
   }
 
   func lease(
@@ -181,8 +340,10 @@ actor SimulatorManager {
       udid: simulator,
       config: config,
       exclusive: exclusive,
-      slotIndex: slotIndex
+      slotIndex: slotIndex,
+      leaserStartTime: processStartTime(leaser)
     )
+    persistLeases()
 
     if deleteOnPIDExit, !processIsRunning(leaser) {
       Logger.simulatorManager.info(
@@ -206,6 +367,16 @@ actor SimulatorManager {
     return simulator
   }
 
+  /// The number of leases whose leasing process is still running.
+  ///
+  /// Exposed over HTTP for diagnostics -- "was anything actually leased when this
+  /// daemon was replaced?" is otherwise hard to answer after the fact. Leases held
+  /// by exited processes are excluded, since those are already reclaimed or about
+  /// to be.
+  func liveLeaseCount() -> Int {
+    return leases.keys.count(where: { processIsRunning($0) })
+  }
+
   func release(for leaser: PID) async throws {
     guard let lease = leases.removeValue(forKey: leaser) else {
       // If the manager recently restarted, we might not have the state of all leases. Since
@@ -218,6 +389,10 @@ actor SimulatorManager {
     Logger.simulatorManager.info(
       "🔓 Releasing simulator \(lease.udid, privacy: .public) for PID \(leaser, privacy: .public)"
     )
+
+    // Recorded before the device is torn down, so a daemon replaced mid-release
+    // does not adopt a lease whose simulator is already going away.
+    persistLeases()
 
     removeReleaseOnExit(for: leaser)
 

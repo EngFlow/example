@@ -7,6 +7,11 @@ final class SimulatorRequestHandler {
     self.simulatorManager = simulatorManager
   }
 
+  /// The number of leases still held by running processes, for diagnostics.
+  func liveLeaseCount() async -> Int {
+    return await simulatorManager.liveLeaseCount()
+  }
+
   func handleRequest(
     method: HTTPMethod,
     pathComponents: [String],
