@@ -104,6 +104,7 @@ sh_test(
     name = "start_restart_test",
     srcs = ["start_restart_test.sh"],
     data = [
+        ":lease_simulator",
         ":release_simulator",
         ":start",
     ],

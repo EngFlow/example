@@ -12,7 +12,10 @@
 
 set -euo pipefail
 
-readonly socket="/tmp/simulator_manager.sock"
+# Overridable only so the test can point at its own socket, matching
+# release_simulator.sh; production callers leave it unset and get the well-known
+# path.
+readonly socket="${SIMULATOR_MANAGER_SOCKET:-/tmp/simulator_manager.sock}"
 
 # --- begin runfiles.bash initialization ---
 set +e
@@ -72,8 +75,31 @@ else
 fi
 
 # Lease is keyed on the test runner's pid so the daemon can reclaim the device if
-# this test dies without releasing.
-readonly lease_pid="${XCTESTRUN_RUNNER_PID:-$$}"
+# this test dies without releasing. So the pid has to name a process that lives
+# for the whole test.
+#
+# rules_apple passes `${BASHPID:-$$}` for that, at two sites in
+# ios_xctestrun_runner.template.sh. At the release call it is a plain top-level
+# line and yields the runner. At our call it is wrapped in a command substitution
+# -- the runner needs the UDID we print -- and BASHPID is fork-sensitive, so it
+# yields the short-lived process that ran us instead. Plain `$$` would have been
+# correct at both, since it keeps the starting shell's value across a fork.
+# Upstream fix pending; until then we correct it here.
+#
+# Not merely a mismatched release: the lease names a process that exits the moment
+# we do, so the daemon's release-on-exit watcher deletes the device while the test
+# is still using it.
+#
+# Which is also what makes the check below possible. The substitution's body is a
+# single command, so bash execs it in place rather than forking again: we *are*
+# that subshell, so the pid we are handed is our own and our parent is the runner.
+# With an intermediate shell it would be a third pid -- unrecognizable, and PPID
+# would name something equally doomed.
+if [[ "${XCTESTRUN_RUNNER_PID:-}" == "$$" ]]; then
+  readonly lease_pid="$PPID"
+else
+  readonly lease_pid="${XCTESTRUN_RUNNER_PID:-$$}"
+fi
 
 url_encoded_device_type="${SIMULATOR_DEVICE_TYPE// /%20}"
 

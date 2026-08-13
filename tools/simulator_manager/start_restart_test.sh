@@ -56,6 +56,7 @@ set -e
 # --- end runfiles.bash initialization v3 ---
 
 readonly start="$(rlocation _main/tools/simulator_manager/start)"
+readonly lease="$(rlocation _main/tools/simulator_manager/lease_simulator)"
 readonly release="$(rlocation _main/tools/simulator_manager/release_simulator)"
 
 failures=0
@@ -72,8 +73,11 @@ function new_prefix() {
   mktemp -u "/tmp/smtest.XXXXXX"
 }
 
+# `|| true` because this is called on a prefix that may have no daemon, and a
+# failing `cat` inside `$(...)` under `set -e` would take the whole script down
+# -- silently, and leaving a daemon behind.
 function daemon_pid() {
-  cat "$1.pid" 2> /dev/null
+  cat "$1.pid" 2> /dev/null || true
 }
 
 function daemon_version() {
@@ -461,7 +465,88 @@ function test_same_version_preserves_a_live_lease() {
   stop_daemon "$prefix"
 }
 
+# The lease and the release have to name the same process, and that process has to
+# outlive the test. whatever pid reaches the socket must be the one the runner would later release.
+function test_lease_pid_survives_a_command_substitution() {
+  local -r prefix="$(new_prefix)"
+
+  SIMULATOR_MANAGER_STATE_PREFIX="$prefix" "$start" > /dev/null 2>&1
+  if [[ -z "$(daemon_pid "$prefix")" ]]; then
+    fail "daemon did not start"
+    return
+  fi
+
+  # Records the request line and never answers, so the lease script blocks on the
+  # reply instead of racing us -- the request is already captured by then.
+  local -r stub="$prefix.stub.sock"
+  local -r captured="$prefix.request"
+  nc -lU "$stub" > "$captured" 2>/dev/null &
+  local -r stub_pid="$!"
+
+  local waited=0
+  while [[ ! -S "$stub" ]]; do
+    if ((waited >= 10)); then
+      kill "$stub_pid" 2> /dev/null || true
+      fail "stub socket never appeared"
+      stop_daemon "$prefix"
+      return
+    fi
+    sleep 1
+    waited=$((waited + 1))
+  done
+
+  # A separate bash stands in for the rules_apple runner script, and records its own pid: that
+  # is the pid it should release under, and the one the lease has to match.
+  #
+  # The command substitution is the whole point --
+  # `unused="$(...)"` -- because that is what the testrunner currently does.
+  local -r runner_pid_file="$prefix.runner_pid"
+  bash -c '
+    echo $$ > "$4"
+    unused="$(SIMULATOR_MANAGER_SOCKET="$1" SIMULATOR_MANAGER_STATE_PREFIX="$2" \
+      SIMULATOR_DEVICE_TYPE="iPhone 16" SIMULATOR_REUSE_SIMULATOR="1" \
+      XCTESTRUN_RUNNER_PID="${BASHPID:-$$}" "$3")"
+  ' _ "$stub" "$prefix" "$lease" "$runner_pid_file" > /dev/null 2>&1 &
+  local -r lease_pid="$!"
+
+  # The request arrives well before any reply would; this only waits for it to be
+  # written, not for the lease to complete.
+  waited=0
+  while ! grep -q 'POST /simulator/' "$captured" 2> /dev/null; do
+    if ((waited >= 60)); then
+      break
+    fi
+    sleep 1
+    waited=$((waited + 1))
+  done
+
+  kill "$lease_pid" 2> /dev/null || true
+  kill "$stub_pid" 2> /dev/null || true
+
+  # Just the pid from `POST /simulator/<pid>?...`.
+  local -r leased_pid="$(
+    grep -o 'POST /simulator/[0-9]*' "$captured" 2> /dev/null | head -1 |
+      grep -o '[0-9]*$'
+  )"
+
+  local -r requester="$(cat "$runner_pid_file" 2> /dev/null || true)"
+
+  if [[ -z "$leased_pid" ]]; then
+    fail "no lease request reached the socket"
+  elif [[ -z "$requester" ]]; then
+    fail "the stand-in runner never recorded its pid"
+  elif [[ "$leased_pid" != "$requester" ]]; then
+    fail "leased under pid $leased_pid, but the runner would release pid $requester; the lease is keyed on a process that exits as soon as it has leased, so the daemon tears the device down under the test"
+  fi
+
+  rm -f "$captured" "$stub" "$runner_pid_file"
+  stop_daemon "$prefix"
+}
+
 readonly device_type="iPhone%2016"
+
+# Needs no simulator, so it runs before the runtime check that can skip the rest.
+test_lease_pid_survives_a_command_substitution
 
 # Leasing provisions a real device, so without a runtime there is nothing to
 # test. Skipping beats failing: the interesting assertions are about start.sh,
