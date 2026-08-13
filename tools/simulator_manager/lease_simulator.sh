@@ -78,28 +78,18 @@ fi
 # this test dies without releasing. So the pid has to name a process that lives
 # for the whole test.
 #
-# rules_apple passes `${BASHPID:-$$}` for that, at two sites in
-# ios_xctestrun_runner.template.sh. At the release call it is a plain top-level
-# line and yields the runner. At our call it is wrapped in a command substitution
-# -- the runner needs the UDID we print -- and BASHPID is fork-sensitive, so it
-# yields the short-lived process that ran us instead. Plain `$$` would have been
-# correct at both, since it keeps the starting shell's value across a fork.
-# Upstream fix pending; until then we correct it here.
+# rules_apple only passes that pid from 5.0.0-rc2 on; 4.5.x calls us with nothing.
+# `$$` is the wrong fallback: it is evaluated here, in our own process, so it names
+# this script -- which exits as soon as we have printed the UDID. The daemon's
+# release-on-exit watcher then reclaims the device while the test is still using
+# it, or hands it to a concurrent test. `PPID` is the runner, which lives for the
+# whole test.
 #
-# Not merely a mismatched release: the lease names a process that exits the moment
-# we do, so the daemon's release-on-exit watcher deletes the device while the test
-# is still using it.
-#
-# Which is also what makes the check below possible. The substitution's body is a
-# single command, so bash execs it in place rather than forking again: we *are*
-# that subshell, so the pid we are handed is our own and our parent is the runner.
-# With an intermediate shell it would be a third pid -- unrecognizable, and PPID
-# would name something equally doomed.
-if [[ "${XCTESTRUN_RUNNER_PID:-}" == "$$" ]]; then
-  readonly lease_pid="$PPID"
-else
-  readonly lease_pid="${XCTESTRUN_RUNNER_PID:-$$}"
-fi
+# Prefer the passed value when we have it: the runner naming itself is better
+# evidence than our inferring it from process topology, which assumes the runner
+# is exactly one level up. That holds for a direct call from `$( ... )`; a
+# launcher that forks rather than `exec`s would break it.
+readonly lease_pid="${XCTESTRUN_RUNNER_PID:-$PPID}"
 
 url_encoded_device_type="${SIMULATOR_DEVICE_TYPE// /%20}"
 

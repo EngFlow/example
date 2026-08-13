@@ -467,7 +467,12 @@ function test_same_version_preserves_a_live_lease() {
 
 # The lease and the release have to name the same process, and that process has to
 # outlive the test. whatever pid reaches the socket must be the one the runner would later release.
+#
+# $1 is the assignment rules_apple prefixes to the call. rules_apple 5.0.0-rc2 passes
+# the runner pid; 4.5.x passes nothing, and then our own `$$` is the trap -- it names
+# this script, which exits the moment it has leased. Both shapes have to work.
 function test_lease_pid_survives_a_command_substitution() {
+  local -r runner_pid_assignment="$1"
   local -r prefix="$(new_prefix)"
 
   SIMULATOR_MANAGER_STATE_PREFIX="$prefix" "$start" > /dev/null 2>&1
@@ -505,7 +510,7 @@ function test_lease_pid_survives_a_command_substitution() {
     echo $$ > "$4"
     unused="$(SIMULATOR_MANAGER_SOCKET="$1" SIMULATOR_MANAGER_STATE_PREFIX="$2" \
       SIMULATOR_DEVICE_TYPE="iPhone 16" SIMULATOR_REUSE_SIMULATOR="1" \
-      XCTESTRUN_RUNNER_PID="${BASHPID:-$$}" "$3")"
+      '"$runner_pid_assignment"' "$3")"
   ' _ "$stub" "$prefix" "$lease" "$runner_pid_file" > /dev/null 2>&1 &
   local -r lease_pid="$!"
 
@@ -545,8 +550,10 @@ function test_lease_pid_survives_a_command_substitution() {
 
 readonly device_type="iPhone%2016"
 
-# Needs no simulator, so it runs before the runtime check that can skip the rest.
-test_lease_pid_survives_a_command_substitution
+# Needs no simulator, so these run before the runtime check that can skip the rest.
+# rules_apple 5.0.0-rc2's shape, then 4.5.x's -- no assignment at all.
+test_lease_pid_survives_a_command_substitution 'XCTESTRUN_RUNNER_PID="${BASHPID:-$$}"'
+test_lease_pid_survives_a_command_substitution ''
 
 # Leasing provisions a real device, so without a runtime there is nothing to
 # test. Skipping beats failing: the interesting assertions are about start.sh,

@@ -147,6 +147,25 @@ ios_unit_test(
 )
 
 swift_library(
+    name = "HelloLongRunningTestLib",
+    testonly = True,
+    srcs = ["HelloLongRunningTest.swift"],
+    module_name = "HelloLongRunningTest",
+)
+
+ios_unit_test(
+    name = "HelloLongRunningTest",
+    minimum_os_version = "26.0",
+    runner = ":ios_leased_simulator_runner",
+    test_host = ":HelloApp",
+    timeout = "long",
+    deps = [":HelloLongRunningTestLib"],
+    exec_properties = {
+        "sandboxAllowed": "False",
+    },
+)
+
+swift_library(
     name = "HelloHostedSnapshotTestLib",
     testonly = True,
     srcs = ["HelloHostedSnapshotTest.swift"],
