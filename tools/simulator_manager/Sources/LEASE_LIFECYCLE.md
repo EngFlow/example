@@ -226,6 +226,14 @@ and a `simctl delete` call inside `delete()` failing silently (it's called as
 regardless of whether the delete actually succeeded) is another. Either way,
 nothing else ever looks for that device again.
 
+`delete()` failing isn't necessarily transient, either: `simctl delete` isn't
+reliable against a still-booted device, and nothing in the original lifecycle
+ever shuts a clone down before deleting it (a clone goes straight from
+"active" to "delete this" — there's no shutdown step in between). A device
+that's genuinely wedged (unresponsive, the same profile as a `launchd_sim`
+that's been running for days) will fail both `shutdown` and `delete` for the
+same reason every time, not just once.
+
 `startReaper(interval:)` runs a sweep on a timer, independent of any lease
 event, that reconciles against reality instead of the event stream: it lists
 every simulator named with the manager's clone prefix
@@ -241,6 +249,20 @@ device must show up as unknown on two consecutive sweeps before it's reaped.
 Deletion goes straight through `simulatorControl`, not through `delete()`:
 an orphan has no slot pointing at it, so there's nothing in `simulatorSlots`
 for `delete()`'s bookkeeping to update.
+
+`SimulatorControl.delete()` itself now shuts the device down before each of
+its own delete attempts (see `shutdownSimulator` in `SimulatorControl.swift`),
+so most orphans clean up on the reaper's first attempt. For the wedged case
+where that still isn't enough, the reaper tracks how many sweeps in a row a
+given UDID has failed to delete (`orphanDeleteFailureCounts`). After three
+consecutive failures, `reapOrphan` treats the device as stuck rather than
+unlucky and calls `SimulatorControl.forceKillLaunchdSim(for:)`, which finds
+the device's `launchd_sim` process by `pgrep -f <udid>` (the process's own
+command line embeds its data path, so the UDID is a safe, specific pattern),
+double-checks the process name before signaling it, and sends it `SIGKILL`
+directly — bypassing `simctl` entirely. One more delete attempt follows; if
+that still fails, the device is logged loudly as needing manual cleanup
+rather than retried silently forever.
 
 ## Where this got subtle
 

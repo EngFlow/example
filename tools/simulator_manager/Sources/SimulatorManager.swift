@@ -112,6 +112,15 @@ actor SimulatorManager {
   /// mid-creation (it exists on disk before `createCloneTask` resumes and records it in
   /// `referenceCount`) never gets caught by a single unlucky sweep.
   private var previousOrphanCandidates: Set<SimulatorUDID> = []
+  /// How many sweeps in a row the reaper has failed to delete a confirmed orphan.
+  /// Reset once a delete succeeds, or once the UDID stops being an orphan at all
+  /// (claimed by a new lease, or already cleaned up some other way).
+  private var orphanDeleteFailureCounts: [SimulatorUDID: Int] = [:]
+  /// After this many consecutive failed deletes, a device is treated as wedged
+  /// rather than merely unlucky: normal `simctl shutdown`/`delete` retries have
+  /// already been exhausted inside `SimulatorControl.delete()` every sweep, so more
+  /// of the same is unlikely to help. Escalate to killing its `launchd_sim` directly.
+  private let forceKillAfterFailedReapAttempts = 3
 
   init(
     simulatorControl: SimulatorControl,
@@ -214,21 +223,79 @@ actor SimulatorManager {
     let confirmedOrphans = currentOrphanCandidates.intersection(previousOrphanCandidates)
     previousOrphanCandidates = currentOrphanCandidates
 
+    // Forget the failure count for anything that isn't a confirmed orphan any more
+    // (claimed by a new lease, or already cleaned up), so a UDID that's reused later
+    // starts with a clean slate rather than inheriting an old device's history.
+    orphanDeleteFailureCounts = orphanDeleteFailureCounts.filter { confirmedOrphans.contains($0.key) }
+
     guard !confirmedOrphans.isEmpty else { return }
 
     for device in managedClones where confirmedOrphans.contains(device.udid) {
-      Logger.simulatorManager.warning(
+      await reapOrphan(device)
+    }
+  }
+
+  /// Deletes one confirmed-orphaned device, escalating to a direct kill of its
+  /// `launchd_sim` if it has already failed to delete
+  /// `forceKillAfterFailedReapAttempts` sweeps in a row.
+  ///
+  /// `SimulatorControl.delete()` already shuts the device down and retries a few
+  /// times internally before throwing, so a failure reaching here means those
+  /// retries were exhausted -- consistent with a genuinely wedged device (the same
+  /// profile as the multi-day-old `launchd_sim` processes that motivated this), not
+  /// a one-off transient error. Retrying the same call every 5-minute sweep forever
+  /// would just fail the same way forever, silently; escalating is what makes this a
+  /// backstop instead of another silent no-op.
+  private func reapOrphan(_ device: SimCtlDevice) async {
+    Logger.simulatorManager.warning(
+      """
+      🧹 Reaping orphaned simulator \(device.udid, privacy: .public) \
+      (\(device.name, privacy: .public)); the manager has no lease or reference to it
+      """
+    )
+
+    do {
+      try await simulatorControl.delete(device.udid, name: device.name, context: "orphan reaper")
+      orphanDeleteFailureCounts.removeValue(forKey: device.udid)
+      return
+    } catch {
+      let failures = (orphanDeleteFailureCounts[device.udid] ?? 0) + 1
+      orphanDeleteFailureCounts[device.udid] = failures
+
+      Logger.simulatorManager.error(
         """
-        🧹 Reaping orphaned simulator \(device.udid, privacy: .public) \
-        (\(device.name, privacy: .public)); the manager has no lease or reference to it
+        ❌ Orphan reaper failed to delete \(device.udid, privacy: .public) \
+        (\(device.name, privacy: .public)), attempt \(failures, privacy: .public): \
+        \(error, privacy: .public)
         """
       )
 
-      try? await simulatorControl.delete(
-        device.udid,
-        name: device.name,
-        context: "orphan reaper"
+      guard failures >= forceKillAfterFailedReapAttempts else { return }
+
+      Logger.simulatorManager.error(
+        """
+        🔨 \(device.udid, privacy: .public) (\(device.name, privacy: .public)) has failed to \
+        delete \(failures, privacy: .public) sweeps in a row; force-killing its launchd_sim
+        """
       )
+
+      await simulatorControl.forceKillLaunchdSim(for: device.udid)
+
+      do {
+        try await simulatorControl.delete(
+          device.udid,
+          name: device.name,
+          context: "orphan reaper, post force-kill"
+        )
+        orphanDeleteFailureCounts.removeValue(forKey: device.udid)
+      } catch {
+        Logger.simulatorManager.error(
+          """
+          ❌ \(device.udid, privacy: .public) (\(device.name, privacy: .public)) still failed to \
+          delete after force-killing launchd_sim: \(error, privacy: .public). Needs manual cleanup.
+          """
+        )
+      }
     }
   }
 

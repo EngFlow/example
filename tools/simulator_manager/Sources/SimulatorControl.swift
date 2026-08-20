@@ -112,6 +112,13 @@ protocol SimulatorControl: Actor {
   // Deliberately excludes base simulators, which are meant to be long-lived and are
   // never reference-counted.
   func listManagedClones() async throws -> [SimCtlDevice]
+
+  // Kills the `launchd_sim` process for `simulator` directly, bypassing `simctl`
+  // entirely. Best-effort and never throws: this is the last resort for a device
+  // that keeps failing `delete()` through normal means (a wedged simulator can fail
+  // both `shutdown` and `delete` indefinitely), used by the orphan reaper's
+  // escalation path.
+  func forceKillLaunchdSim(for simulator: SimulatorUDID) async
 }
 
 actor RealSimulatorControl: SimulatorControl {
@@ -310,20 +317,7 @@ actor RealSimulatorControl: SimulatorControl {
   }
 
   func shutdown(_ simulator: SimulatorUDID, context: @escaping @autoclosure () -> String?) async throws {
-    do {
-      _ = try await simctl(["shutdown", simulator], context: context())
-    } catch let error as ProcessError {
-      // Exit code 149 is related to the simulator already being shut down
-      guard error.exitCode == 149 else {
-        throw error
-      }
-
-      Logger.simulatorControl.warning(
-        """
-        ⚠️ Shutdown failed, but probably \"already shut down\": \(error, privacy: .public)
-        """
-      )
-    }
+    try await shutdownSimulator(simulator, context: context())
   }
 
   func cleanTempFiles(in simulator: SimulatorUDID) {
@@ -400,6 +394,40 @@ actor RealSimulatorControl: SimulatorControl {
     }
 
     return devicesByRuntime.values.flatMap { $0 }.filter { $0.name.hasPrefix(managedCloneNamePrefix) }
+  }
+
+  func forceKillLaunchdSim(for simulator: SimulatorUDID) async {
+    // `launchd_sim`'s command line embeds the device's own data path (see the ps
+    // output that motivated this: ".../Devices/<udid>/data/var/run/..."), so the
+    // UDID is a safe, specific `pgrep -f` pattern -- it can only match that one
+    // device's process tree.
+    let pids: [Int32]
+    do {
+      let output = try await subprocess("/usr/bin/pgrep", ["-f", simulator])
+      pids = output.split(separator: "\n").compactMap { Int32($0.trimmingCharacters(in: .whitespaces)) }
+    } catch {
+      // `pgrep` exits non-zero (surfaced here as a thrown `ProcessError`) when nothing
+      // matches -- there's nothing left to kill.
+      return
+    }
+
+    for pid in pids {
+      // Double check this is actually `launchd_sim` before signaling it. `pgrep -f`
+      // matches the UDID anywhere in the command line; being wrong here would kill an
+      // unrelated process that merely mentioned this device (e.g. in a log path).
+      guard let comm = try? await subprocess("/bin/ps", ["-p", "\(pid)", "-o", "comm="]),
+            comm.trimmingCharacters(in: .whitespacesAndNewlines).hasSuffix("launchd_sim") else {
+        continue
+      }
+
+      Logger.simulatorControl.warning(
+        """
+        🔨 Force-killing launchd_sim (pid \(pid, privacy: .public)) for stuck simulator \
+        \(simulator, privacy: .public)
+        """
+      )
+      kill(pid, SIGKILL)
+    }
   }
 
   func ensureBooted(_ simulator: SimulatorUDID, context: @escaping @autoclosure () -> String?) async throws {
@@ -584,12 +612,19 @@ actor SimulatorDeleteOrExistenceMutex {
     Logger.simulatorControl.info("🗑️ Deleting simulator \(simulator, privacy: .public)")
 
     // `simctl delete` can fail transiently (CoreSimulator daemon busy, a lingering
-    // child process, disk I/O). Callers treat a thrown error here as "give up until
-    // the next event," so retry a few times before surfacing failure -- it's much
-    // cheaper than leaving the simulator running until the orphan reaper's next
-    // sweep catches it.
+    // child process, disk I/O) or because the device is still booted -- `delete`
+    // does not reliably shut a booted device down on its own. Callers treat a thrown
+    // error here as "give up until the next event," so shut down and retry a few
+    // times before surfacing failure -- it's much cheaper than leaving the simulator
+    // running until the orphan reaper's next sweep catches it.
     let maxAttempts = 3
     for attempt in 1...maxAttempts {
+      // Best-effort: proceed to the delete attempt regardless of whether this
+      // succeeds. A shutdown failure for a reason other than "already shut down"
+      // (already handled inside `shutdownSimulator`) shouldn't block trying delete
+      // anyway, since delete is the operation that actually matters here.
+      try? await shutdownSimulator(simulator, context: context())
+
       do {
         _ = try await simctl(["delete", simulator], context: context())
         Logger.simulatorControl.info("🗑️ Deleted simulator \(simulator, privacy: .public)")
@@ -614,6 +649,28 @@ actor SimulatorDeleteOrExistenceMutex {
         try? await Task.sleep(for: .seconds(2))
       }
     }
+  }
+}
+
+/// Shared by `RealSimulatorControl.shutdown` and `unlockedDelete`, since delete needs
+/// to shut the device down first and shouldn't reimplement this.
+private func shutdownSimulator(
+  _ simulator: SimulatorUDID,
+  context: @escaping @autoclosure () -> String?
+) async throws {
+  do {
+    _ = try await simctl(["shutdown", simulator], context: context())
+  } catch let error as ProcessError {
+    // Exit code 149 is related to the simulator already being shut down
+    guard error.exitCode == 149 else {
+      throw error
+    }
+
+    Logger.simulatorControl.warning(
+      """
+      ⚠️ Shutdown failed, but probably \"already shut down\": \(error, privacy: .public)
+      """
+    )
   }
 }
 
