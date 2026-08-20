@@ -52,6 +52,15 @@ struct Main: AsyncParsableCommand {
   )
   var leasePath: String?
 
+  @Option(
+    help: """
+    Seconds between sweeps of the orphan reaper, which deletes clone simulators the \
+    manager has lost track of (e.g. left behind by a prior daemon's restart, or a \
+    failed deletion). 0 disables the reaper.
+    """
+  )
+  var reapIntervalSeconds: UInt16 = 300
+
   func validate() throws {
     guard recentlyUsedCapacity > 0 else {
       throw ValidationError(
@@ -81,6 +90,8 @@ struct Main: AsyncParsableCommand {
     // Before serving, so the first release to arrive already sees the leases this
     // daemon inherited.
     await simulatorManager.restoreLeases()
+
+    await simulatorManager.startReaper(interval: .seconds(Int(reapIntervalSeconds)))
 
     try await simulatorManager.startChildProcesses()
 

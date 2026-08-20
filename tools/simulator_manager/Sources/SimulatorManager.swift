@@ -106,6 +106,13 @@ actor SimulatorManager {
   private var childProcessTasks: [Task<Void, Never>] = []
   private var childProcesses: [String: (Process, DispatchSourceRead, DispatchSourceRead)] = [:]
 
+  private var reaperTask: Task<Void, Never>?
+  /// Clone UDIDs that looked orphaned on the *previous* sweep. A device must appear
+  /// unknown on two consecutive sweeps before the reaper deletes it, so a clone that's
+  /// mid-creation (it exists on disk before `createCloneTask` resumes and records it in
+  /// `referenceCount`) never gets caught by a single unlucky sweep.
+  private var previousOrphanCandidates: Set<SimulatorUDID> = []
+
   init(
     simulatorControl: SimulatorControl,
     deleteRecentlyUsedIdleAfter: UInt16,
@@ -131,6 +138,8 @@ actor SimulatorManager {
   }
 
   deinit {
+    reaperTask?.cancel()
+
     for task in childProcessTasks {
       task.cancel()
     }
@@ -145,6 +154,81 @@ actor SimulatorManager {
   func startChildProcesses() throws {
     for path in startupProcessPaths {
       childProcessTasks.append(createStartChildProcessTask(path: path))
+    }
+  }
+
+  /// Starts the periodic sweep that deletes clone simulators the manager has lost
+  /// track of.
+  ///
+  /// Every other cleanup path is event-driven: an explicit release, a PID-exit
+  /// watcher, an idle timer, or "rediscovered by name on the next lease of the same
+  /// config." Each of those can miss a device -- a daemon restart drops a lease
+  /// whose device is never leased again (see `restoreLeases`), or a `simctl delete`
+  /// call fails and is swallowed (see `delete`) -- and nothing else ever looks for
+  /// it again. This sweep is the backstop: it reconciles against what CoreSimulator
+  /// actually has running, independent of how a device became untracked.
+  ///
+  /// `interval <= .zero` disables it, matching how `deleteIdleAfter` of 0 means
+  /// "immediately" elsewhere in this file rather than "never."
+  func startReaper(interval: Duration) {
+    guard interval > .zero else { return }
+
+    reaperTask = Task {
+      while !Task.isCancelled {
+        try? await Task.sleep(for: interval)
+        guard !Task.isCancelled else { break }
+        await reapOrphanedSimulators()
+      }
+    }
+  }
+
+  /// One sweep of the orphan reaper: list every clone simulator that exists, and
+  /// delete the ones with no entry in `referenceCount`.
+  ///
+  /// `referenceCount` is the right ground truth to check against, not `leases` or
+  /// `simulatorSlots`: a device gets an entry in it the instant it's claimed (before
+  /// any `await`, per the invariant on `getSimulator`), and the entry is removed
+  /// only in `delete()` -- including while the device sits in the idle-timer grace
+  /// period, where the count is `0` but the key stays. So "no entry" reliably means
+  /// "the manager has no idea this exists," not merely "nothing is leasing it right
+  /// now."
+  ///
+  /// Bypasses `delete()` deliberately: that function updates a slot in
+  /// `simulatorSlots`, but an orphan by definition has no slot pointing at it, so
+  /// there is nothing there to update. This calls `simulatorControl` directly, the
+  /// same lower-level operation `delete()` itself wraps.
+  private func reapOrphanedSimulators() async {
+    let known = Set(referenceCount.keys)
+
+    let managedClones: [SimCtlDevice]
+    do {
+      managedClones = try await simulatorControl.listManagedClones()
+    } catch {
+      Logger.simulatorManager.error(
+        "❌ Orphan reaper failed to list simulators, skipping this sweep: \(error, privacy: .public)"
+      )
+      return
+    }
+
+    let currentOrphanCandidates = Set(managedClones.map(\.udid)).subtracting(known)
+    let confirmedOrphans = currentOrphanCandidates.intersection(previousOrphanCandidates)
+    previousOrphanCandidates = currentOrphanCandidates
+
+    guard !confirmedOrphans.isEmpty else { return }
+
+    for device in managedClones where confirmedOrphans.contains(device.udid) {
+      Logger.simulatorManager.warning(
+        """
+        🧹 Reaping orphaned simulator \(device.udid, privacy: .public) \
+        (\(device.name, privacy: .public)); the manager has no lease or reference to it
+        """
+      )
+
+      try? await simulatorControl.delete(
+        device.udid,
+        name: device.name,
+        context: "orphan reaper"
+      )
     }
   }
 

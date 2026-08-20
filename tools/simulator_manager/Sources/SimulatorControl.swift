@@ -105,6 +105,13 @@ protocol SimulatorControl: Actor {
     runtimeIdentifier: String,
     context: @escaping @autoclosure () -> String?
   ) async throws -> String?
+
+  // Every clone-named simulator that currently exists, across all runtimes.
+  //
+  // Used by the orphan reaper to reconcile the manager's bookkeeping against reality.
+  // Deliberately excludes base simulators, which are meant to be long-lived and are
+  // never reference-counted.
+  func listManagedClones() async throws -> [SimCtlDevice]
 }
 
 actor RealSimulatorControl: SimulatorControl {
@@ -363,6 +370,38 @@ actor RealSimulatorControl: SimulatorControl {
     }
   }
 
+  func listManagedClones() async throws -> [SimCtlDevice] {
+    let output = try await simctl(["list", "devices", "-j"], context: "listManagedClones")
+
+    guard let jsonData = output.data(using: .utf8) else {
+      throw NSError(
+        domain: "SimulatorControl",
+        code: 1,
+        userInfo: [NSLocalizedDescriptionKey: "Failed to convert output to data"]
+      )
+    }
+
+    let devicesByRuntime: [String: [SimCtlDevice]]
+    do {
+      devicesByRuntime = try JSONDecoder().decode(SimCtlDevices.self, from: jsonData).devices
+    } catch {
+      let json = String(data: jsonData, encoding: .utf8) ?? "<invalid utf8>"
+      Logger.simulatorControl.error(
+        """
+        ❌ Failed to decode 'simctl list devices -j': \(error, privacy: .public).
+        Output: \(json, privacy: .public)
+        """
+      )
+      throw NSError(
+        domain: "SimulatorControl",
+        code: 1,
+        userInfo: [NSLocalizedDescriptionKey: "Failed to decode output: \(error) - \(json)"]
+      )
+    }
+
+    return devicesByRuntime.values.flatMap { $0 }.filter { $0.name.hasPrefix(managedCloneNamePrefix) }
+  }
+
   func ensureBooted(_ simulator: SimulatorUDID, context: @escaping @autoclosure () -> String?) async throws {
     for retriesLeft in (0...1).reversed() {
       do {
@@ -544,20 +583,37 @@ actor SimulatorDeleteOrExistenceMutex {
   ) async throws {
     Logger.simulatorControl.info("🗑️ Deleting simulator \(simulator, privacy: .public)")
 
-    do {
-      _ = try await simctl(["delete", simulator], context: context())
-    } catch {
-      Logger.simulatorControl.error(
-        """
-        ❌ Failed to delete simulator \(simulator, privacy: .public): \
-        \(error, privacy: .public)
-        """
-      )
+    // `simctl delete` can fail transiently (CoreSimulator daemon busy, a lingering
+    // child process, disk I/O). Callers treat a thrown error here as "give up until
+    // the next event," so retry a few times before surfacing failure -- it's much
+    // cheaper than leaving the simulator running until the orphan reaper's next
+    // sweep catches it.
+    let maxAttempts = 3
+    for attempt in 1...maxAttempts {
+      do {
+        _ = try await simctl(["delete", simulator], context: context())
+        Logger.simulatorControl.info("🗑️ Deleted simulator \(simulator, privacy: .public)")
+        return
+      } catch {
+        guard attempt < maxAttempts else {
+          Logger.simulatorControl.error(
+            """
+            ❌ Failed to delete simulator \(simulator, privacy: .public) after \
+            \(maxAttempts, privacy: .public) attempts: \(error, privacy: .public)
+            """
+          )
+          throw error
+        }
 
-      throw error
+        Logger.simulatorControl.warning(
+          """
+          ⚠️ Delete attempt \(attempt, privacy: .public)/\(maxAttempts, privacy: .public) for \
+          simulator \(simulator, privacy: .public) failed, retrying: \(error, privacy: .public)
+          """
+        )
+        try? await Task.sleep(for: .seconds(2))
+      }
     }
-
-    Logger.simulatorControl.info("🗑️ Deleted simulator \(simulator, privacy: .public)")
   }
 }
 
@@ -612,13 +668,18 @@ private func syncSubprocess(
   }
 }
 
+/// Prefix shared by every simulator this manager creates for cloning (see
+/// `SimulatorConfig.cloneDeviceName`). Used to scope the orphan reaper to devices
+/// it manages, so it never touches a developer's own simulators or base templates.
+let managedCloneNamePrefix = "EXAMPLE_BAZEL_CLONE_"
+
 extension SimulatorConfig {
   func baseDeviceName() -> String {
     return "EXAMPLE_BAZEL_BASE_\(deviceType)_\(version)"
   }
 
   func cloneDeviceName(index: Int) -> String {
-    return "EXAMPLE_BAZEL_CLONE_\(deviceType)_\(version)_\(index)"
+    return "\(managedCloneNamePrefix)\(deviceType)_\(version)_\(index)"
   }
 
   func runtimeIdentifier() -> String {
