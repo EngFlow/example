@@ -14,28 +14,28 @@ struct LRUSet<Element: Hashable> {
     self.capacity = capacity
   }
 
-  // Returns an element that was evicted from the set.
+  // Returns an element that was evicted from the set, or nil if nothing was evicted
+  // (including when `element` was already present and just moved to most-recently-used).
   mutating func insert(_ element: Element) -> Element? {
-    let evicted: Element?
     if storage.contains(element) {
       if let index = order.firstIndex(of: element) {
-        evicted = order.remove(at: index)
-      } else {
-        evicted = nil
+        order.remove(at: index)
       }
 
       order.append(element)
-    } else {
-      if order.count >= capacity, let oldest = order.first {
-        order.removeFirst()
-        evicted = storage.remove(oldest)
-      } else {
-        evicted = nil
-      }
-
-      order.append(element)
-      storage.insert(element)
+      return nil
     }
+
+    let evicted: Element?
+    if order.count >= capacity, let oldest = order.first {
+      order.removeFirst()
+      evicted = storage.remove(oldest)
+    } else {
+      evicted = nil
+    }
+
+    order.append(element)
+    storage.insert(element)
     return evicted
   }
 

@@ -51,19 +51,21 @@ private enum SimulatorSlot {
 extension SimulatorSlot {
   var sortOrder: Int {
     switch self {
-    // Try to use active or pending creation simulators first (should only be
-    // one of either for non-exclusive)
+    // Try to use an active simulator first (should only be one for non-exclusive)
     case .active:
       return 0
-    case .pendingCreation:
+
+    // A pending deletion is already created and booted, so reuse it before waiting
+    // on a pending creation or starting a fresh one.
+    case .pendingDeletion:
       return 1
 
-    // Use a pending deletion before any empty slots
-    case .pendingDeletion:
+    // Use an empty slot before waiting on a pending creation, so a lease doesn't
+    // block on someone else's in-flight clone when a fresh slot is free to start.
+    case .empty:
       return 2
 
-    // Finally use empty slots
-    case .empty:
+    case .pendingCreation:
       return 3
 
     // Deleting simulator can't be used, so put it at the end
@@ -646,12 +648,18 @@ actor SimulatorManager {
     let processSource =
       DispatchSource.makeProcessSource(identifier: leaser, eventMask: .exit, queue: .main)
 
+    // Avoid double handling of exit in case the process exits between
+    // `processSource.resume()` and the check with `kill` below. The event handler runs
+    // on `.main`, while the liveness check below runs on whatever thread calls this
+    // method, so the flag guarding against a double call must itself be synchronized.
+    let handledExitLock = NSLock()
     var handledExit = false
     let onExitHandler: () -> Void = { [weak self] in
-      // Avoid double handling of exit in case the process exits between
-      // `processSource.resume()` and the check with `kill`
-      guard !handledExit else { return }
+      handledExitLock.lock()
+      let alreadyHandled = handledExit
       handledExit = true
+      handledExitLock.unlock()
+      guard !alreadyHandled else { return }
 
       Task {
         guard let self else { return }
@@ -665,8 +673,8 @@ actor SimulatorManager {
     processSource.setEventHandler { onExitHandler() }
     processSource.resume()
 
-    // Check to see if the process is already dead and cancel the source if it is, which will
-    // trigger `setCancelHandler`, which releases the simulator
+    // Check to see if the process is already dead. There is no `setCancelHandler`, so
+    // handle the exit directly here rather than relying on cancellation to do it.
     guard processIsRunning(leaser) else {
       processSource.cancel()
       onExitHandler()
