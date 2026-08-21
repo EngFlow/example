@@ -166,6 +166,27 @@ ios_unit_test(
 )
 
 swift_library(
+    name = "HelloLeakProbeTestLib",
+    testonly = True,
+    srcs = ["HelloLeakProbeTest.swift"],
+    module_name = "HelloLeakProbeTest",
+)
+
+# Found what was holding on to memory in HelloLongRunningTest; `manual` because it just
+# measures rather than checking anything, and safe to delete now.
+ios_unit_test(
+    name = "HelloLeakProbeTest",
+    minimum_os_version = "26.0",
+    runner = ":ios_leased_simulator_runner",
+    tags = ["manual"],
+    test_host = ":HelloApp",
+    deps = [":HelloLeakProbeTestLib"],
+    exec_properties = {
+        "sandboxAllowed": "False",
+    },
+)
+
+swift_library(
     name = "HelloHostedSnapshotTestLib",
     testonly = True,
     srcs = ["HelloHostedSnapshotTest.swift"],

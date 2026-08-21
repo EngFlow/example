@@ -506,7 +506,10 @@ function test_lease_pid_survives_a_command_substitution() {
   # The command substitution is the whole point --
   # `unused="$(...)"` -- because that is what the testrunner currently does.
   local -r runner_pid_file="$prefix.runner_pid"
-  bash -c '
+  # /bin/bash, not PATH's: rules_apple's runner template is `#!/bin/bash`, which on
+  # macOS is 3.2. A newer bash from PATH would define BASHPID and so model a value
+  # the runner cannot actually pass us.
+  /bin/bash -c '
     echo $$ > "$4"
     unused="$(SIMULATOR_MANAGER_SOCKET="$1" SIMULATOR_MANAGER_STATE_PREFIX="$2" \
       SIMULATOR_DEVICE_TYPE="iPhone 16" SIMULATOR_REUSE_SIMULATOR="1" \
@@ -550,10 +553,15 @@ function test_lease_pid_survives_a_command_substitution() {
 
 readonly device_type="iPhone%2016"
 
-# Needs no simulator, so these run before the runtime check that can skip the rest.
-# rules_apple 5.0.0-rc2's shape, then 4.5.x's -- no assignment at all.
+# Needs no simulator, so this runs before the runtime check that can skip the rest.
+#
+# Only 5.0.0-rc2's shape, which is what MODULE.bazel pins. 4.5.x's shape -- no
+# assignment at all -- is not checked because nothing can pass it: with no pid
+# handed to us, `PPID` is the only candidate, and how many levels up the runner
+# sits depends on the bash running it. Bash 3.2 forks for `unused="$( ... )"` and
+# then execs, so `PPID` is that fork, which exits as soon as the substitution
+# does; bash 5.x execs in place, so `PPID` is the runner itself.
 test_lease_pid_survives_a_command_substitution 'XCTESTRUN_RUNNER_PID="${BASHPID:-$$}"'
-test_lease_pid_survives_a_command_substitution ''
 
 # Leasing provisions a real device, so without a runtime there is nothing to
 # test. Skipping beats failing: the interesting assertions are about start.sh,
