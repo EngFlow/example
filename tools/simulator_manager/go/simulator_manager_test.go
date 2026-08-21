@@ -255,6 +255,55 @@ func TestDeleteOnPIDExit_AutoReleasesWhenProcessDies(t *testing.T) {
 	assert.Contains(t, control.deleteCalls, udid)
 }
 
+func TestLease_FailsAssertionWhenMoreThanOneRunningSimulatorShareTheSlot(t *testing.T) {
+	control := newFakeSimulatorControl()
+	sm := newTestManager(control, 60, 60, false, nil)
+	cfg := testConfig("iPhone")
+
+	// Simulate the exact failure mode the assertion exists to catch: two real
+	// booted devices ended up sharing what should be one slot's name.
+	name := cfg.CloneDeviceName(0)
+	control.runningOverride[name] = []SimCtlDevice{
+		{Name: name, UDID: "udid-a", State: "Booted"},
+		{Name: name, UDID: "udid-b", State: "Booted"},
+	}
+
+	_, err := sm.Lease(1, false, cfg)
+
+	require.Error(t, err)
+	assert.Contains(t, err.Error(), "assertion failed")
+	assert.Contains(t, err.Error(), "udid-a")
+	assert.Contains(t, err.Error(), "udid-b")
+	assert.Equal(t, ErrNoLease, sm.Release(1), "a lease that failed the assertion must not have been recorded")
+	assert.Equal(t, 0, sm.LiveLeaseCount())
+}
+
+func TestLease_SucceedsWhenAtMostOneRunningSimulatorForTheSlot(t *testing.T) {
+	control := newFakeSimulatorControl()
+	sm := newTestManager(control, 60, 60, false, nil)
+	cfg := testConfig("iPhone")
+
+	name := cfg.CloneDeviceName(0)
+	control.runningOverride[name] = []SimCtlDevice{
+		{Name: name, UDID: "udid-a", State: "Booted"},
+	}
+
+	udid, err := sm.Lease(1, false, cfg)
+
+	require.NoError(t, err)
+	assert.NotEmpty(t, udid)
+}
+
+func TestLease_IgnoresRunningSimulatorsListErrorRatherThanFailingTheLease(t *testing.T) {
+	control := &erroringRunningSimulatorsControl{fakeSimulatorControl: newFakeSimulatorControl()}
+	sm := newTestManager(control, 60, 60, false, nil)
+
+	udid, err := sm.Lease(1, false, testConfig("iPhone"))
+
+	require.NoError(t, err, "a failure to run the diagnostic check itself must not fail the lease")
+	assert.NotEmpty(t, udid)
+}
+
 func TestLiveLeaseCount(t *testing.T) {
 	control := newFakeSimulatorControl()
 	// deleteOnPIDExit disabled so a lease for an already-dead PID isn't

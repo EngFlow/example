@@ -32,12 +32,20 @@ type fakeSimulatorControl struct {
 	deleteErrs  map[SimulatorUDID]error
 
 	cleanTempFilesCalls []SimulatorUDID
+
+	// runningOverride, keyed by clone name, is returned by RunningSimulators
+	// for that name. The fake doesn't model real booted state on its own
+	// (there's nothing to derive it from), so this defaults to empty --
+	// tests that want to exercise the "duplicate running simulator" assertion
+	// set an override explicitly.
+	runningOverride map[string][]SimCtlDevice
 }
 
 func newFakeSimulatorControl() *fakeSimulatorControl {
 	return &fakeSimulatorControl{
 		ensureBootedErrs: make(map[SimulatorUDID]error),
 		deleteErrs:       make(map[SimulatorUDID]error),
+		runningOverride:  make(map[string][]SimCtlDevice),
 	}
 }
 
@@ -107,6 +115,23 @@ func (f *fakeSimulatorControl) GetExisting(name string, deviceType string, runti
 	// by RealSimulatorControl's own createBase/clone rediscovery logic, which
 	// this fake doesn't need to replicate.
 	return "", nil
+}
+
+func (f *fakeSimulatorControl) RunningSimulators(name string) ([]SimCtlDevice, error) {
+	f.mu.Lock()
+	defer f.mu.Unlock()
+	return f.runningOverride[name], nil
+}
+
+// erroringRunningSimulatorsControl wraps a fakeSimulatorControl to make
+// RunningSimulators always fail, for testing that the lease-time assertion
+// treats a failure to perform the check as non-fatal to the lease itself.
+type erroringRunningSimulatorsControl struct {
+	*fakeSimulatorControl
+}
+
+func (c *erroringRunningSimulatorsControl) RunningSimulators(name string) ([]SimCtlDevice, error) {
+	return nil, fmt.Errorf("simctl unavailable")
 }
 
 // fakeLeaseStore is an in-memory LeaseStore for testing RestoreLeases and

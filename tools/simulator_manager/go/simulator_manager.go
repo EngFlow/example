@@ -6,6 +6,7 @@ import (
 	"io"
 	"os"
 	"os/exec"
+	"strings"
 	"sync"
 	"syscall"
 	"time"
@@ -366,6 +367,10 @@ func (sm *SimulatorManager) Lease(leaser int32, exclusive bool, config Simulator
 		return "", err
 	}
 
+	if err := sm.assertAtMostOneRunning(config, slotIndex); err != nil {
+		return "", err
+	}
+
 	sm.mu.Lock()
 	sm.recentlyLeased.Insert(config)
 
@@ -394,6 +399,42 @@ func (sm *SimulatorManager) Lease(leaser int32, exclusive bool, config Simulator
 	}
 
 	return simulator, nil
+}
+
+// assertAtMostOneRunning is a lease-time sanity check, not a recoverable
+// error path: a device backing one slot should only ever have one real,
+// booted simulator behind it. If simctl reports more than one booted
+// simulator sharing this slot's name, the reuse/sharing logic has let a
+// duplicate device come into existence -- exactly the failure mode that
+// causes leaked, unreferenced launchd_sim processes. Failing loudly here
+// catches that at the moment it happens, rather than relying solely on
+// after-the-fact reaping.
+//
+// A failure to even perform the check (simctl itself erroring) is logged and
+// ignored rather than failing the lease -- the check is a diagnostic, and
+// its own failure shouldn't block a lease that's otherwise fine.
+func (sm *SimulatorManager) assertAtMostOneRunning(config SimulatorConfig, slotIndex int) error {
+	name := config.CloneDeviceName(slotIndex)
+
+	running, err := sm.simulatorControl.RunningSimulators(name)
+	if err != nil {
+		logger.Warn("Failed to list running simulators for lease assertion", "name", name, "error", err)
+		return nil
+	}
+
+	if len(running) <= 1 {
+		return nil
+	}
+
+	udids := make([]string, len(running))
+	for i, device := range running {
+		udids[i] = device.UDID
+	}
+
+	return fmt.Errorf(
+		"assertion failed: %d simulators named %q are running (expected at most 1): %s",
+		len(running), name, strings.Join(udids, ", "),
+	)
 }
 
 func (sm *SimulatorManager) LiveLeaseCount() int {

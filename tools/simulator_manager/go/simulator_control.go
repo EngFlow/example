@@ -40,8 +40,9 @@ type SimCtlDevices struct {
 }
 
 type SimCtlDevice struct {
-	Name string `json:"name"`
-	UDID string `json:"udid"`
+	Name  string `json:"name"`
+	UDID  string `json:"udid"`
+	State string `json:"state"`
 }
 
 type ProcessError struct {
@@ -85,6 +86,13 @@ type SimulatorControl interface {
 	Delete(simulator SimulatorUDID, name string, context string) error
 
 	GetExisting(name string, deviceType string, runtimeIdentifier string, context string) (string, error)
+
+	// RunningSimulators returns every currently-booted simulator named `name`,
+	// across all runtimes. Used as a lease-time sanity check: a shared device
+	// should only ever have one real, booted simulator behind it, so finding
+	// more than one indicates the sharing/reuse logic let a duplicate device
+	// come into existence.
+	RunningSimulators(name string) ([]SimCtlDevice, error)
 }
 
 type RealSimulatorControl struct {
@@ -319,6 +327,29 @@ func (r *RealSimulatorControl) Delete(simulator SimulatorUDID, name string, cont
 	return r.deleteAndExistenceMutex(name, func(mutex *SimulatorDeleteOrExistenceMutex) error {
 		return mutex.unlockedDelete(simulator, context)
 	})
+}
+
+func (r *RealSimulatorControl) RunningSimulators(name string) ([]SimCtlDevice, error) {
+	output, err := simctl([]string{"list", "devices", "-j"}, "assertAtMostOneRunning")
+	if err != nil {
+		return nil, err
+	}
+
+	var devices SimCtlDevices
+	if err := json.Unmarshal([]byte(output), &devices); err != nil {
+		simulatorControlLogger.Error("Failed to decode 'simctl list devices -j'", "error", err, "output", output)
+		return nil, fmt.Errorf("failed to decode output: %w - %s", err, output)
+	}
+
+	var running []SimCtlDevice
+	for _, deviceList := range devices.Devices {
+		for _, device := range deviceList {
+			if device.Name == name && device.State == "Booted" {
+				running = append(running, device)
+			}
+		}
+	}
+	return running, nil
 }
 
 func (r *RealSimulatorControl) GetExisting(name string, deviceType string, runtimeIdentifier string, context string) (string, error) {
