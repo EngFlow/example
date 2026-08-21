@@ -32,7 +32,13 @@ build:clang --host_cxxopt="-fvisibility=hidden"
 
 # iOS setup
 build:ios --ios_multi_cpus=sim_arm64
-build:ios --@rules_apple//apple/build_settings:ios_simulator_device="iPhone 16 Pro"
+# The simulator device is not pinned here: which device profiles exist depends on
+# the installed Xcode's iOS runtime, so any value checked in goes stale. Set it in
+# .bazelrc.user, e.g.
+#
+#     build:ios --@rules_apple//apple/build_settings:ios_simulator_device="iPhone 17"
+#
+# `xcrun simctl list devicetypes` lists what is available locally.
 
 # Platform-specific options for each supported platform.
 build:remote_linux_x64 --extra_execution_platforms=//platform/linux_x64
