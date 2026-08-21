@@ -49,7 +49,7 @@ sh_binary(
     data = [
         ":install_post_boot_script",
         ":prepare_simulator",
-        ":simulator_manager",
+        "//tools/simulator_manager/go",
     ],
     visibility = ["//visibility:public"],
     deps = ["@bazel_tools//tools/bash/runfiles"],

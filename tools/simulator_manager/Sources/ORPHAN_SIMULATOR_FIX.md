@@ -172,24 +172,34 @@ See the next section for what addresses this.
 
 ## Verification status
 
-There is no `BUILD` file or `Package.swift` for this target yet, so it isn't
-wired into Bazel and can't be built with `swift build` either. This change
-has been verified by code review against the existing invariants (see
-`LEASE_LIFECYCLE.md`), not by compiling or running it. Before relying on
-this in production:
+`bazel build //experiments/yannic/macsimulatormanager/swift:macsimulatormanager`
+now succeeds for real (see [`README.md`](README.md#building-it)), and
+`bazel-bin/experiments/yannic/macsimulatormanager/swift/macsimulatormanager
+--help` runs and prints the expected flags, including
+`--reap-interval-seconds`. That confirms the code compiles and links against
+`ShellOut`/`ArgumentParser`/SwiftNIO correctly, but not the runtime behavior
+described above — there's no CoreSimulator runtime installed on the machine
+this was built on (`xcrun simctl list runtimes` is empty there), so the
+lease/reaper/escalation logic itself is still verified only by code review
+against the invariants in `LEASE_LIFECYCLE.md`, not by exercising it.
+Getting the toolchain wired up also required one unplanned fix: this repo's
+`common:clang` config enforces `-Werror=sign-compare` globally (including for
+host tools), which `rules_swift`'s own bundled `tools/common/process.cc`
+doesn't build clean under — exempted via a `--per_file_copt` in `.bazelrc`
+rather than patching upstream, mirroring the existing `.pb.cc` exemption
+right above it.
+
+Before relying on this in production:
 
 1. Confirm this branch is actually the source for whatever customers run —
-   given the missing build target and the `DO NOT MERGE` history noted
-   above, that's not yet established. If it is, push this branch and get it
-   merged; if there's a separate deploy path, find it.
-2. Set up a build target (Bazel or an ad hoc `Package.swift`) so this code
-   compiles and can be typechecked — it currently depends on `ShellOut`,
-   `ArgumentParser`, and SwiftNIO, none of which are vendored here.
-3. Manually exercise the restart-orphan path: lease a config, `kill -9` the
+   given the `DO NOT MERGE` history noted above, that's not yet established.
+   If it is, push this branch and get it merged; if there's a separate
+   deploy path, find it.
+2. Manually exercise the restart-orphan path: lease a config, `kill -9` the
    daemon, start a new instance with a short `--reap-interval-seconds`, and
    confirm the orphaned clone disappears from `xcrun simctl list devices`
    within two sweep intervals without touching unrelated simulators.
-4. Manually exercise the wedged-device escalation path: lease a config, then
+3. Manually exercise the wedged-device escalation path: lease a config, then
    independently hang or otherwise make its clone's `simctl shutdown`/`delete`
    fail out-of-band, and confirm the reaper force-kills its `launchd_sim`
    after 3 failed sweeps rather than retrying forever.

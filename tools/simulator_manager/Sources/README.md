@@ -9,9 +9,23 @@ slow and resource-hungry.
 The daemon speaks HTTP over a Unix domain socket rather than a TCP port,
 since it is only ever talked to by processes on the same machine.
 
+## Building it
+
+```bash
+bazel build //experiments/yannic/macsimulatormanager/swift:macsimulatormanager
+```
+
+Third-party dependencies (`ShellOut`, `swift-argument-parser`, SwiftNIO) are
+resolved via [`rules_swift_package_manager`](https://github.com/cgrindel/rules_swift_package_manager)
+from the `Package.swift` / `Package.resolved` pair in this directory, not
+hand-vendored. If you change `Package.swift`, regenerate `Package.resolved`
+with `swift package resolve` and run `bazel mod tidy` at the repo root to
+pick up any new or changed external repos in `MODULE.bazel`.
+
 ## Running it
 
-`Main.swift` is a `swift-argument-parser` command. Notable options:
+`Main.swift` is a `swift-argument-parser` command; `bazel run` works the same
+way, with arguments after `--`. Notable options:
 
 - `--pid-path` / `--unix-socket-path` — where the daemon writes its PID file
   and creates the listening socket.

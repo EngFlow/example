@@ -1,0 +1,25 @@
+load("@rules_go//go:def.bzl", "go_binary", "go_library")
+
+go_library(
+    name = "go_lib",
+    srcs = [
+        "http_server.go",
+        "lease_store.go",
+        "logger.go",
+        "lru_set.go",
+        "main.go",
+        "pty.go",
+        "simulator_control.go",
+        "simulator_manager.go",
+        "simulator_request_handler.go",
+    ],
+    importpath = "github.com/EngFlow/example/tools/simulator_manager/go",
+    visibility = ["//visibility:private"],
+    deps = ["@org_golang_x_sys//unix"],
+)
+
+go_binary(
+    name = "go",
+    embed = [":go_lib"],
+    visibility = ["//visibility:public"],
+)
