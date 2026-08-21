@@ -88,10 +88,10 @@ type SimulatorControl interface {
 }
 
 type RealSimulatorControl struct {
-	createBaseTasks     map[string]chan taskResult
+	createBaseTasks     map[string]*resultBroadcaster
 	createBaseTasksLock sync.Mutex
 
-	cloneTasks     map[string]chan taskResult
+	cloneTasks     map[string]*resultBroadcaster
 	cloneTasksLock sync.Mutex
 
 	deleteAndExistenceMutexes     map[string]*deleteOrExistenceMutexEntry
@@ -103,6 +103,33 @@ type taskResult struct {
 	err  error
 }
 
+// resultBroadcaster lets any number of callers await the same eventual
+// taskResult without consuming it. A plain channel can't do this safely: if
+// two goroutines both receive from the one channel used to coalesce a single
+// in-flight CreateBase/Clone request, only the first gets the real value --
+// the second gets the channel's zero value (an empty UDID with a nil error,
+// i.e. a phantom successful lease) once the channel is drained and closed.
+// Waiting on a channel that's closed once, then reading a result set before
+// that close, delivers the same value to every waiter instead.
+type resultBroadcaster struct {
+	done   chan struct{}
+	result taskResult
+}
+
+func newResultBroadcaster() *resultBroadcaster {
+	return &resultBroadcaster{done: make(chan struct{})}
+}
+
+func (b *resultBroadcaster) complete(result taskResult) {
+	b.result = result
+	close(b.done)
+}
+
+func (b *resultBroadcaster) wait() taskResult {
+	<-b.done
+	return b.result
+}
+
 type deleteOrExistenceMutexEntry struct {
 	mutex *SimulatorDeleteOrExistenceMutex
 	count int
@@ -110,22 +137,22 @@ type deleteOrExistenceMutexEntry struct {
 
 func NewRealSimulatorControl() *RealSimulatorControl {
 	return &RealSimulatorControl{
-		createBaseTasks:           make(map[string]chan taskResult),
-		cloneTasks:                make(map[string]chan taskResult),
+		createBaseTasks:           make(map[string]*resultBroadcaster),
+		cloneTasks:                make(map[string]*resultBroadcaster),
 		deleteAndExistenceMutexes: make(map[string]*deleteOrExistenceMutexEntry),
 	}
 }
 
 func (r *RealSimulatorControl) CreateBase(name string, config SimulatorConfig, runtimeIdentifier string) (SimulatorUDID, error) {
 	r.createBaseTasksLock.Lock()
-	if existingTask, ok := r.createBaseTasks[name]; ok {
+	if existing, ok := r.createBaseTasks[name]; ok {
 		r.createBaseTasksLock.Unlock()
-		result := <-existingTask
+		result := existing.wait()
 		return result.udid, result.err
 	}
 
-	resultChan := make(chan taskResult, 1)
-	r.createBaseTasks[name] = resultChan
+	broadcaster := newResultBroadcaster()
+	r.createBaseTasks[name] = broadcaster
 	r.createBaseTasksLock.Unlock()
 
 	go func() {
@@ -136,10 +163,10 @@ func (r *RealSimulatorControl) CreateBase(name string, config SimulatorConfig, r
 		}()
 
 		udid, err := r.createBaseImpl(name, config, runtimeIdentifier)
-		resultChan <- taskResult{udid: udid, err: err}
+		broadcaster.complete(taskResult{udid: udid, err: err})
 	}()
 
-	result := <-resultChan
+	result := broadcaster.wait()
 	return result.udid, result.err
 }
 
@@ -186,14 +213,14 @@ func (r *RealSimulatorControl) createBaseImpl(name string, config SimulatorConfi
 
 func (r *RealSimulatorControl) Clone(baseSimulator SimulatorUDID, name string, deviceType string, runtimeIdentifier string, postBoot *string) (SimulatorUDID, error) {
 	r.cloneTasksLock.Lock()
-	if existingTask, ok := r.cloneTasks[name]; ok {
+	if existing, ok := r.cloneTasks[name]; ok {
 		r.cloneTasksLock.Unlock()
-		result := <-existingTask
+		result := existing.wait()
 		return result.udid, result.err
 	}
 
-	resultChan := make(chan taskResult, 1)
-	r.cloneTasks[name] = resultChan
+	broadcaster := newResultBroadcaster()
+	r.cloneTasks[name] = broadcaster
 	r.cloneTasksLock.Unlock()
 
 	go func() {
@@ -204,10 +231,10 @@ func (r *RealSimulatorControl) Clone(baseSimulator SimulatorUDID, name string, d
 		}()
 
 		udid, err := r.cloneImpl(baseSimulator, name, deviceType, runtimeIdentifier, postBoot)
-		resultChan <- taskResult{udid: udid, err: err}
+		broadcaster.complete(taskResult{udid: udid, err: err})
 	}()
 
-	result := <-resultChan
+	result := broadcaster.wait()
 	return result.udid, result.err
 }
 

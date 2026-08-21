@@ -46,7 +46,7 @@ type simulatorSlot struct {
 	kind      string
 	udid      SimulatorUDID
 	exclusive bool
-	task      chan taskResult
+	task      *resultBroadcaster
 	cancel    context.CancelFunc
 }
 
@@ -84,7 +84,7 @@ type SimulatorManager struct {
 	leases            map[int32]simulatorLease
 	leaserExitWatches map[int32]context.CancelFunc
 
-	getBaseSimulatorTasks map[SimulatorConfig]chan taskResult
+	getBaseSimulatorTasks map[SimulatorConfig]*resultBroadcaster
 
 	deleteIdleAfter             uint16
 	deleteRecentlyUsedIdleAfter uint16
@@ -119,7 +119,7 @@ func NewSimulatorManager(
 		referenceCount:              make(map[SimulatorUDID]int),
 		leases:                      make(map[int32]simulatorLease),
 		leaserExitWatches:           make(map[int32]context.CancelFunc),
-		getBaseSimulatorTasks:       make(map[SimulatorConfig]chan taskResult),
+		getBaseSimulatorTasks:       make(map[SimulatorConfig]*resultBroadcaster),
 		deleteIdleAfter:             deleteIdleAfter,
 		deleteRecentlyUsedIdleAfter: deleteRecentlyUsedIdleAfter,
 		deleteOnPIDExit:             deleteOnPIDExit,
@@ -431,14 +431,14 @@ func (sm *SimulatorManager) Release(leaser int32) error {
 
 func (sm *SimulatorManager) getBase(config SimulatorConfig) (SimulatorUDID, error) {
 	sm.mu.Lock()
-	if existingTask, ok := sm.getBaseSimulatorTasks[config]; ok {
+	if existing, ok := sm.getBaseSimulatorTasks[config]; ok {
 		sm.mu.Unlock()
-		result := <-existingTask
+		result := existing.wait()
 		return result.udid, result.err
 	}
 
-	resultChan := make(chan taskResult, 1)
-	sm.getBaseSimulatorTasks[config] = resultChan
+	broadcaster := newResultBroadcaster()
+	sm.getBaseSimulatorTasks[config] = broadcaster
 	sm.mu.Unlock()
 
 	go func() {
@@ -460,10 +460,10 @@ func (sm *SimulatorManager) getBase(config SimulatorConfig) (SimulatorUDID, erro
 			logger.Info("Created base simulator", "config", config, "udid", baseSimulator)
 		}
 
-		resultChan <- taskResult{udid: baseSimulator, err: err}
+		broadcaster.complete(taskResult{udid: baseSimulator, err: err})
 	}()
 
-	result := <-resultChan
+	result := broadcaster.wait()
 	return result.udid, result.err
 }
 
@@ -568,14 +568,14 @@ func (sm *SimulatorManager) getSimulator(config SimulatorConfig, exclusive bool)
 				cancel:    cancel,
 			}
 			sm.mu.Unlock()
-			result := <-task
+			result := task.wait()
 			sm.mu.Lock()
 			return result.udid, index, result.err
 
 		case slotPendingCreation:
 			if !slot.exclusive && !exclusive {
 				sm.mu.Unlock()
-				result := <-slot.task
+				result := slot.task.wait()
 				if result.err == nil {
 					sm.mu.Lock()
 					sm.incrementReferenceCount(result.udid)
@@ -596,7 +596,7 @@ func (sm *SimulatorManager) getSimulator(config SimulatorConfig, exclusive bool)
 		cancel:    cancel,
 	})
 	sm.mu.Unlock()
-	result := <-task
+	result := task.wait()
 	sm.mu.Lock()
 	return result.udid, index, result.err
 }
@@ -623,7 +623,7 @@ func (sm *SimulatorManager) reuseSimulator(simulator SimulatorUDID, config Simul
 			}
 			sm.mu.Unlock()
 
-			result := <-task
+			result := task.wait()
 			return result.udid, result.err
 		}
 		return "", err
@@ -632,19 +632,17 @@ func (sm *SimulatorManager) reuseSimulator(simulator SimulatorUDID, config Simul
 	return simulator, nil
 }
 
-func (sm *SimulatorManager) createCloneTask(config SimulatorConfig, exclusive bool, slotIndex int) (chan taskResult, context.CancelFunc) {
+func (sm *SimulatorManager) createCloneTask(config SimulatorConfig, exclusive bool, slotIndex int) (*resultBroadcaster, context.CancelFunc) {
 	ctx, cancel := context.WithCancel(context.Background())
-	resultChan := make(chan taskResult, 1)
+	broadcaster := newResultBroadcaster()
 
 	go func() {
-		defer close(resultChan)
-
 		baseUDID, err := sm.getBase(config)
 		if err != nil {
 			sm.mu.Lock()
 			sm.simulatorSlots[config][slotIndex] = simulatorSlot{kind: slotEmpty}
 			sm.mu.Unlock()
-			resultChan <- taskResult{err: err}
+			broadcaster.complete(taskResult{err: err})
 			return
 		}
 
@@ -652,7 +650,7 @@ func (sm *SimulatorManager) createCloneTask(config SimulatorConfig, exclusive bo
 			sm.mu.Lock()
 			sm.simulatorSlots[config][slotIndex] = simulatorSlot{kind: slotEmpty}
 			sm.mu.Unlock()
-			resultChan <- taskResult{err: ctx.Err()}
+			broadcaster.complete(taskResult{err: ctx.Err()})
 			return
 		}
 
@@ -668,7 +666,7 @@ func (sm *SimulatorManager) createCloneTask(config SimulatorConfig, exclusive bo
 			sm.mu.Lock()
 			sm.simulatorSlots[config][slotIndex] = simulatorSlot{kind: slotEmpty}
 			sm.mu.Unlock()
-			resultChan <- taskResult{err: err}
+			broadcaster.complete(taskResult{err: err})
 			return
 		}
 
@@ -681,10 +679,10 @@ func (sm *SimulatorManager) createCloneTask(config SimulatorConfig, exclusive bo
 		sm.incrementReferenceCount(simulator)
 		sm.mu.Unlock()
 
-		resultChan <- taskResult{udid: simulator, err: nil}
+		broadcaster.complete(taskResult{udid: simulator, err: nil})
 	}()
 
-	return resultChan, cancel
+	return broadcaster, cancel
 }
 
 func (sm *SimulatorManager) registerReleaseOnExit(leaser int32) {

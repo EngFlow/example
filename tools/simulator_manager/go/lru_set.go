@@ -25,11 +25,11 @@ func NewLRUSet[T comparable](capacity int) *LRUSet[T] {
 func (s *LRUSet[T]) Insert(element T) *T {
 	var evicted *T
 	if _, exists := s.storage[element]; exists {
-		// Remove from current position in order
+		// Remove from current position in order. Nothing is evicted here --
+		// the element is already in the set, just moving to the
+		// most-recently-used end.
 		for i, e := range s.order {
 			if e == element {
-				old := s.order[i]
-				evicted = &old
 				s.order = append(s.order[:i], s.order[i+1:]...)
 				break
 			}

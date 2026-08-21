@@ -1,4 +1,4 @@
-load("@rules_go//go:def.bzl", "go_binary", "go_library")
+load("@rules_go//go:def.bzl", "go_binary", "go_library", "go_test")
 
 go_library(
     name = "go_lib",
@@ -22,4 +22,23 @@ go_binary(
     name = "go",
     embed = [":go_lib"],
     visibility = ["//visibility:public"],
+)
+
+go_test(
+    name = "go_test",
+    srcs = [
+        "fake_simulator_control_test.go",
+        "http_server_test.go",
+        "lease_store_test.go",
+        "lru_set_test.go",
+        "main_test.go",
+        "simulator_control_test.go",
+        "simulator_manager_test.go",
+        "simulator_request_handler_test.go",
+    ],
+    embed = [":go_lib"],
+    deps = [
+        "@com_github_stretchr_testify//assert",
+        "@com_github_stretchr_testify//require",
+    ],
 )
