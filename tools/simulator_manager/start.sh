@@ -10,6 +10,9 @@ set -euo pipefail
 # changes will impact all executors in the default pool.
 #
 #!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! WARNING !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+# 47: keep a released simulator warm for 2 hours rather than 1 minute, to see what
+#     the reuse rate looks like when a device is essentially never reclaimed. A
+#     version bump is what makes this take effect on an already-running worker.
 # 46: fall back to the parent pid, not our own, when rules_apple passes no runner
 #     pid -- 4.5.x passes none, so both lease and release named a process that
 #     exits immediately, taking the simulator with it while the test still runs.
@@ -21,7 +24,7 @@ set -euo pipefail
 # 43: install the post-boot script with `cp -f`, so an upgrade can overwrite the
 #     read-only copy a previous version left in place.
 # 42: liveness check for a leaser that exits during provisioning.
-readonly non_staging_version=46
+readonly non_staging_version=47
 
 if [[ -z "${EXAMPLE_CI_STAGING_VERSION:-}" ]]; then
   readonly expected_version="$non_staging_version"
@@ -53,7 +56,11 @@ function check_need_shutdown() {
 # will constantly be deleting and creating simulators, adding at least 10
 # seconds to test runtimes.
 readonly delete_after_idle_secs=0
-readonly delete_recently_used_after_idle_secs="${EXAMPLE_SIMULATOR_MANAGER_DELETE_RECENTLY_USED_AFTER_IDLE_SECS:-60}" # TODO: Tweak this more. Adjusted to 1 minute to help BuildBuddy with disk space issues.
+# Deliberately long for now: a released simulator effectively stays warm for the
+# rest of the worker's useful life, so consecutive test actions never pay the
+# ~10s boot. The tradeoff is the ~6GB it holds, and the disk that made this 1
+# minute before -- revisit once we have reuse numbers to compare against.
+readonly delete_recently_used_after_idle_secs=7200
 readonly recently_used_capacity="${EXAMPLE_SIMULATOR_MANAGER_RECENTLY_USED_CAPACITY:-1}"
 
 readonly mutex_timeout=60

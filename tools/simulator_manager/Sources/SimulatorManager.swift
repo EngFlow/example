@@ -208,6 +208,14 @@ actor SimulatorManager {
       slots[lease.slotIndex] = .active(lease.udid, exclusive: lease.exclusive)
       simulatorSlots[lease.config] = slots
 
+      // Adopting the lease is not enough: how long this device is kept warm once
+      // released is decided by whether its config is recently used, and only
+      // `lease` records that. Without this the first release after a restart takes
+      // `deleteIdleAfter` -- 0 on a worker -- and deletes a device the daemon we
+      // replaced would have kept, making every version bump cost the tests in
+      // flight a fresh boot.
+      _ = recentlyLeased.insert(lease.config)
+
       incrementReferenceCount(for: lease.udid)
 
       if deleteOnPIDExit {

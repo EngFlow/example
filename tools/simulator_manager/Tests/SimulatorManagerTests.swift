@@ -865,6 +865,115 @@ final class SimulatorManagerLeaseHandoverTests: XCTestCase {
   }
 }
 
+/// A daemon that adopts a lease must also adopt the recency that decides how long
+/// the device is kept warm once that lease is released.
+///
+/// Which of the two idle timers a released device gets is decided by whether its
+/// config is in the recently-used set, and only `lease` puts it there. So a
+/// successor starts with an empty set while holding adopted leases: the first
+/// release lands on `delete-idle-after` -- 0 on a worker -- and the device is
+/// destroyed instead of kept for the next test. The trigger is a version bump,
+/// which is exactly when `start.sh` replaces a daemon holding live leases, so
+/// raising the warm window is also what makes this worth fixing.
+final class SimulatorManagerAdoptedRecencyTests: XCTestCase {
+  /// The worker's shape, from `start.sh`: nothing is kept warm unless it is the
+  /// recently-used config. A symmetric pair would hide the bug, since both
+  /// branches would then keep the device.
+  private func makeManager(
+    _ control: MockSimulatorControl,
+    store: LeaseStore?
+  ) -> SimulatorManager {
+    SimulatorManager(
+      simulatorControl: control,
+      deleteRecentlyUsedIdleAfter: 600,
+      deleteIdleAfter: 0,
+      recentlyUsedCapacity: 1,
+      deleteOnPIDExit: false,
+      leaseStore: store
+    )
+  }
+
+  private let config = SimulatorConfig(deviceType: "iPhone 14", os: "iOS", version: "16.4")
+
+  /// Deletion is scheduled on a task, so the assertions have to give it a chance to
+  /// run. Generous against the deadline it would fire on (0s) and negligible
+  /// against the one it must not (600s), so neither outcome is a matter of timing.
+  private func letPendingDeletionRun() async throws {
+    try await Task.sleep(for: .milliseconds(500))
+  }
+
+  /// The control: the same release, with no restart in the way. Pins that the warm
+  /// window works at all, so the regression below can only be about adoption.
+  func test_a_released_device_stays_warm_without_a_restart() async throws {
+    let control = MockSimulatorControl()
+    let manager = makeManager(control, store: FakeLeaseStore())
+
+    let udid = try await manager.lease(to: getpid(), exclusive: true, config: config)
+    try await manager.release(for: getpid())
+    try await letPendingDeletionRun()
+
+    let deleted = await control.deletedSimulators
+    XCTAssertFalse(
+      deleted.contains(udid),
+      "precondition: a released device of the recently-used config is kept warm"
+    )
+  }
+
+  /// The regression. A successor adopts the lease, its test finishes, and the
+  /// device must be kept warm just as it would have been by the daemon that
+  /// granted the lease.
+  func test_an_adopted_lease_keeps_its_device_warm_on_release() async throws {
+    let control = MockSimulatorControl()
+    let store = FakeLeaseStore()
+
+    // This process is alive by definition, so it stands in for a runner script
+    // still running while the daemon underneath it is replaced.
+    let leaser = getpid()
+    let udid = try await makeManager(control, store: store)
+      .lease(to: leaser, exclusive: true, config: config)
+
+    let successor = makeManager(control, store: store)
+    await successor.restoreLeases()
+
+    try await successor.release(for: leaser)
+    try await letPendingDeletionRun()
+
+    let deleted = await control.deletedSimulators
+    XCTAssertFalse(
+      deleted.contains(udid),
+      """
+      an adopted lease's device was deleted on release rather than kept warm: \
+      the successor did not inherit its config's recency, so the release took \
+      the delete-idle-after branch
+      """
+    )
+  }
+
+  /// The consequence a test actually feels: the next lease reuses the warm device
+  /// instead of paying a fresh clone and boot. Asserted separately from the
+  /// deletion above because this is the cost, not the mechanism.
+  func test_the_next_lease_reuses_an_adopted_leases_device() async throws {
+    let control = MockSimulatorControl()
+    let store = FakeLeaseStore()
+
+    let leaser = getpid()
+    let udid = try await makeManager(control, store: store)
+      .lease(to: leaser, exclusive: true, config: config)
+
+    let successor = makeManager(control, store: store)
+    await successor.restoreLeases()
+    try await successor.release(for: leaser)
+    try await letPendingDeletionRun()
+
+    let next = try await successor.lease(to: 5678, exclusive: true, config: config)
+    XCTAssertEqual(
+      next,
+      udid,
+      "the device left by an adopted lease should be reused, not re-cloned"
+    )
+  }
+}
+
 /// The on-disk format has to survive a real round trip, since a successor daemon
 /// is a different process reading what this one wrote.
 final class FileLeaseStoreTests: XCTestCase {
