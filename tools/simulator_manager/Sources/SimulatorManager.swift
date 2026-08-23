@@ -51,19 +51,21 @@ private enum SimulatorSlot {
 extension SimulatorSlot {
   var sortOrder: Int {
     switch self {
-    // Try to use active or pending creation simulators first (should only be
-    // one of either for non-exclusive)
+    // Try to use an active simulator first (should only be one for non-exclusive)
     case .active:
       return 0
-    case .pendingCreation:
+
+    // A pending deletion is already created and booted, so reuse it before waiting
+    // on a pending creation or starting a fresh one.
+    case .pendingDeletion:
       return 1
 
-    // Use a pending deletion before any empty slots
-    case .pendingDeletion:
+    // Use an empty slot before waiting on a pending creation, so a lease doesn't
+    // block on someone else's in-flight clone when a fresh slot is free to start.
+    case .empty:
       return 2
 
-    // Finally use empty slots
-    case .empty:
+    case .pendingCreation:
       return 3
 
     // Deleting simulator can't be used, so put it at the end
@@ -104,6 +106,22 @@ actor SimulatorManager {
   private var childProcessTasks: [Task<Void, Never>] = []
   private var childProcesses: [String: (Process, DispatchSourceRead, DispatchSourceRead)] = [:]
 
+  private var reaperTask: Task<Void, Never>?
+  /// Clone UDIDs that looked orphaned on the *previous* sweep. A device must appear
+  /// unknown on two consecutive sweeps before the reaper deletes it, so a clone that's
+  /// mid-creation (it exists on disk before `createCloneTask` resumes and records it in
+  /// `referenceCount`) never gets caught by a single unlucky sweep.
+  private var previousOrphanCandidates: Set<SimulatorUDID> = []
+  /// How many sweeps in a row the reaper has failed to delete a confirmed orphan.
+  /// Reset once a delete succeeds, or once the UDID stops being an orphan at all
+  /// (claimed by a new lease, or already cleaned up some other way).
+  private var orphanDeleteFailureCounts: [SimulatorUDID: Int] = [:]
+  /// After this many consecutive failed deletes, a device is treated as wedged
+  /// rather than merely unlucky: normal `simctl shutdown`/`delete` retries have
+  /// already been exhausted inside `SimulatorControl.delete()` every sweep, so more
+  /// of the same is unlikely to help. Escalate to killing its `launchd_sim` directly.
+  private let forceKillAfterFailedReapAttempts = 3
+
   init(
     simulatorControl: SimulatorControl,
     deleteRecentlyUsedIdleAfter: UInt16,
@@ -129,6 +147,8 @@ actor SimulatorManager {
   }
 
   deinit {
+    reaperTask?.cancel()
+
     for task in childProcessTasks {
       task.cancel()
     }
@@ -143,6 +163,139 @@ actor SimulatorManager {
   func startChildProcesses() throws {
     for path in startupProcessPaths {
       childProcessTasks.append(createStartChildProcessTask(path: path))
+    }
+  }
+
+  /// Starts the periodic sweep that deletes clone simulators the manager has lost
+  /// track of.
+  ///
+  /// Every other cleanup path is event-driven: an explicit release, a PID-exit
+  /// watcher, an idle timer, or "rediscovered by name on the next lease of the same
+  /// config." Each of those can miss a device -- a daemon restart drops a lease
+  /// whose device is never leased again (see `restoreLeases`), or a `simctl delete`
+  /// call fails and is swallowed (see `delete`) -- and nothing else ever looks for
+  /// it again. This sweep is the backstop: it reconciles against what CoreSimulator
+  /// actually has running, independent of how a device became untracked.
+  ///
+  /// `interval <= .zero` disables it, matching how `deleteIdleAfter` of 0 means
+  /// "immediately" elsewhere in this file rather than "never."
+  func startReaper(interval: Duration) {
+    guard interval > .zero else { return }
+
+    reaperTask = Task {
+      while !Task.isCancelled {
+        try? await Task.sleep(for: interval)
+        guard !Task.isCancelled else { break }
+        await reapOrphanedSimulators()
+      }
+    }
+  }
+
+  /// One sweep of the orphan reaper: list every clone simulator that exists, and
+  /// delete the ones with no entry in `referenceCount`.
+  ///
+  /// `referenceCount` is the right ground truth to check against, not `leases` or
+  /// `simulatorSlots`: a device gets an entry in it the instant it's claimed (before
+  /// any `await`, per the invariant on `getSimulator`), and the entry is removed
+  /// only in `delete()` -- including while the device sits in the idle-timer grace
+  /// period, where the count is `0` but the key stays. So "no entry" reliably means
+  /// "the manager has no idea this exists," not merely "nothing is leasing it right
+  /// now."
+  ///
+  /// Bypasses `delete()` deliberately: that function updates a slot in
+  /// `simulatorSlots`, but an orphan by definition has no slot pointing at it, so
+  /// there is nothing there to update. This calls `simulatorControl` directly, the
+  /// same lower-level operation `delete()` itself wraps.
+  private func reapOrphanedSimulators() async {
+    let known = Set(referenceCount.keys)
+
+    let managedClones: [SimCtlDevice]
+    do {
+      managedClones = try await simulatorControl.listManagedClones()
+    } catch {
+      Logger.simulatorManager.error(
+        "❌ Orphan reaper failed to list simulators, skipping this sweep: \(error, privacy: .public)"
+      )
+      return
+    }
+
+    let currentOrphanCandidates = Set(managedClones.map(\.udid)).subtracting(known)
+    let confirmedOrphans = currentOrphanCandidates.intersection(previousOrphanCandidates)
+    previousOrphanCandidates = currentOrphanCandidates
+
+    // Forget the failure count for anything that isn't a confirmed orphan any more
+    // (claimed by a new lease, or already cleaned up), so a UDID that's reused later
+    // starts with a clean slate rather than inheriting an old device's history.
+    orphanDeleteFailureCounts = orphanDeleteFailureCounts.filter { confirmedOrphans.contains($0.key) }
+
+    guard !confirmedOrphans.isEmpty else { return }
+
+    for device in managedClones where confirmedOrphans.contains(device.udid) {
+      await reapOrphan(device)
+    }
+  }
+
+  /// Deletes one confirmed-orphaned device, escalating to a direct kill of its
+  /// `launchd_sim` if it has already failed to delete
+  /// `forceKillAfterFailedReapAttempts` sweeps in a row.
+  ///
+  /// `SimulatorControl.delete()` already shuts the device down and retries a few
+  /// times internally before throwing, so a failure reaching here means those
+  /// retries were exhausted -- consistent with a genuinely wedged device (the same
+  /// profile as the multi-day-old `launchd_sim` processes that motivated this), not
+  /// a one-off transient error. Retrying the same call every 5-minute sweep forever
+  /// would just fail the same way forever, silently; escalating is what makes this a
+  /// backstop instead of another silent no-op.
+  private func reapOrphan(_ device: SimCtlDevice) async {
+    Logger.simulatorManager.warning(
+      """
+      🧹 Reaping orphaned simulator \(device.udid, privacy: .public) \
+      (\(device.name, privacy: .public)); the manager has no lease or reference to it
+      """
+    )
+
+    do {
+      try await simulatorControl.delete(device.udid, name: device.name, context: "orphan reaper")
+      orphanDeleteFailureCounts.removeValue(forKey: device.udid)
+      return
+    } catch {
+      let failures = (orphanDeleteFailureCounts[device.udid] ?? 0) + 1
+      orphanDeleteFailureCounts[device.udid] = failures
+
+      Logger.simulatorManager.error(
+        """
+        ❌ Orphan reaper failed to delete \(device.udid, privacy: .public) \
+        (\(device.name, privacy: .public)), attempt \(failures, privacy: .public): \
+        \(error, privacy: .public)
+        """
+      )
+
+      guard failures >= forceKillAfterFailedReapAttempts else { return }
+
+      Logger.simulatorManager.error(
+        """
+        🔨 \(device.udid, privacy: .public) (\(device.name, privacy: .public)) has failed to \
+        delete \(failures, privacy: .public) sweeps in a row; force-killing its launchd_sim
+        """
+      )
+
+      await simulatorControl.forceKillLaunchdSim(for: device.udid)
+
+      do {
+        try await simulatorControl.delete(
+          device.udid,
+          name: device.name,
+          context: "orphan reaper, post force-kill"
+        )
+        orphanDeleteFailureCounts.removeValue(forKey: device.udid)
+      } catch {
+        Logger.simulatorManager.error(
+          """
+          ❌ \(device.udid, privacy: .public) (\(device.name, privacy: .public)) still failed to \
+          delete after force-killing launchd_sim: \(error, privacy: .public). Needs manual cleanup.
+          """
+        )
+      }
     }
   }
 
@@ -654,12 +807,18 @@ actor SimulatorManager {
     let processSource =
       DispatchSource.makeProcessSource(identifier: leaser, eventMask: .exit, queue: .main)
 
+    // Avoid double handling of exit in case the process exits between
+    // `processSource.resume()` and the check with `kill` below. The event handler runs
+    // on `.main`, while the liveness check below runs on whatever thread calls this
+    // method, so the flag guarding against a double call must itself be synchronized.
+    let handledExitLock = NSLock()
     var handledExit = false
     let onExitHandler: () -> Void = { [weak self] in
-      // Avoid double handling of exit in case the process exits between
-      // `processSource.resume()` and the check with `kill`
-      guard !handledExit else { return }
+      handledExitLock.lock()
+      let alreadyHandled = handledExit
       handledExit = true
+      handledExitLock.unlock()
+      guard !alreadyHandled else { return }
 
       Task {
         guard let self else { return }
@@ -673,8 +832,8 @@ actor SimulatorManager {
     processSource.setEventHandler { onExitHandler() }
     processSource.resume()
 
-    // Check to see if the process is already dead and cancel the source if it is, which will
-    // trigger `setCancelHandler`, which releases the simulator
+    // Check to see if the process is already dead. There is no `setCancelHandler`, so
+    // handle the exit directly here rather than relying on cancellation to do it.
     guard processIsRunning(leaser) else {
       processSource.cancel()
       onExitHandler()

@@ -105,6 +105,20 @@ protocol SimulatorControl: Actor {
     runtimeIdentifier: String,
     context: @escaping @autoclosure () -> String?
   ) async throws -> String?
+
+  // Every clone-named simulator that currently exists, across all runtimes.
+  //
+  // Used by the orphan reaper to reconcile the manager's bookkeeping against reality.
+  // Deliberately excludes base simulators, which are meant to be long-lived and are
+  // never reference-counted.
+  func listManagedClones() async throws -> [SimCtlDevice]
+
+  // Kills the `launchd_sim` process for `simulator` directly, bypassing `simctl`
+  // entirely. Best-effort and never throws: this is the last resort for a device
+  // that keeps failing `delete()` through normal means (a wedged simulator can fail
+  // both `shutdown` and `delete` indefinitely), used by the orphan reaper's
+  // escalation path.
+  func forceKillLaunchdSim(for simulator: SimulatorUDID) async
 }
 
 actor RealSimulatorControl: SimulatorControl {
@@ -303,20 +317,7 @@ actor RealSimulatorControl: SimulatorControl {
   }
 
   func shutdown(_ simulator: SimulatorUDID, context: @escaping @autoclosure () -> String?) async throws {
-    do {
-      _ = try await simctl(["shutdown", simulator], context: context())
-    } catch let error as ProcessError {
-      // Exit code 149 is related to the simulator already being shut down
-      guard error.exitCode == 149 else {
-        throw error
-      }
-
-      Logger.simulatorControl.warning(
-        """
-        ⚠️ Shutdown failed, but probably \"already shut down\": \(error, privacy: .public)
-        """
-      )
-    }
+    try await shutdownSimulator(simulator, context: context())
   }
 
   func cleanTempFiles(in simulator: SimulatorUDID) {
@@ -360,6 +361,72 @@ actor RealSimulatorControl: SimulatorControl {
         runtimeIdentifier: runtimeIdentifier,
         context: context()
       )
+    }
+  }
+
+  func listManagedClones() async throws -> [SimCtlDevice] {
+    let output = try await simctl(["list", "devices", "-j"], context: "listManagedClones")
+
+    guard let jsonData = output.data(using: .utf8) else {
+      throw NSError(
+        domain: "SimulatorControl",
+        code: 1,
+        userInfo: [NSLocalizedDescriptionKey: "Failed to convert output to data"]
+      )
+    }
+
+    let devicesByRuntime: [String: [SimCtlDevice]]
+    do {
+      devicesByRuntime = try JSONDecoder().decode(SimCtlDevices.self, from: jsonData).devices
+    } catch {
+      let json = String(data: jsonData, encoding: .utf8) ?? "<invalid utf8>"
+      Logger.simulatorControl.error(
+        """
+        ❌ Failed to decode 'simctl list devices -j': \(error, privacy: .public).
+        Output: \(json, privacy: .public)
+        """
+      )
+      throw NSError(
+        domain: "SimulatorControl",
+        code: 1,
+        userInfo: [NSLocalizedDescriptionKey: "Failed to decode output: \(error) - \(json)"]
+      )
+    }
+
+    return devicesByRuntime.values.flatMap { $0 }.filter { $0.name.hasPrefix(managedCloneNamePrefix) }
+  }
+
+  func forceKillLaunchdSim(for simulator: SimulatorUDID) async {
+    // `launchd_sim`'s command line embeds the device's own data path (see the ps
+    // output that motivated this: ".../Devices/<udid>/data/var/run/..."), so the
+    // UDID is a safe, specific `pgrep -f` pattern -- it can only match that one
+    // device's process tree.
+    let pids: [Int32]
+    do {
+      let output = try await subprocess("/usr/bin/pgrep", ["-f", simulator])
+      pids = output.split(separator: "\n").compactMap { Int32($0.trimmingCharacters(in: .whitespaces)) }
+    } catch {
+      // `pgrep` exits non-zero (surfaced here as a thrown `ProcessError`) when nothing
+      // matches -- there's nothing left to kill.
+      return
+    }
+
+    for pid in pids {
+      // Double check this is actually `launchd_sim` before signaling it. `pgrep -f`
+      // matches the UDID anywhere in the command line; being wrong here would kill an
+      // unrelated process that merely mentioned this device (e.g. in a log path).
+      guard let comm = try? await subprocess("/bin/ps", ["-p", "\(pid)", "-o", "comm="]),
+            comm.trimmingCharacters(in: .whitespacesAndNewlines).hasSuffix("launchd_sim") else {
+        continue
+      }
+
+      Logger.simulatorControl.warning(
+        """
+        🔨 Force-killing launchd_sim (pid \(pid, privacy: .public)) for stuck simulator \
+        \(simulator, privacy: .public)
+        """
+      )
+      kill(pid, SIGKILL)
     }
   }
 
@@ -544,20 +611,66 @@ actor SimulatorDeleteOrExistenceMutex {
   ) async throws {
     Logger.simulatorControl.info("🗑️ Deleting simulator \(simulator, privacy: .public)")
 
-    do {
-      _ = try await simctl(["delete", simulator], context: context())
-    } catch {
-      Logger.simulatorControl.error(
-        """
-        ❌ Failed to delete simulator \(simulator, privacy: .public): \
-        \(error, privacy: .public)
-        """
-      )
+    // `simctl delete` can fail transiently (CoreSimulator daemon busy, a lingering
+    // child process, disk I/O) or because the device is still booted -- `delete`
+    // does not reliably shut a booted device down on its own. Callers treat a thrown
+    // error here as "give up until the next event," so shut down and retry a few
+    // times before surfacing failure -- it's much cheaper than leaving the simulator
+    // running until the orphan reaper's next sweep catches it.
+    let maxAttempts = 3
+    for attempt in 1...maxAttempts {
+      // Best-effort: proceed to the delete attempt regardless of whether this
+      // succeeds. A shutdown failure for a reason other than "already shut down"
+      // (already handled inside `shutdownSimulator`) shouldn't block trying delete
+      // anyway, since delete is the operation that actually matters here.
+      try? await shutdownSimulator(simulator, context: context())
 
+      do {
+        _ = try await simctl(["delete", simulator], context: context())
+        Logger.simulatorControl.info("🗑️ Deleted simulator \(simulator, privacy: .public)")
+        return
+      } catch {
+        guard attempt < maxAttempts else {
+          Logger.simulatorControl.error(
+            """
+            ❌ Failed to delete simulator \(simulator, privacy: .public) after \
+            \(maxAttempts, privacy: .public) attempts: \(error, privacy: .public)
+            """
+          )
+          throw error
+        }
+
+        Logger.simulatorControl.warning(
+          """
+          ⚠️ Delete attempt \(attempt, privacy: .public)/\(maxAttempts, privacy: .public) for \
+          simulator \(simulator, privacy: .public) failed, retrying: \(error, privacy: .public)
+          """
+        )
+        try? await Task.sleep(for: .seconds(2))
+      }
+    }
+  }
+}
+
+/// Shared by `RealSimulatorControl.shutdown` and `unlockedDelete`, since delete needs
+/// to shut the device down first and shouldn't reimplement this.
+private func shutdownSimulator(
+  _ simulator: SimulatorUDID,
+  context: @escaping @autoclosure () -> String?
+) async throws {
+  do {
+    _ = try await simctl(["shutdown", simulator], context: context())
+  } catch let error as ProcessError {
+    // Exit code 149 is related to the simulator already being shut down
+    guard error.exitCode == 149 else {
       throw error
     }
 
-    Logger.simulatorControl.info("🗑️ Deleted simulator \(simulator, privacy: .public)")
+    Logger.simulatorControl.warning(
+      """
+      ⚠️ Shutdown failed, but probably \"already shut down\": \(error, privacy: .public)
+      """
+    )
   }
 }
 
@@ -612,13 +725,18 @@ private func syncSubprocess(
   }
 }
 
+/// Prefix shared by every simulator this manager creates for cloning (see
+/// `SimulatorConfig.cloneDeviceName`). Used to scope the orphan reaper to devices
+/// it manages, so it never touches a developer's own simulators or base templates.
+let managedCloneNamePrefix = "EXAMPLE_BAZEL_CLONE_"
+
 extension SimulatorConfig {
   func baseDeviceName() -> String {
     return "EXAMPLE_BAZEL_BASE_\(deviceType)_\(version)"
   }
 
   func cloneDeviceName(index: Int) -> String {
-    return "EXAMPLE_BAZEL_CLONE_\(deviceType)_\(version)_\(index)"
+    return "\(managedCloneNamePrefix)\(deviceType)_\(version)_\(index)"
   }
 
   func runtimeIdentifier() -> String {

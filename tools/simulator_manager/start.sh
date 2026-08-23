@@ -211,7 +211,7 @@ if [[ -z "$version" ]]; then
   # --- end runfiles.bash initialization v3 ---
 
   simulator_manager="$(
-    rlocation _main/tools/simulator_manager/simulator_manager
+    rlocation _main/tools/simulator_manager/go/go_/go
   )"
   bazel_prepare_simulator="$(
     rlocation _main/tools/simulator_manager/prepare_simulator
