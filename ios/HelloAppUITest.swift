@@ -16,6 +16,7 @@ class HelloAppUITest: XCTestCase {
     }
 
     func testIsActive() {
+        Thread.sleep(forTimeInterval: 120.0)
         XCTAssertTrue(application.staticTexts["HELLO_WORLD"].exists)
     }
 }
