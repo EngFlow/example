@@ -117,6 +117,10 @@ maven.install(
 
     # When updating versions, run `REPIN=1 bazel run @maven//:pin`
     fail_if_repin_required = True,
+    known_contributing_modules = [
+        "grpc-java",
+        "protobuf",
+    ],
     lock_file = "//:maven_install.json",
     repositories = [
         "https://repo.maven.apache.org/maven2/",
