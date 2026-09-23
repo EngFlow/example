@@ -33,6 +33,7 @@ def find_tests(package):
     - attr(tags, no-ci, $t)
     - attr(tags, no-{os_name}-ci, $t)
     - attr(tags, no-{remote}-ci, $t)
+    - attr(tags, no-{remote}-{os_name}-ci, $t)
     """.strip()
 
     print(f"Executing query to find test targets:\n{query}")
