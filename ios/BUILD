@@ -1,6 +1,12 @@
 load("@bazel_skylib//rules:build_test.bzl", "build_test")
 load("@rules_apple//apple:ios.bzl", "ios_application", "ios_ui_test", "ios_unit_test")
 load("@rules_apple//apple:macos.bzl", "macos_unit_test")
+load(
+    "@rules_apple//apple:watchos.bzl",
+    "watchos_application",
+    "watchos_ui_test",
+    "watchos_unit_test",
+)
 load("@rules_swift//swift:swift.bzl", "swift_library")
 
 swift_library(
@@ -63,3 +69,14 @@ macos_unit_test(
     ],
     deps = [":HelloTestLib"],
 )
+
+watchos_application(
+    name = "HelloWatchosApp",
+    bundle_id = "com.engflow.helloapp",
+    minimum_os_version = "26.0",
+    deps = [":HelloAppLibrary"],
+)
+
+#watchos_unit_test()
+
+#watchos_ui_test()
