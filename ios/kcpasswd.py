@@ -1,0 +1,38 @@
+#!/usr/bin/env python3
+
+# Port of Gavin Brock's Perl kcpassword generator to Python, by Tom Taylor
+# <tom@tomtaylor.co.uk>.
+# Perl version: http://www.brock-family.org/gavin/perl/kcpassword.html
+# https://github.com/timsutton/osx-vm-templates/blob/master/scripts/support/set_kcpassword.py
+
+import getpass
+import sys
+import os
+
+
+def kcpassword(passwd):
+    # The magic 11 bytes - these are just repeated
+    # 0x7D 0x89 0x52 0x23 0xD2 0xBC 0xDD 0xEA 0xA3 0xB9 0x1F
+    key = [125, 137, 82, 35, 210, 188, 221, 234, 163, 185, 31]
+    key_len = len(key)
+
+    passwd = list(bytearray(passwd, "utf8"))
+    # pad passwd length out to an even multiple of key length
+    r = len(passwd) % key_len
+    if (r > 0):
+        passwd = passwd + [0] * (key_len - r)
+
+    for n in range(0, len(passwd), len(key)):
+        for j in range(n, min(n + len(key), len(passwd))):
+            passwd[j] = passwd[j] ^ key[j % key_len]
+
+    return bytearray(passwd)
+
+
+if __name__ == "__main__":
+    secret = getpass.getpass("Autologin user password: ")
+    passwd = kcpassword(secret)
+    fd = os.open('/etc/kcpassword', os.O_WRONLY | os.O_CREAT, 0o600)
+    file = os.fdopen(fd, 'wb')
+    file.write(passwd)
+    file.close()
