@@ -13,7 +13,7 @@ platform(
     ],
     exec_properties = {
         "Pool": "macos_arm_m2",
-        "sandboxAllowed": "False",  # ios builds need to escape the sandbox in order to correctly reach XCode.
+        "test.sandboxAllowed": "False",  # ios tests need to escape the sandbox in order to correctly reach the simulator service.
     },
 )
 
