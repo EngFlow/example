@@ -32,6 +32,7 @@ build:clang --host_cxxopt="-fvisibility=hidden"
 
 # iOS setup
 build:ios --ios_multi_cpus=sim_arm64
+build:ios --macos_cpus=arm64
 build:ios --@rules_apple//apple/build_settings:ios_simulator_device="iPhone 16 Pro"
 
 # Platform-specific options for each supported platform.
