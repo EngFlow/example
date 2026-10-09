@@ -72,22 +72,56 @@ build_test(
 genrule(
     name = "get_aws_instance_type",
     outs = ["aws_instance.txt"],
-    # Uses '||' to prevent the genrule from failing if the server isn't reachable
-    cmd = "TOKEN=$$(curl -s -X PUT 'http://169.254.169.254/latest/api/token' -H 'X-aws-ec2-metadata-token-ttl-seconds: 21600') && curl -s -H \"X-aws-ec2-metadata-token: $$TOKEN\" http://169.254.169.254/latest/meta-data/instance-type > $@ || echo 'Not AWS or unavailable' > $@",
+    # Fetches key AWS instance metadata for performance comparison
+    cmd = "(" +
+          "TOKEN=$$(curl -s -X PUT 'http://169.254.169.254/latest/api/token' -H 'X-aws-ec2-metadata-token-ttl-seconds: 21600') && " +
+          "echo '=== AWS Instance Metadata ===' && " +
+          "echo 'Instance Type:' && " +
+          "curl -s -H \"X-aws-ec2-metadata-token: $$TOKEN\" http://169.254.169.254/latest/meta-data/instance-type && echo '' && " +
+          "echo 'AMI ID:' && " +
+          "curl -s -H \"X-aws-ec2-metadata-token: $$TOKEN\" http://169.254.169.254/latest/meta-data/ami-id && echo '' && " +
+          "echo 'Availability Zone:' && " +
+          "curl -s -H \"X-aws-ec2-metadata-token: $$TOKEN\" http://169.254.169.254/latest/meta-data/placement/availability-zone && echo '' && " +
+          "echo 'Instance Lifecycle:' && " +
+          "curl -s -H \"X-aws-ec2-metadata-token: $$TOKEN\" http://169.254.169.254/latest/meta-data/instance-life-cycle && echo '' && " +
+          "echo 'Instance ID:' && " +
+          "curl -s -H \"X-aws-ec2-metadata-token: $$TOKEN\" http://169.254.169.254/latest/meta-data/instance-id" +
+          ") > $@ 2>&1 || echo 'Not AWS or unavailable' > $@",
     exec_properties = {
         "dockerNetwork": "standard",
     },
-    tags = ["no-cache", "no-sandbox"],
+    tags = [
+        "no-cache",
+        "no-sandbox",
+    ],
 )
 
 genrule(
     name = "get_gcp_machine_type",
     outs = ["gcp_machine.txt"],
-    cmd = "curl -s -H 'Metadata-Flavor: Google' http://metadata.google.internal/computeMetadata/v1/instance/machine-type > $@ || echo 'Not GCP or unavailable' > $@",
+    # Fetches key GCP instance metadata for performance comparison
+    cmd = "(" +
+          "echo '=== GCP Instance Metadata ===' && " +
+          "echo 'Machine Type:' && " +
+          "curl -s -H 'Metadata-Flavor: Google' http://metadata.google.internal/computeMetadata/v1/instance/machine-type && echo '' && " +
+          "echo 'Image:' && " +
+          "curl -s -H 'Metadata-Flavor: Google' http://metadata.google.internal/computeMetadata/v1/instance/image && echo '' && " +
+          "echo 'Zone:' && " +
+          "curl -s -H 'Metadata-Flavor: Google' http://metadata.google.internal/computeMetadata/v1/instance/zone && echo '' && " +
+          "echo 'Preemptible:' && " +
+          "curl -s -H 'Metadata-Flavor: Google' http://metadata.google.internal/computeMetadata/v1/instance/scheduling/preemptible && echo '' && " +
+          "echo 'Instance ID:' && " +
+          "curl -s -H 'Metadata-Flavor: Google' http://metadata.google.internal/computeMetadata/v1/instance/id && echo '' && " +
+          "echo 'Instance Name:' && " +
+          "curl -s -H 'Metadata-Flavor: Google' http://metadata.google.internal/computeMetadata/v1/instance/name" +
+          ") > $@ 2>&1 || echo 'Not GCP or unavailable' > $@",
     exec_properties = {
         "dockerNetwork": "standard",
     },
-    tags = ["no-cache", "no-sandbox"],
+    tags = [
+        "no-cache",
+        "no-sandbox",
+    ],
 )
 
 genrule(
@@ -141,8 +175,8 @@ filegroup(
     name = "remote_exec_info",
     srcs = [
         ":get_aws_instance_type",
-        ":get_gcp_machine_type",
         ":get_cpu_info",
+        ":get_gcp_machine_type",
         ":get_memory_info",
         ":get_system_info",
     ],
