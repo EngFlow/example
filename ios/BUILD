@@ -1,6 +1,7 @@
 load("@bazel_skylib//rules:build_test.bzl", "build_test")
 load("@rules_apple//apple:ios.bzl", "ios_application", "ios_ui_test", "ios_unit_test")
-load("@rules_apple//apple:macos.bzl", "macos_unit_test")
+load("@rules_apple//apple:macos.bzl", "macos_build_test", "macos_unit_test")
+load("@rules_apple//apple:resources.bzl", "apple_metal_library")
 load("@rules_swift//swift:swift.bzl", "swift_library")
 
 swift_library(
@@ -62,4 +63,19 @@ macos_unit_test(
         "no-local-macos-ci",  # Mac local will fail (no console user)
     ],
     deps = [":HelloTestLib"],
+)
+
+apple_metal_library(
+    name = "SampleMetal",
+    srcs = ["sample.metal"],
+    out = "Sample.metallib",
+    hdrs = ["shader_defines.h"],
+)
+
+macos_build_test(
+    name = "SampleMetalBuildTest",
+    minimum_os_version = "14.0",
+    targets = [
+        ":SampleMetal",
+    ],
 )
