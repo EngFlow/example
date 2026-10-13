@@ -72,21 +72,12 @@ build_test(
 genrule(
     name = "get_aws_instance_type",
     outs = ["aws_instance.txt"],
-    # Fetches key AWS instance metadata for performance comparison
+    # Fetches AWS instance metadata
     cmd = "(" +
-          "TOKEN=$$(curl -s -X PUT 'http://169.254.169.254/latest/api/token' -H 'X-aws-ec2-metadata-token-ttl-seconds: 21600') && " +
-          "echo '=== AWS Instance Metadata ===' && " +
-          "echo 'Instance Type:' && " +
-          "curl -s -H \"X-aws-ec2-metadata-token: $$TOKEN\" http://169.254.169.254/latest/meta-data/instance-type && echo '' && " +
-          "echo 'AMI ID:' && " +
-          "curl -s -H \"X-aws-ec2-metadata-token: $$TOKEN\" http://169.254.169.254/latest/meta-data/ami-id && echo '' && " +
-          "echo 'Availability Zone:' && " +
-          "curl -s -H \"X-aws-ec2-metadata-token: $$TOKEN\" http://169.254.169.254/latest/meta-data/placement/availability-zone && echo '' && " +
-          "echo 'Instance Lifecycle:' && " +
-          "curl -s -H \"X-aws-ec2-metadata-token: $$TOKEN\" http://169.254.169.254/latest/meta-data/instance-life-cycle && echo '' && " +
-          "echo 'Instance ID:' && " +
-          "curl -s -H \"X-aws-ec2-metadata-token: $$TOKEN\" http://169.254.169.254/latest/meta-data/instance-id" +
-          ") > $@ 2>&1 || echo 'Not AWS or unavailable' > $@",
+          "curl -sL https://raw.githubusercontent.com/aws/amazon-ec2-utils/main/ec2-metadata -o /tmp/ec2-metadata && " +
+          "chmod +x /tmp/ec2-metadata && " +
+          "/tmp/ec2-metadata --all" +
+          ") > $@ 2>&1 || echo 'ec2-metadata failed or unavailable' > $@",
     exec_properties = {
         "dockerNetwork": "standard",
     },
@@ -99,21 +90,10 @@ genrule(
 genrule(
     name = "get_gcp_machine_type",
     outs = ["gcp_machine.txt"],
-    # Fetches key GCP instance metadata for performance comparison
+    # Fetches GCP instance metadata
     cmd = "(" +
           "echo '=== GCP Instance Metadata ===' && " +
-          "echo 'Machine Type:' && " +
-          "curl -s -H 'Metadata-Flavor: Google' http://metadata.google.internal/computeMetadata/v1/instance/machine-type && echo '' && " +
-          "echo 'Image:' && " +
-          "curl -s -H 'Metadata-Flavor: Google' http://metadata.google.internal/computeMetadata/v1/instance/image && echo '' && " +
-          "echo 'Zone:' && " +
-          "curl -s -H 'Metadata-Flavor: Google' http://metadata.google.internal/computeMetadata/v1/instance/zone && echo '' && " +
-          "echo 'Preemptible:' && " +
-          "curl -s -H 'Metadata-Flavor: Google' http://metadata.google.internal/computeMetadata/v1/instance/scheduling/preemptible && echo '' && " +
-          "echo 'Instance ID:' && " +
-          "curl -s -H 'Metadata-Flavor: Google' http://metadata.google.internal/computeMetadata/v1/instance/id && echo '' && " +
-          "echo 'Instance Name:' && " +
-          "curl -s -H 'Metadata-Flavor: Google' http://metadata.google.internal/computeMetadata/v1/instance/name" +
+          "curl -s -H 'Metadata-Flavor: Google' 'http://metadata.google.internal/computeMetadata/v1/instance/?recursive=true' | python3 -m json.tool" +
           ") > $@ 2>&1 || echo 'Not GCP or unavailable' > $@",
     exec_properties = {
         "dockerNetwork": "standard",
