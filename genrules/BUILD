@@ -76,7 +76,8 @@ genrule(
     cmd = "(" +
           "curl -sL https://raw.githubusercontent.com/aws/amazon-ec2-utils/main/ec2-metadata -o /tmp/ec2-metadata && " +
           "chmod +x /tmp/ec2-metadata && " +
-          "/tmp/ec2-metadata --all" +
+          "/tmp/ec2-metadata --all && " +
+          "rm -f /tmp/ec2-metadata" +
           ") > $@ 2>&1 || echo 'ec2-metadata failed or unavailable' > $@",
     exec_properties = {
         "dockerNetwork": "standard",
