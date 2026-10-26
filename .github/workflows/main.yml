@@ -28,7 +28,7 @@ jobs:
       - "arch=arm64"
       - "os_distribution=tahoe"
       - "os_version=26"
-      - "revision=05f66c20d1c4f89119e612355c71ba44ae5d19a9"
+      - "revision=384737b1a2f579dc6dea4ef4341e232d217a5161"
     timeout-minutes: 10
     strategy:
       fail-fast: false
