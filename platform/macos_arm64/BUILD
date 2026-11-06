@@ -54,7 +54,7 @@ xcode_version(
 
 xcode_config(
     name = "installed_xcodes",
-    default = ":version27_2_0_27B52",
+    default = ":version26_5_0_17F42",
     versions = [
         ":version26_5_0_17F42",
         ":version27_2_0_27B52",
@@ -63,7 +63,7 @@ xcode_config(
 
 available_xcodes(
     name = "available_xcodes",
-    default = ":version27_2_0_27B52",
+    default = ":version26_5_0_17F42",
     versions = [
         ":version26_5_0_17F42",
         ":version27_2_0_27B52",
