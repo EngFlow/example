@@ -86,8 +86,6 @@ filegroup(
         cxx_builtin_include_directories = [
             "/Applications/",
             "/Library/",
-            "/Users/jcater/Applications/",
-            "/Users/jcater/Library/Developer/",
         ],
         libtool = "@apple_support//crosstool:exec_libtool",
         tool_paths_overrides = {},
