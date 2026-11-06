@@ -91,13 +91,7 @@ jobs:
           # TODO: This should probably follow matrix.xcode_version for the ios tests.
           APPLE_SDK_VERSION_OVERRIDE: 26.5
           XCODE_VERSION: ${{ matrix.xcode_version }}
-        shell: bash
-        run: |
-          # Only set the override when the matrix specifies an Xcode version.
-          if [[ -n "${XCODE_VERSION}" ]]; then
-            export XCODE_VERSION_OVERRIDE="${XCODE_VERSION}"
-          fi
-          python3 infra/test-all.py --package=${{ matrix.test_package }}
+        run: python3 infra/test-all.py --package=${{ matrix.test_package }}
 
   linux-test-matrix:
     runs-on:
@@ -163,13 +157,7 @@ jobs:
           OS: ${{ matrix.os }}
           EXECUTION_TYPE: ${{ matrix.execution_type }}
           XCODE_VERSION: ${{ matrix.xcode_version }}
-        shell: bash
-        run: |
-          # Only set the override when the matrix specifies an Xcode version.
-          if [[ -n "${XCODE_VERSION}" ]]; then
-            export XCODE_VERSION_OVERRIDE="${XCODE_VERSION}"
-          fi
-          python3 infra/test-all.py --package=${{ matrix.test_package }}
+        run: python3 infra/test-all.py --package=${{ matrix.test_package }}
 
   bento-snapshot:
     runs-on:
