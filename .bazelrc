@@ -48,6 +48,7 @@ build:remote_macos_arm64 --macos_minimum_os=14
 build:remote_macos_arm64 --repo_env=BAZEL_DO_NOT_DETECT_CPP_TOOLCHAIN=1
 build:remote_macos_arm64 --repo_env=BAZEL_NO_APPLE_CPP_TOOLCHAIN=1
 build:remote_macos_arm64 --xcode_version_config=//platform/macos_arm64/xcode:installed_xcodes
+build:remote_macos_arm64 --extra_toolchains=//platform/macos_arm64/cc:all
 # Disable workers: Builds fail with remote swift workers
 build:remote_macos_arm64 --experimental_remote_mark_tool_inputs=false
 
