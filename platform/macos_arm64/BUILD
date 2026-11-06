@@ -35,18 +35,37 @@ xcode_version(
     version = "26.5.0.17F42",
 )
 
+xcode_version(
+    name = "version27_2_0_27B52",
+    aliases = [
+        "27.2.0",
+        "27.2.0.27B52",
+        "27B52",
+        "27.2",
+        "27",
+    ],
+    default_ios_sdk_version = "27.2",
+    default_macos_sdk_version = "27.2",
+    default_tvos_sdk_version = "27.2",
+    default_visionos_sdk_version = "27.2",
+    default_watchos_sdk_version = "27.2",
+    version = "27.2.0.27B52",
+)
+
 xcode_config(
     name = "installed_xcodes",
-    default = ":version26_5_0_17F42",
+    default = ":version27_2_0_27B52",
     versions = [
         ":version26_5_0_17F42",
+        ":version27_2_0_27B52",
     ],
 )
 
 available_xcodes(
     name = "available_xcodes",
-    default = ":version26_5_0_17F42",
+    default = ":version27_2_0_27B52",
     versions = [
         ":version26_5_0_17F42",
+        ":version27_2_0_27B52",
     ],
 )
