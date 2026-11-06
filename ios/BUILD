@@ -78,4 +78,7 @@ macos_build_test(
     targets = [
         ":SampleMetal",
     ],
+    tags = [
+        "no-local-macos-ci",  # Mac local will fail (metal not installed)
+    ],
 )
