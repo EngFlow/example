@@ -39,7 +39,6 @@ jobs:
           - docker
           - genrules
           - go
-          - ios
           - java
           - kotlin
           - perl
@@ -50,6 +49,28 @@ jobs:
         include:
           - arch: arm64
           - os: macos
+
+          # ios is tested against each installed Xcode version.
+          - test_package: ios
+            execution_type: remote
+            xcode_version: "26.5"
+            arch: arm64
+            os: macos
+          - test_package: ios
+            execution_type: remote
+            xcode_version: "27.2"
+            arch: arm64
+            os: macos
+          - test_package: ios
+            execution_type: local
+            xcode_version: "26.5"
+            arch: arm64
+            os: macos
+          - test_package: ios
+            execution_type: local
+            xcode_version: "27.2"
+            arch: arm64
+            os: macos
 
     steps:
       - uses: "actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd"
@@ -67,8 +88,16 @@ jobs:
           ARCH: ${{ matrix.arch }}
           OS: ${{ matrix.os }}
           EXECUTION_TYPE: ${{ matrix.execution_type }}
+          # TODO: This should probably follow matrix.xcode_version for the ios tests.
           APPLE_SDK_VERSION_OVERRIDE: 26.5
-        run: python3 infra/test-all.py --package=${{ matrix.test_package }}
+          XCODE_VERSION: ${{ matrix.xcode_version }}
+        shell: bash
+        run: |
+          # Only set the override when the matrix specifies an Xcode version.
+          if [[ -n "${XCODE_VERSION}" ]]; then
+            export XCODE_VERSION_OVERRIDE="${XCODE_VERSION}"
+          fi
+          python3 infra/test-all.py --package=${{ matrix.test_package }}
 
   linux-test-matrix:
     runs-on:
@@ -92,7 +121,6 @@ jobs:
           - docker
           - genrules
           - go
-          - ios
           - java
           - kotlin
           - perl
@@ -104,15 +132,19 @@ jobs:
           - arch: x64
           - os: linux
 
-          # Override remote ios tests to use macos/arm64 in the remote executor.
+          # Remote ios tests use macos/arm64 in the remote executor, and are
+          # tested against each installed Xcode version. Local ios tests are
+          # not supported on linux.
           - test_package: ios
             execution_type: remote
+            xcode_version: "26.5"
             arch: arm64
             os: macos
-        exclude:
-          # Local ios tests are not supported on linux
           - test_package: ios
-            execution_type: local
+            execution_type: remote
+            xcode_version: "27.2"
+            arch: arm64
+            os: macos
 
     steps:
       - uses: "actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd"
@@ -130,7 +162,14 @@ jobs:
           ARCH: ${{ matrix.arch }}
           OS: ${{ matrix.os }}
           EXECUTION_TYPE: ${{ matrix.execution_type }}
-        run: python3 infra/test-all.py --package=${{ matrix.test_package }}
+          XCODE_VERSION: ${{ matrix.xcode_version }}
+        shell: bash
+        run: |
+          # Only set the override when the matrix specifies an Xcode version.
+          if [[ -n "${XCODE_VERSION}" ]]; then
+            export XCODE_VERSION_OVERRIDE="${XCODE_VERSION}"
+          fi
+          python3 infra/test-all.py --package=${{ matrix.test_package }}
 
   bento-snapshot:
     runs-on:

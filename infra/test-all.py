@@ -66,6 +66,10 @@ def run_tests(package):
     if package in EXTRA_FLAGS:
         flags += EXTRA_FLAGS[package]
 
+    xcode_version = os.getenv("XCODE_VERSION_OVERRIDE")
+    if xcode_version:
+        flags.append("--xcode_version=" + xcode_version)
+
     print(f"---------------\nTesting {package}...")
     sys.stdout.flush()
 
