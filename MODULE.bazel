@@ -160,3 +160,4 @@ scala_deps.scala()
 scala_deps.scalatest()
 
 bazel_dep(name = "rules_shell", version = "0.8.0")
+bazel_dep(name = "bazel_features", version = "1.54.1")
