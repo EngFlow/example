@@ -1,0 +1,6 @@
+# Vendored Swift configuration for different XCode versions.
+
+# Regenerate them with:
+# DEVELOPER_DIR=/Applications/Xcode-$VERSION.app/Contents/Developer/ bazel run --  @rules_swift//tools/explicit_modules:scan  --output  vendored.BUILD  --developer-dir /Applications/Xcode-$VERSION.app/Contents/Developer/
+
+exports_files(["vendored.27.2.BUILD", "vendored.26.5.BUILD"])
