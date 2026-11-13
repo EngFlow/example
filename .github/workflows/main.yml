@@ -83,16 +83,17 @@ jobs:
       matrix:
         execution_type: [remote, local]
         # Each installed Xcode version, with the iOS SDK versions to test it with.
+        # ios_simulator_device is optional, and overrides the default from .bazelrc.
         xcode:
           - { version: "26.5", ios_sdk: "26.5" }
-          - { version: "27.2", ios_sdk: "27.2" }
+          - { version: "27.2", ios_sdk: "27.2", ios_simulator_device: "iPhone Duo" }
         exclude:
           # TODO: Re-enable when remote-only Xcode versions are supported.
           - execution_type: remote
-            xcode: { version: "27.2", ios_sdk: "27.2" }
+            xcode: { version: "27.2", ios_sdk: "27.2", ios_simulator_device: "iPhone Duo" }
           # TODO: Re-enable when Xcode 27.2 is installed on the macos CI fleet.
           - execution_type: local
-            xcode: { version: "27.2", ios_sdk: "27.2" }
+            xcode: { version: "27.2", ios_sdk: "27.2", ios_simulator_device: "iPhone Duo" }
 
     steps:
       - uses: "actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd"
@@ -116,6 +117,7 @@ jobs:
           --
           --xcode_version=${{ matrix.xcode.version }}
           --ios_sdk_version=${{ matrix.xcode.ios_sdk }}
+          ${{ matrix.xcode.ios_simulator_device && format('--@rules_apple//apple/build_settings:ios_simulator_device="{0}"', matrix.xcode.ios_simulator_device) || '' }}
 
   linux-test-matrix:
     runs-on:
@@ -187,9 +189,10 @@ jobs:
       fail-fast: false
       matrix:
         # Each installed Xcode version, with the iOS SDK versions to test it with.
+        # ios_simulator_device is optional, and overrides the default from .bazelrc.
         xcode:
           - { version: "26.5", ios_sdk: "26.5" }
-          - { version: "27.2", ios_sdk: "27.2" }
+          - { version: "27.2", ios_sdk: "27.2", ios_simulator_device: "iPhone Duo" }
 
     steps:
       - uses: "actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd"
@@ -214,6 +217,7 @@ jobs:
           --
           --xcode_version=${{ matrix.xcode.version }}
           --ios_sdk_version=${{ matrix.xcode.ios_sdk }}
+          ${{ matrix.xcode.ios_simulator_device && format('--@rules_apple//apple/build_settings:ios_simulator_device="{0}"', matrix.xcode.ios_simulator_device) || '' }}
 
   bento-snapshot:
     runs-on:
