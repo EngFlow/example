@@ -33,13 +33,13 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
+        # ios is tested separately in macos-ios-test-matrix.
         test_package:
           - cpp
           - csharp
           - docker
           - genrules
           - go
-          - ios
           - java
           - kotlin
           - perl
@@ -67,8 +67,54 @@ jobs:
           ARCH: ${{ matrix.arch }}
           OS: ${{ matrix.os }}
           EXECUTION_TYPE: ${{ matrix.execution_type }}
-          APPLE_SDK_VERSION_OVERRIDE: 26.5
         run: python3 infra/test-all.py --package=${{ matrix.test_package }}
+
+  macos-ios-test-matrix:
+    runs-on:
+      - self-hosted
+      - "os=macos"
+      - "arch=arm64"
+      - "os_distribution=tahoe"
+      - "os_version=26"
+      - "revision=384737b1a2f579dc6dea4ef4341e232d217a5161"
+    timeout-minutes: 10
+    strategy:
+      fail-fast: false
+      matrix:
+        execution_type: [remote, local]
+        # Each installed Xcode version, with the iOS SDK versions to test it with.
+        # ios_simulator_device is optional, and overrides the default from .bazelrc.
+        xcode:
+          - { version: "26.5", ios_sdk: "26.5" }
+          - { version: "27.2", ios_sdk: "27.2", ios_simulator_device: "iPhone Duo" }
+        exclude:
+          # TODO: Re-enable when Xcode 27.2 is installed on the macos CI fleet.
+          - execution_type: local
+            xcode: { version: "27.2", ios_sdk: "27.2", ios_simulator_device: "iPhone Duo" }
+
+    steps:
+      - uses: "actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd"
+
+      - name: Set up authentication
+        shell: bash
+        run: cp infra/bazelrc .bazelrc.user
+
+      - name: Generate python requirements lock
+        shell: bash
+        run: bazel run //python:requirements.update
+
+      - name: Build and test
+        env:
+          ARCH: arm64
+          OS: macos
+          EXECUTION_TYPE: ${{ matrix.execution_type }}
+        run: >-
+          python3 infra/test-all.py
+          --package=ios
+          --
+          --xcode_version=${{ matrix.xcode.version }}
+          --ios_sdk_version=${{ matrix.xcode.ios_sdk }}
+          ${{ matrix.xcode.ios_simulator_device && format('--@rules_apple//apple/build_settings:ios_simulator_device="{0}"', matrix.xcode.ios_simulator_device) || '' }}
 
   linux-test-matrix:
     runs-on:
@@ -86,13 +132,13 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
+        # ios is tested separately in linux-ios-test-matrix.
         test_package:
           - cpp
           - csharp
           - docker
           - genrules
           - go
-          - ios
           - java
           - kotlin
           - perl
@@ -103,16 +149,6 @@ jobs:
         include:
           - arch: x64
           - os: linux
-
-          # Override remote ios tests to use macos/arm64 in the remote executor.
-          - test_package: ios
-            execution_type: remote
-            arch: arm64
-            os: macos
-        exclude:
-          # Local ios tests are not supported on linux
-          - test_package: ios
-            execution_type: local
 
     steps:
       - uses: "actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd"
@@ -131,6 +167,54 @@ jobs:
           OS: ${{ matrix.os }}
           EXECUTION_TYPE: ${{ matrix.execution_type }}
         run: python3 infra/test-all.py --package=${{ matrix.test_package }}
+
+  # Local ios tests are not supported on linux, so this only runs remote tests.
+  linux-ios-test-matrix:
+    runs-on:
+      - self-hosted
+      - "os=linux"
+      - "arch=x64"
+      - "engflow-bento-name=example-gh-x64"
+      - "engflow-cluster=glass"
+      - "engflow-job-name=linux-test-matrix-remote"
+      - "engflow-job-type=${{github.event_name}}-${{github.ref_name}}"
+      - "engflow-run-id=${{ github.run_id }}"
+      - "engflow-bento-allow-save=false"
+
+    timeout-minutes: 10
+    strategy:
+      fail-fast: false
+      matrix:
+        # Each installed Xcode version, with the iOS SDK versions to test it with.
+        # ios_simulator_device is optional, and overrides the default from .bazelrc.
+        xcode:
+          - { version: "26.5", ios_sdk: "26.5" }
+          - { version: "27.2", ios_sdk: "27.2", ios_simulator_device: "iPhone Duo" }
+
+    steps:
+      - uses: "actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd"
+
+      - name: Set up authentication
+        shell: bash
+        run: cp infra/bazelrc .bazelrc.user
+
+      - name: Generate python requirements lock
+        shell: bash
+        run: bazel run //python:requirements.update
+
+      - name: Build and test
+        env:
+          # The ios tests use macos/arm64 in the remote executor.
+          ARCH: arm64
+          OS: macos
+          EXECUTION_TYPE: remote
+        run: >-
+          python3 infra/test-all.py
+          --package=ios
+          --
+          --xcode_version=${{ matrix.xcode.version }}
+          --ios_sdk_version=${{ matrix.xcode.ios_sdk }}
+          ${{ matrix.xcode.ios_simulator_device && format('--@rules_apple//apple/build_settings:ios_simulator_device="{0}"', matrix.xcode.ios_simulator_device) || '' }}
 
   bento-snapshot:
     runs-on:
