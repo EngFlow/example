@@ -88,9 +88,6 @@ jobs:
           - { version: "26.5", ios_sdk: "26.5" }
           - { version: "27.2", ios_sdk: "27.2", ios_simulator_device: "iPhone Duo" }
         exclude:
-          # TODO: Re-enable when remote-only Xcode versions are supported.
-          - execution_type: remote
-            xcode: { version: "27.2", ios_sdk: "27.2", ios_simulator_device: "iPhone Duo" }
           # TODO: Re-enable when Xcode 27.2 is installed on the macos CI fleet.
           - execution_type: local
             xcode: { version: "27.2", ios_sdk: "27.2", ios_simulator_device: "iPhone Duo" }
