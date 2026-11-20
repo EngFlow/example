@@ -1,6 +1,5 @@
 import Foundation
 import os.log
-import ShellOut
 
 typealias SimulatorUDID = String
 
@@ -574,41 +573,79 @@ private func subprocess(
   env: [String: String] = [:],
   context: @escaping @autoclosure () -> String? = nil
 ) async throws -> String {
-  return try await Task { try syncSubprocess(executable, args, env: env, context: context()) }.value
+  let context = context()
+
+  // `simctl` calls such as `bootstatus -b` and `clone` can block for minutes, so run them on a
+  // Dispatch queue rather than tying up a thread in Swift concurrency's small cooperative pool.
+  // Blocking there with several provisions in flight would stall every actor, including
+  // `SimulatorManager`, and with it releases and HTTP responses.
+  return try await withCheckedThrowingContinuation { continuation in
+    DispatchQueue.global().async {
+      continuation.resume(
+        with: Result { try syncSubprocess(executable, args, env: env, context: context) }
+      )
+    }
+  }
 }
 
 private func syncSubprocess(
   _ executable: String,
-  _ args: [String] = [],
-  env: [String: String] = [:],
-  context: @escaping @autoclosure () -> String? = nil
+  _ args: [String],
+  env: [String: String],
+  context: String?
 ) throws -> String {
-  let quotedArgs = args.map { "'\($0)'" }
-
-  var newEnv = ProcessInfo.processInfo.environment.merging(env) { _, new in new }
-  newEnv["PWD"] = FileManager.default.currentDirectoryPath
-
-  let process = Process()
-  process.environment = ProcessInfo.processInfo.environment.merging(env) { _, new in new }
-
-  let command = "\(executable) \(quotedArgs.joined(separator: " "))"
+  let command = ([executable] + args).map { "'\($0)'" }.joined(separator: " ")
 
   Logger.simulatorControl.debug(#"🛠️ Running "\#(command, privacy: .public)""#)
 
-  do {
-    return try shellOut(
-      to: executable,
-      arguments: quotedArgs,
-      process: process
-    )
-  } catch let error as ShellOutError {
+  // Run the executable directly, without a shell, so arguments such as a device type taken from
+  // the request are passed through verbatim rather than interpreted.
+  let stdOutPipe = Pipe()
+  let stdErrPipe = Pipe()
+  let process = Process()
+  process.executableURL = URL(fileURLWithPath: executable)
+  process.arguments = args
+  process.environment = ProcessInfo.processInfo.environment.merging(env) { _, new in new }
+  process.standardInput = FileHandle.nullDevice
+  process.standardOutput = stdOutPipe
+  process.standardError = stdErrPipe
+
+  try process.run()
+
+  // Drain stderr concurrently, so a child that fills the stderr pipe while we are still reading
+  // stdout can't deadlock us.
+  let stdErrData = DataBox()
+  let stdErrRead = DispatchWorkItem {
+    stdErrData.data = stdErrPipe.fileHandleForReading.readDataToEndOfFile()
+  }
+  DispatchQueue.global().async(execute: stdErrRead)
+  let stdOut = stdOutPipe.fileHandleForReading.readDataToEndOfFile().trimmedOutput()
+  stdErrRead.wait()
+  process.waitUntilExit()
+
+  guard process.terminationStatus == 0 else {
     throw ProcessError(
       command: command,
-      context: context(),
-      exitCode: error.terminationStatus,
-      stdOut: error.output,
-      stdErr: error.message
+      context: context,
+      exitCode: process.terminationStatus,
+      stdOut: stdOut,
+      stdErr: stdErrData.data.trimmedOutput()
     )
+  }
+
+  return stdOut
+}
+
+/// Holds data written by one `DispatchWorkItem` and read after `wait()`ing on it.
+private final class DataBox: @unchecked Sendable {
+  var data = Data()
+}
+
+extension Data {
+  /// The data as a string, minus the single trailing newline most commands end their output with.
+  fileprivate func trimmedOutput() -> String {
+    let output = String(decoding: self, as: UTF8.self)
+    return output.hasSuffix("\n") ? String(output.dropLast()) : output
   }
 }
 

@@ -1,6 +1,5 @@
 import Foundation
 import os
-import ShellOut
 
 typealias PID = pid_t
 

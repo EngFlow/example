@@ -11,7 +11,6 @@ swift_binary(
     srcs = glob(["Sources/*.swift"]),
     tags = ["no-linux-ci"],
     deps = [
-        "@swiftpkg_shellout//:ShellOut",
         "@swiftpkg_swift_argument_parser//:ArgumentParser",
         "@swiftpkg_swift_nio//:NIO",
         "@swiftpkg_swift_nio//:NIOCore",
@@ -33,7 +32,6 @@ swift_test(
     module_name = "simulator_manager",
     tags = ["no-linux-ci"],
     deps = [
-        "@swiftpkg_shellout//:ShellOut",
         "@swiftpkg_swift_argument_parser//:ArgumentParser",
         "@swiftpkg_swift_nio//:NIO",
         "@swiftpkg_swift_nio//:NIOCore",
