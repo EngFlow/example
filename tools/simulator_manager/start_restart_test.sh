@@ -292,6 +292,41 @@ function test_shutdown_requires_post() {
   stop_daemon "$prefix"
 }
 
+# A client that keeps its connection open between requests must not hold up a
+# shutdown: the daemon only exits once every connection has closed, and before
+# it closed idle ones itself, start.sh had to wait out its timeout and kill it.
+function test_shutdown_does_not_wait_for_an_idle_connection() {
+  local -r prefix="$(new_prefix)"
+
+  if ! output="$(SIMULATOR_MANAGER_STATE_PREFIX="$prefix" "$start" 2>&1)"; then
+    fail "start.sh failed: $output"
+    return
+  fi
+  local -r pid="$(daemon_pid "$prefix")"
+
+  # Makes one keep-alive request, then holds the connection open, idle.
+  python3 -c '
+import socket, sys, time
+s = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+s.connect(sys.argv[1])
+s.sendall(b"GET /version HTTP/1.1\r\nHost: x\r\n\r\n")
+s.recv(4096)
+time.sleep(60)
+' "$prefix.sock" > /dev/null 2>&1 &
+  local -r client=$!
+  # Give it time to connect and get its response.
+  sleep 1
+
+  curl --silent --max-time 10 --unix-socket "$prefix.sock" \
+    -XPOST 'http:/-/shutdown' > /dev/null 2>&1
+  if ! await_exit "$pid" 10; then
+    fail "the daemon was still running 10s after /shutdown, with an idle connection open"
+  fi
+
+  kill "$client" 2> /dev/null || true
+  stop_daemon "$prefix"
+}
+
 # The regression test. A version change must not cost an in-flight test its
 # lease: start.sh runs on every lease, so an action starting a new test can
 # otherwise destroy the bookkeeping for tests already running, and their release
@@ -625,6 +660,7 @@ echo "using iOS $ios_version on $device_type"
 test_state_prefix_override_is_honored
 test_socket_is_owner_only
 test_shutdown_requires_post
+test_shutdown_does_not_wait_for_an_idle_connection
 test_version_change_preserves_a_live_lease
 test_a_new_daemon_adopts_a_live_lease
 test_a_new_daemon_drops_a_dead_leasers_lease
