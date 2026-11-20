@@ -43,13 +43,13 @@ ownership.
 ## Running tests
 
 The simulator device type must be set, or the lease hook fails fast rather than
-booting a device for a test that cannot run. It is deliberately not pinned in
-`.bazelrc`, because which device profiles exist depends on the installed Xcode's
-iOS runtime. Set it in `.bazelrc.user`:
+booting a device for a test that cannot run. `.bazelrc` sets it for
+`--config=ios`:
 
     build:ios --@rules_apple//apple/build_settings:ios_simulator_device="iPhone 17"
 
-Then:
+Which device profiles exist depends on the installed Xcode's iOS runtime, so if
+that one isn't available locally, override it in `.bazelrc.user`. Then:
 
     bazel test --config=ios //ios:HelloAppUITest
 
