@@ -10,6 +10,10 @@ set -euo pipefail
 # changes will impact all executors in the default pool.
 #
 #!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! WARNING !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+# 48: write the pid file only once the socket is bound, and kill a daemon that
+#     has a live pid but can't report its version; run simulator commands
+#     without a shell; delete a simulator whose reuse fails rather than leaving
+#     it leased to nobody.
 # 47: keep a released simulator warm for 2 hours rather than 1 minute, to see what
 #     the reuse rate looks like when a device is essentially never reclaimed. A
 #     version bump is what makes this take effect on an already-running worker.
@@ -24,7 +28,7 @@ set -euo pipefail
 # 43: install the post-boot script with `cp -f`, so an upgrade can overwrite the
 #     read-only copy a previous version left in place.
 # 42: liveness check for a leaser that exits during provisioning.
-readonly non_staging_version=47
+readonly non_staging_version=48
 
 if [[ -z "${EXAMPLE_CI_STAGING_VERSION:-}" ]]; then
   readonly expected_version="$non_staging_version"
