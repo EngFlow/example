@@ -1395,6 +1395,61 @@ final class SimulatorManagerPendingDeletionTests: XCTestCase {
   }
 }
 
+/// A value tests can change from a `@Sendable` hook while the manager reads it.
+private final class LockedBox<Value>: @unchecked Sendable {
+  private let lock = NSLock()
+  private var stored: Value
+
+  init(_ value: Value) {
+    stored = value
+  }
+
+  var value: Value {
+    get { lock.withLock { stored } }
+    set { lock.withLock { stored = newValue } }
+  }
+}
+
+/// The bookkeeping that ties a lease to the process holding it.
+final class SimulatorManagerLeaserTests: XCTestCase {
+  private let config = SimulatorConfig(deviceType: "iPhone 14", os: "iOS", version: "16.4")
+
+  /// Provisioning can take minutes, and a leaser that dies during it can have its PID handed to
+  /// another process. That process is still running, so a liveness check alone passes, and the
+  /// device would be leased to it until it exits. The start time read when the request arrived is
+  /// what tells them apart.
+  func test_a_pid_reused_during_provisioning_gets_no_device() async throws {
+    let control = MockSimulatorControl()
+    let startTime = LockedBox<UInt64>(1)
+    let manager = SimulatorManager(
+      simulatorControl: control,
+      deleteRecentlyUsedIdleAfter: 0,
+      deleteIdleAfter: 0,
+      recentlyUsedCapacity: 1,
+      deleteOnPIDExit: true,
+      startTimeOf: { _ in startTime.value }
+    )
+
+    // The leaser dies mid-clone and an unrelated process, started later, takes its PID.
+    await control.setOnClone { startTime.value = 2 }
+
+    // swiftformat:disable:next hoistAwait
+    await assertThrowsAsyncError(
+      try await manager.lease(to: PID(getpid()), exclusive: true, config: config)
+    ) { error in
+      guard case SimulatorManagerError.leaserExited = error else {
+        return XCTFail("expected leaserExited, got \(error)")
+      }
+    }
+
+    // The clone goes back to the pool, which with these timers deletes it.
+    let created = await control.baseForClones.keys
+    let deleted = await control.deletedSimulators
+    XCTAssertEqual(created.count, 1)
+    XCTAssertEqual(Set(deleted), Set(created))
+  }
+}
+
 final class LRUSetTests: XCTestCase {
   /// With capacity 1, leasing a second configuration evicts the first -- which
   /// flips the first config's released devices from `delete-recently-used-idle-after`
@@ -1517,6 +1572,13 @@ actor MockSimulatorControl: SimulatorControl {
     return simulator
   }
 
+  /// Runs during every `clone`, standing in for whatever happens while a real clone boots.
+  var onClone: (@Sendable () async -> Void)?
+
+  func setOnClone(_ hook: @escaping @Sendable () async -> Void) {
+    onClone = hook
+  }
+
   func clone(
     _ simulator: SimulatorUDID,
     name: String,
@@ -1524,6 +1586,10 @@ actor MockSimulatorControl: SimulatorControl {
     runtimeIdentifier: String,
     postBoot: String?
   ) async throws -> SimulatorUDID {
+    if let onClone {
+      await onClone()
+    }
+
     // Mirrors the real implementation, which looks for an existing device of this
     // name first so that a clone left behind by a killed manager is adopted rather
     // than duplicated.

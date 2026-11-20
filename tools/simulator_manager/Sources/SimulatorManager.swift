@@ -18,7 +18,7 @@ private struct SimulatorLease {
   let config: SimulatorConfig
   let exclusive: Bool
   let slotIndex: Int
-  /// When the leasing process started, captured at lease time.
+  /// When the leasing process started, captured when its lease request arrived.
   ///
   /// Persisted so a successor daemon can tell a still-running leaser from a
   /// recycled PID. Nil when it could not be read.
@@ -99,6 +99,9 @@ actor SimulatorManager {
 
   private var postBoot: String?
 
+  /// Reads a process's start time. Injectable so tests can stand in for a PID being recycled.
+  private let startTimeOf: @Sendable (PID) -> UInt64?
+
   init(
     simulatorControl: SimulatorControl,
     deleteRecentlyUsedIdleAfter: UInt16,
@@ -106,7 +109,8 @@ actor SimulatorManager {
     recentlyUsedCapacity: Int,
     deleteOnPIDExit: Bool,
     postBoot: String? = nil,
-    leaseStore: LeaseStore? = nil
+    leaseStore: LeaseStore? = nil,
+    startTimeOf: @escaping @Sendable (PID) -> UInt64? = processStartTime
   ) {
     self.simulatorControl = simulatorControl
     self.deleteIdleAfter = deleteIdleAfter
@@ -115,6 +119,7 @@ actor SimulatorManager {
     self.recentlyLeased = LRUSet(capacity: recentlyUsedCapacity)
     self.postBoot = postBoot
     self.leaseStore = leaseStore
+    self.startTimeOf = startTimeOf
 
     // Change the working directory to some place stable, since on RBE the runfiles directory can
     // get cleaned up
@@ -270,14 +275,7 @@ actor SimulatorManager {
   private func leaserSurvived(_ lease: PersistedLease) -> Bool {
     guard processIsRunning(lease.pid) else { return false }
 
-    // A record without a start time predates that field. Fall back to liveness
-    // alone: adopting on a PID collision costs one device held until that process
-    // exits, which is better than dropping every lease on a mixed-version upgrade.
-    guard let persistedStart = lease.leaserStartTime else { return true }
-
-    guard let currentStart = processStartTime(lease.pid) else { return false }
-
-    guard currentStart == persistedStart else {
+    guard isRunning(lease.pid, startedAt: lease.leaserStartTime) else {
       Logger.simulatorManager.info(
         """
         👻 PID \(lease.pid, privacy: .public) is running but started at a different \
@@ -288,6 +286,18 @@ actor SimulatorManager {
     }
 
     return true
+  }
+
+  /// Whether `pid` is running and is the process that started at `startTime`, rather than an
+  /// unrelated one that reused the number.
+  ///
+  /// A nil `startTime` means it couldn't be read, or the record predates that field. Fall back to
+  /// liveness alone: adopting on a PID collision costs one device held until that process exits,
+  /// which is better than refusing every such lease.
+  private func isRunning(_ pid: PID, startedAt startTime: UInt64?) -> Bool {
+    guard processIsRunning(pid) else { return false }
+    guard let startTime else { return true }
+    return startTimeOf(pid) == startTime
   }
 
   /// Whether `lease` can be adopted without contradicting one already restored.
@@ -357,6 +367,11 @@ actor SimulatorManager {
       throw SimulatorManagerError.alreadyLeased(udid: existingLease.udid)
     }
 
+    // Read now, not once provisioning is done: that can take minutes, and a leaser that dies in
+    // the meantime can have its PID reused. Reading it afterwards would record the new process's
+    // start time, and hand the lease to it.
+    let leaserStartTime = startTimeOf(leaser)
+
     Logger.simulatorManager.info(
       """
       🔒 Leasing \(exclusive ? "exclusive" : "non-exclusive", privacy: .public) \
@@ -386,19 +401,20 @@ actor SimulatorManager {
     recentlyLeased.insert(config)
 
     // Re-check now that provisioning is done: the leaser may have exited while we
-    // were cloning and booting. Record the lease first so `release` can unwind the
-    // reference count and put the device back in the idle pool, then hand it back
-    // rather than returning a UDID nobody will use.
+    // were cloning and booting, and its PID may even belong to another process by
+    // now. Record the lease first so `release` can unwind the reference count and
+    // put the device back in the idle pool, then hand it back rather than returning
+    // a UDID nobody will use.
     leases[leaser] = .init(
       udid: simulator,
       config: config,
       exclusive: exclusive,
       slotIndex: slotIndex,
-      leaserStartTime: processStartTime(leaser)
+      leaserStartTime: leaserStartTime
     )
     persistState()
 
-    if deleteOnPIDExit, !processIsRunning(leaser) {
+    if deleteOnPIDExit, !isRunning(leaser, startedAt: leaserStartTime) {
       Logger.simulatorManager.info(
         """
         👋 PID \(leaser, privacy: .public) exited while its simulator was being \
