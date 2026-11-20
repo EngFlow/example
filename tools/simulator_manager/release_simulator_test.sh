@@ -37,7 +37,9 @@ source "${RUNFILES_DIR:-/dev/null}/$f" 2> /dev/null \
     exit 1
   }
 f=
-set -e
+# The upstream snippet ends with `set -e`, which is left out on purpose: these
+# tests count failures and report them at the end, so a failing command must
+# not abort the script part way through.
 # --- end runfiles.bash initialization v3 ---
 
 readonly release="$(rlocation _main/tools/simulator_manager/release_simulator)"

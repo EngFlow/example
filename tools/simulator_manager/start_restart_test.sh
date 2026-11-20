@@ -52,7 +52,9 @@ source "${RUNFILES_DIR:-/dev/null}/$f" 2> /dev/null \
     exit 1
   }
 f=
-set -e
+# The upstream snippet ends with `set -e`, which is left out on purpose: these
+# tests count failures and report them at the end, so a failing command must
+# not abort the script part way through.
 # --- end runfiles.bash initialization v3 ---
 
 readonly start="$(rlocation _main/tools/simulator_manager/start)"
@@ -73,9 +75,7 @@ function new_prefix() {
   mktemp -u "/tmp/smtest.XXXXXX"
 }
 
-# `|| true` because this is called on a prefix that may have no daemon, and a
-# failing `cat` inside `$(...)` under `set -e` would take the whole script down
-# -- silently, and leaving a daemon behind.
+# Empty, not an error, for a prefix that has no daemon.
 function daemon_pid() {
   cat "$1.pid" 2> /dev/null || true
 }
