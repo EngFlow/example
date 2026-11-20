@@ -760,7 +760,7 @@ final class SimulatorManagerLeaseHandoverTests: XCTestCase {
       ),
     ])
 
-    let manager = makeManager(control, store: store)
+    let manager = makeManager(control, store: store, deleteOnPIDExit: true)
     await manager.restoreLeases()
 
     let live = await manager.liveLeaseCount()
@@ -813,7 +813,7 @@ final class SimulatorManagerLeaseHandoverTests: XCTestCase {
       ),
     ])
 
-    await makeManager(control, store: store).restoreLeases()
+    await makeManager(control, store: store, deleteOnPIDExit: true).restoreLeases()
 
     // The rewrite is asynchronous in the fake, so let the save land.
     try await Task.sleep(for: .milliseconds(100))
@@ -855,6 +855,58 @@ final class SimulatorManagerLeaseHandoverTests: XCTestCase {
     XCTAssertEqual(live, 1, "only one lease can hold an exclusive device")
   }
 
+  /// The same device in two slots would be deleted through one slot while the other still hands
+  /// it out, so the second lease claiming it is dropped, even though it is shared.
+  func test_one_device_in_two_slots_is_not_adopted_twice() async throws {
+    let control = MockSimulatorControl()
+    let store = FakeLeaseStore()
+
+    let leaser = getpid()
+    let start = processStartTime(leaser)
+    store.preload([
+      .init(
+        pid: leaser,
+        leaserStartTime: start,
+        udid: "SHARED-DEVICE",
+        config: config,
+        exclusive: false,
+        slotIndex: 0
+      ),
+      .init(
+        pid: 1,
+        leaserStartTime: nil,
+        udid: "SHARED-DEVICE",
+        config: config,
+        exclusive: false,
+        slotIndex: 1
+      ),
+    ])
+
+    let manager = makeManager(control, store: store)
+    await manager.restoreLeases()
+
+    try await manager.release(for: leaser)
+    // swiftformat:disable:next hoistAwait
+    try await assertThrowsAsyncError(await manager.release(for: 1))
+  }
+
+  /// Without exit tracking, a lease's PID doesn't have to be a running process, so restoring
+  /// mustn't drop the lease for not being one.
+  func test_without_exit_tracking_a_dead_pids_lease_is_adopted() async throws {
+    let control = MockSimulatorControl()
+    let store = FakeLeaseStore()
+
+    let udid = try await makeManager(control, store: store)
+      .lease(to: 4242, exclusive: true, config: config)
+
+    let successor = makeManager(control, store: store)
+    await successor.restoreLeases()
+    try await successor.release(for: 4242)
+
+    let deleted = await control.deletedSimulators
+    XCTAssertEqual(deleted, [udid])
+  }
+
   /// A dropped lease's device has nobody left to release it, so the successor puts
   /// it on an idle timer -- here 0, so it is deleted -- rather than leaving it
   /// booted for the life of the worker.
@@ -873,7 +925,7 @@ final class SimulatorManagerLeaseHandoverTests: XCTestCase {
       ),
     ])
 
-    await makeManager(control, store: store).restoreLeases()
+    await makeManager(control, store: store, deleteOnPIDExit: true).restoreLeases()
 
     let deleted = await control.deletedSimulators
     XCTAssertEqual(deleted, ["DEAD-DEVICE"])
@@ -905,7 +957,7 @@ final class SimulatorManagerLeaseHandoverTests: XCTestCase {
       ),
     ])
 
-    let manager = makeManager(control, store: store)
+    let manager = makeManager(control, store: store, deleteOnPIDExit: true)
     await manager.restoreLeases()
 
     let deleted = await control.deletedSimulators

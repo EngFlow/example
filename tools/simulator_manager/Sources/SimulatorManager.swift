@@ -168,14 +168,17 @@ actor SimulatorManager {
     var unowned = persisted.idleSimulators
 
     for lease in persisted.leases {
-      guard leaserSurvived(lease) else {
+      // Without exit tracking the caller owns the lease's lifetime, and the PID need not name a
+      // running process, just as in `lease`.
+      guard !deleteOnPIDExit || leaserSurvived(lease) else {
         dropped += 1
         unowned.append(.init(udid: lease.udid, config: lease.config, slotIndex: lease.slotIndex))
         continue
       }
 
-      // Two leases cannot share an exclusive device, and a slot cannot hold two
-      // different devices. A file that says otherwise is inconsistent -- possibly
+      // Two leases cannot share an exclusive device, a device cannot be in two
+      // slots, and a slot cannot hold two different devices. A file that says
+      // otherwise is inconsistent -- possibly
       // hand-edited, or written by a version with different slot semantics -- so
       // prefer dropping the lease over corrupting the slot bookkeeping.
       guard canAdopt(lease) else {
@@ -309,7 +312,9 @@ actor SimulatorManager {
   /// Whether `lease` can be adopted without contradicting one already restored.
   private func canAdopt(_ lease: PersistedLease) -> Bool {
     for existing in leases.values {
-      if existing.udid == lease.udid, existing.exclusive || lease.exclusive {
+      if existing.udid == lease.udid,
+         existing.exclusive || lease.exclusive
+         || existing.config != lease.config || existing.slotIndex != lease.slotIndex {
         return false
       }
 
