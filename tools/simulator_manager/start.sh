@@ -19,7 +19,8 @@ set -euo pipefail
 #     owner-only, and reject requests that use the wrong HTTP method; close
 #     idle keep-alive connections on shutdown rather than waiting on them;
 #     reject an unrecognized `exclusive` value rather than leasing shared, and
-#     answer a second lease for the same pid with 409.
+#     answer a second lease for the same pid with 409; check for a stale start
+#     lock on every attempt, not just the first.
 # 47: keep a released simulator warm for 2 hours rather than 1 minute, to see what
 #     the reuse rate looks like when a device is essentially never reclaimed. A
 #     version bump is what makes this take effect on an already-running worker.
@@ -73,10 +74,14 @@ readonly delete_after_idle_secs=0
 readonly delete_recently_used_after_idle_secs=7200
 readonly recently_used_capacity="${EXAMPLE_SIMULATOR_MANAGER_RECENTLY_USED_CAPACITY:-1}"
 
-readonly mutex_timeout=60
 readonly shutdown_timeout=45
 readonly startup_timeout=10
-readonly stale_mutex_seconds=120
+# Comfortably longer than a holder can legitimately take -- a full shutdown,
+# then a startup -- so only a crashed holder's lock counts as stale.
+readonly stale_mutex_seconds=$((shutdown_timeout + startup_timeout + 15))
+# Longer than `stale_mutex_seconds`, so a waiter clears a crashed holder's lock
+# rather than giving up first.
+readonly mutex_timeout=$((stale_mutex_seconds + 20))
 # Overridable only so tests can drive a daemon on their own paths instead of the
 # well-known ones; production callers leave these unset. A test that reused the
 # real paths would fight the worker's live daemon.
@@ -96,24 +101,28 @@ function exitMutex() {
   trap - EXIT
 }
 
-function enterMutex() {
-  if [[ -d "$mutex_path" ]]; then
-    local mtime
-    mtime=$(stat -f %B "$mutex_path")
-    local now
-    now=$(date +%s)
-    if (((now - mtime) > stale_mutex_seconds)); then
-      echo >&2 "$(date '+[%H:%M:%S]') ⚠️ Deleting stale lock file. This" \
-        "shouldn't happen."
-      rm -rf "$mutex_path"
-    fi
+# Checked on every attempt, not just the first: a lock that goes stale while we
+# wait would otherwise hold every caller until its own timeout.
+function removeStaleMutex() {
+  local mtime
+  # Gone already if its holder released it since our `mkdir` failed.
+  mtime=$(stat -f %B "$mutex_path" 2> /dev/null) || return 0
+  local now
+  now=$(date +%s)
+  if (((now - mtime) > stale_mutex_seconds)); then
+    echo >&2 "$(date '+[%H:%M:%S]') ⚠️ Deleting stale lock file. This" \
+      "shouldn't happen."
+    rm -rf "$mutex_path"
   fi
+}
 
+function enterMutex() {
   for _ in $(seq 1 "$mutex_timeout"); do
     if mkdir "$mutex_path" 2> /dev/null; then
       trap 'exitMutex' EXIT
       return 0
     fi
+    removeStaleMutex
     sleep 1
   done
 
