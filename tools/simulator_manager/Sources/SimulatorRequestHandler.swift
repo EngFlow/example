@@ -61,6 +61,11 @@ final class SimulatorRequestHandler {
           // FIXME: Get this from the error itself
           message: "PID \(leaser) has already leased another simulator: \(udid)"
         )
+      } catch SimulatorManagerError.leaseInProgress {
+        return .init(
+          status: .badRequest,
+          message: "PID \(leaser) already has a simulator lease being provisioned"
+        )
       } catch SimulatorManagerError.leaserExited {
         // Nobody is left to read this response, but answering rather than throwing
         // keeps it out of the server's error path.

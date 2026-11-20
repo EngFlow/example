@@ -9,6 +9,7 @@ extension Logger {
 
 enum SimulatorManagerError: Error {
   case alreadyLeased(udid: SimulatorUDID)
+  case leaseInProgress
   case noLease
   case leaserExited
 }
@@ -82,6 +83,8 @@ actor SimulatorManager {
   private var simulatorSlots: [SimulatorConfig: [SimulatorSlot]] = [:]
   private var referenceCount: [SimulatorUDID: Int] = [:]
   private var leases: [PID: SimulatorLease] = [:]
+  /// Leasers whose lease is still being provisioned, and so not yet in `leases`.
+  private var provisioningLeasers: Set<PID> = []
 
   private var leaserExitListeners: [PID: DispatchSourceProcess] = [:]
 
@@ -366,6 +369,15 @@ actor SimulatorManager {
     if let existingLease = leases[leaser] {
       throw SimulatorManagerError.alreadyLeased(udid: existingLease.udid)
     }
+
+    // The lease isn't recorded until provisioning is done, so the check above can't see one that
+    // is still being provisioned. Without this, a second request for the same PID would provision
+    // its own device and overwrite the first lease, leaving the first device held by nobody.
+    // Claimed before the first `await`, so the two can't interleave.
+    guard provisioningLeasers.insert(leaser).inserted else {
+      throw SimulatorManagerError.leaseInProgress
+    }
+    defer { provisioningLeasers.remove(leaser) }
 
     // Read now, not once provisioning is done: that can take minutes, and a leaser that dies in
     // the meantime can have its PID reused. Reading it afterwards would record the new process's

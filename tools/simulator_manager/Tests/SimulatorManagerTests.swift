@@ -1448,6 +1448,38 @@ final class SimulatorManagerLeaserTests: XCTestCase {
     XCTAssertEqual(created.count, 1)
     XCTAssertEqual(Set(deleted), Set(created))
   }
+
+  /// A lease is only recorded once its device is provisioned, so a second request for the same
+  /// PID arriving before then used to get a device of its own. It then overwrote the first lease,
+  /// and nothing would ever release the first device.
+  func test_concurrent_leases_for_one_pid_grant_only_one() async throws {
+    let control = MockSimulatorControl()
+    let manager = SimulatorManager(
+      simulatorControl: control,
+      deleteRecentlyUsedIdleAfter: 0,
+      deleteIdleAfter: 0,
+      recentlyUsedCapacity: 1,
+      deleteOnPIDExit: false
+    )
+    let config = self.config
+
+    // Holds the first lease in provisioning long enough for the second to arrive.
+    await control.setOnClone { try? await Task.sleep(for: .milliseconds(200)) }
+
+    @Sendable func lease() async -> SimulatorUDID? {
+      return try? await manager.lease(to: 1234, exclusive: true, config: config)
+    }
+    async let first = lease()
+    async let second = lease()
+    let granted = await [first, second].compactMap { $0 }
+    XCTAssertEqual(granted.count, 1, "only one of two concurrent leases for a PID may succeed")
+
+    // Releasing that one lease must return every device provisioned for the PID.
+    try await manager.release(for: 1234)
+    let created = await control.baseForClones.keys
+    let deleted = await control.deletedSimulators
+    XCTAssertEqual(Set(deleted), Set(created), "a device was provisioned that nothing will release")
+  }
 }
 
 final class LRUSetTests: XCTestCase {
