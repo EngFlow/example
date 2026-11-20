@@ -132,16 +132,20 @@ use_repo(maven, "maven")
 bazel_dep(name = "rules_kotlin", version = "2.3.20")
 bazel_dep(name = "rules_perl", version = "1.1.1")
 bazel_dep(name = "rules_swift", version = "4.1.1")
-system_sdk = use_extension("@rules_swift//swift:extensions.bzl", "system_sdk")
-system_sdk.configure_xcode(
+
+# Vendored explicit modules for the Xcode versions on the remote macOS workers.
+# Only used by the Swift toolchains registered by --config=remote_macos_arm64;
+# local builds use rules_swift's auto-detected @system_sdk.
+vendored_system_sdk = use_extension("//platform/macos_arm64/swift:extensions.bzl", "vendored_system_sdk")
+vendored_system_sdk.configure_xcode(
     build_file = "//platform/macos_arm64/swift:vendored.26.5.BUILD",
     version = "26.5.0.17F42",
 )
-system_sdk.configure_xcode(
+vendored_system_sdk.configure_xcode(
     build_file = "//platform/macos_arm64/swift:vendored.27.2.BUILD",
     version = "27.2.0.27B52",
 )
-use_repo(system_sdk, "system_sdk")
+use_repo(vendored_system_sdk, "vendored_system_sdk")
 
 bazel_dep(name = "rules_nodejs", version = "6.7.4")
 bazel_dep(name = "aspect_rules_ts", version = "3.8.10")
