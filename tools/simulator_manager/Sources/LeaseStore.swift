@@ -24,15 +24,32 @@ struct PersistedLease: Codable, Equatable {
   let slotIndex: Int
 }
 
+/// A released simulator being kept warm for reuse, in the form it takes on disk.
+///
+/// Recorded so a successor daemon can take over the idle timer. Otherwise a
+/// device that was idle when its daemon was replaced belongs to nobody, and stays
+/// booted for the life of the worker.
+struct PersistedIdleSimulator: Codable, Equatable {
+  let udid: SimulatorUDID
+  let config: SimulatorConfig
+  let slotIndex: Int
+}
+
+/// Everything a daemon persists for its successor.
+struct PersistedState: Codable, Equatable {
+  var leases: [PersistedLease] = []
+  var idleSimulators: [PersistedIdleSimulator] = []
+}
+
 /// Where the daemon keeps its leases so a successor can pick them up.
 protocol LeaseStore: Sendable {
-  /// Replaces the stored set with `leases`. Failures are logged, not thrown:
+  /// Replaces the stored state with `state`. Failures are logged, not thrown:
   /// losing persistence degrades a restart, but failing the lease that triggered
   /// the write would break a test that is otherwise fine.
-  func save(_ leases: [PersistedLease])
+  func save(_ state: PersistedState)
 
-  /// The stored set, or empty if there is nothing readable to restore.
-  func load() -> [PersistedLease]
+  /// The stored state, or empty if there is nothing readable to restore.
+  func load() -> PersistedState
 }
 
 /// A `LeaseStore` backed by a JSON file.
@@ -44,12 +61,12 @@ protocol LeaseStore: Sendable {
 struct FileLeaseStore: LeaseStore {
   let path: String
 
-  func save(_ leases: [PersistedLease]) {
+  func save(_ state: PersistedState) {
     let url = URL(fileURLWithPath: path)
     do {
       let encoder = JSONEncoder()
       encoder.outputFormatting = [.prettyPrinted, .sortedKeys]
-      let data = try encoder.encode(leases)
+      let data = try encoder.encode(state)
 
       // `.atomic` writes an auxiliary file alongside the destination and renames
       // it over the top, which is the whole reason this is durable. Doing that by
@@ -59,22 +76,27 @@ struct FileLeaseStore: LeaseStore {
     } catch {
       Logger.leaseStore.error(
         """
-        ❌ Failed to persist \(leases.count, privacy: .public) lease(s) to \
+        ❌ Failed to persist \(state.leases.count, privacy: .public) lease(s) and \
+        \(state.idleSimulators.count, privacy: .public) idle simulator(s) to \
         \(path, privacy: .public): \(error, privacy: .public)
         """
       )
     }
   }
 
-  func load() -> [PersistedLease] {
+  func load() -> PersistedState {
     let url = URL(fileURLWithPath: path)
     guard FileManager.default.fileExists(atPath: path) else {
-      return []
+      return .init()
     }
 
     do {
       let data = try Data(contentsOf: url)
-      return try JSONDecoder().decode([PersistedLease].self, from: data)
+      if let state = try? JSONDecoder().decode(PersistedState.self, from: data) {
+        return state
+      }
+      // Daemons before version 48 wrote a bare array of leases.
+      return try .init(leases: JSONDecoder().decode([PersistedLease].self, from: data))
     } catch {
       // A corrupt or stale-format file must not stop the daemon from starting.
       // The cost of ignoring it is the old behavior: leases predating the restart
@@ -85,7 +107,7 @@ struct FileLeaseStore: LeaseStore {
         none: \(error, privacy: .public)
         """
       )
-      return []
+      return .init()
     }
   }
 }

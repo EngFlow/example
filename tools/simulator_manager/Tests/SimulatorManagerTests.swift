@@ -647,24 +647,31 @@ final class SimulatorManagerRestartTests: XCTestCase {
 /// observe the store before the write it just triggered had landed.
 private final class FakeLeaseStore: LeaseStore, @unchecked Sendable {
   private let lock = NSLock()
-  private var stored: [PersistedLease] = []
+  private var stored = PersistedState()
 
   /// Hands `load()` something the daemon never wrote, for the cases where the file
   /// is corrupt, hand-edited or written by another version.
-  func preload(_ leases: [PersistedLease]) {
-    lock.withLock { stored = leases }
+  func preload(
+    _ leases: [PersistedLease],
+    idleSimulators: [PersistedIdleSimulator] = []
+  ) {
+    lock.withLock { stored = .init(leases: leases, idleSimulators: idleSimulators) }
   }
 
   func contents() -> [PersistedLease] {
+    return lock.withLock { stored.leases }
+  }
+
+  func idleContents() -> [PersistedIdleSimulator] {
+    return lock.withLock { stored.idleSimulators }
+  }
+
+  func save(_ state: PersistedState) {
+    lock.withLock { stored = state }
+  }
+
+  func load() -> PersistedState {
     return lock.withLock { stored }
-  }
-
-  func save(_ leases: [PersistedLease]) {
-    lock.withLock { stored = leases }
-  }
-
-  func load() -> [PersistedLease] {
-    return contents()
   }
 }
 
@@ -848,6 +855,97 @@ final class SimulatorManagerLeaseHandoverTests: XCTestCase {
     XCTAssertEqual(live, 1, "only one lease can hold an exclusive device")
   }
 
+  /// A dropped lease's device has nobody left to release it, so the successor puts
+  /// it on an idle timer -- here 0, so it is deleted -- rather than leaving it
+  /// booted for the life of the worker.
+  func test_a_dropped_leases_device_is_reclaimed() async throws {
+    let control = MockSimulatorControl()
+    let store = FakeLeaseStore()
+
+    store.preload([
+      .init(
+        pid: 1,
+        leaserStartTime: 999,
+        udid: "DEAD-DEVICE",
+        config: config,
+        exclusive: true,
+        slotIndex: 0
+      ),
+    ])
+
+    await makeManager(control, store: store).restoreLeases()
+
+    let deleted = await control.deletedSimulators
+    XCTAssertEqual(deleted, ["DEAD-DEVICE"])
+  }
+
+  /// A dropped lease that shared a non-exclusive device with one that survived must
+  /// not take the device away from the survivor.
+  func test_a_dropped_lease_does_not_reclaim_a_device_still_in_use() async throws {
+    let control = MockSimulatorControl()
+    let store = FakeLeaseStore()
+
+    let leaser = getpid()
+    store.preload([
+      .init(
+        pid: leaser,
+        leaserStartTime: processStartTime(leaser),
+        udid: "SHARED-DEVICE",
+        config: config,
+        exclusive: false,
+        slotIndex: 0
+      ),
+      .init(
+        pid: 1,
+        leaserStartTime: 999,
+        udid: "SHARED-DEVICE",
+        config: config,
+        exclusive: false,
+        slotIndex: 0
+      ),
+    ])
+
+    let manager = makeManager(control, store: store)
+    await manager.restoreLeases()
+
+    let deleted = await control.deletedSimulators
+    XCTAssertEqual(deleted, [])
+    let live = await manager.liveLeaseCount()
+    XCTAssertEqual(live, 1)
+  }
+
+  /// A device the previous daemon was keeping warm is handed over too: the
+  /// successor reuses it rather than cloning a new one, and doesn't leave it booted
+  /// with nobody tracking it.
+  func test_an_idle_simulator_is_handed_over_and_reused() async throws {
+    let control = MockSimulatorControl()
+    let store = FakeLeaseStore()
+    let makeWarmManager = {
+      SimulatorManager(
+        simulatorControl: control,
+        deleteRecentlyUsedIdleAfter: 600,
+        deleteIdleAfter: 600,
+        recentlyUsedCapacity: 1,
+        deleteOnPIDExit: false,
+        leaseStore: store
+      )
+    }
+
+    let first = makeWarmManager()
+    let udid = try await first.lease(to: 4242, exclusive: true, config: config)
+    try await first.release(for: 4242)
+
+    XCTAssertEqual(store.idleContents(), [.init(udid: udid, config: config, slotIndex: 0)])
+
+    let successor = makeWarmManager()
+    await successor.restoreLeases()
+
+    let reused = try await successor.lease(to: 4343, exclusive: true, config: config)
+    XCTAssertEqual(reused, udid)
+    let deleted = await control.deletedSimulators
+    XCTAssertEqual(deleted, [])
+  }
+
   /// Persistence is opt-in. Without a store the manager behaves as it always did,
   /// which is what the tests above this class rely on.
   func test_without_a_store_nothing_is_restored() async throws {
@@ -983,7 +1081,7 @@ final class FileLeaseStoreTests: XCTestCase {
       .path
   }
 
-  func test_leases_round_trip_through_a_file() throws {
+  func test_state_round_trips_through_a_file() throws {
     let path = temporaryPath()
     defer { try? FileManager.default.removeItem(atPath: path) }
 
@@ -1006,15 +1104,46 @@ final class FileLeaseStoreTests: XCTestCase {
         slotIndex: 3
       ),
     ]
+    let state = PersistedState(
+      leases: leases,
+      idleSimulators: [
+        .init(
+          udid: "UDID-C",
+          config: .init(deviceType: "iPhone 16", os: "iOS", version: "26.4"),
+          slotIndex: 1
+        ),
+      ]
+    )
 
-    store.save(leases)
+    store.save(state)
 
-    XCTAssertEqual(FileLeaseStore(path: path).load(), leases)
+    XCTAssertEqual(FileLeaseStore(path: path).load(), state)
+  }
+
+  /// Daemons before version 48 wrote a bare array of leases, and a successor must
+  /// still adopt those across the upgrade.
+  func test_a_bare_lease_array_loads_as_leases() throws {
+    let path = temporaryPath()
+    defer { try? FileManager.default.removeItem(atPath: path) }
+
+    let leases: [PersistedLease] = [
+      .init(
+        pid: 501,
+        leaserStartTime: 1234,
+        udid: "UDID-A",
+        config: .init(deviceType: "iPhone 16", os: "iOS", version: "26.4"),
+        exclusive: true,
+        slotIndex: 0
+      ),
+    ]
+    try JSONEncoder().encode(leases).write(to: URL(fileURLWithPath: path))
+
+    XCTAssertEqual(FileLeaseStore(path: path).load(), PersistedState(leases: leases))
   }
 
   /// A missing file is the first-ever start, not an error.
   func test_a_missing_file_loads_as_empty() {
-    XCTAssertEqual(FileLeaseStore(path: temporaryPath()).load(), [])
+    XCTAssertEqual(FileLeaseStore(path: temporaryPath()).load(), PersistedState())
   }
 
   /// A corrupt file must not stop the daemon from starting; the worst case is the
@@ -1025,7 +1154,7 @@ final class FileLeaseStoreTests: XCTestCase {
 
     try "not json".write(toFile: path, atomically: true, encoding: .utf8)
 
-    XCTAssertEqual(FileLeaseStore(path: path).load(), [])
+    XCTAssertEqual(FileLeaseStore(path: path).load(), PersistedState())
   }
 
   /// Saving replaces rather than appends, so a released lease does not come back.
@@ -1034,19 +1163,21 @@ final class FileLeaseStoreTests: XCTestCase {
     defer { try? FileManager.default.removeItem(atPath: path) }
 
     let store = FileLeaseStore(path: path)
-    store.save([
-      .init(
-        pid: 1,
-        leaserStartTime: nil,
-        udid: "OLD",
-        config: .init(deviceType: "iPhone 16", os: "iOS", version: "26.4"),
-        exclusive: true,
-        slotIndex: 0
-      ),
-    ])
-    store.save([])
+    store.save(
+      .init(leases: [
+        .init(
+          pid: 1,
+          leaserStartTime: nil,
+          udid: "OLD",
+          config: .init(deviceType: "iPhone 16", os: "iOS", version: "26.4"),
+          exclusive: true,
+          slotIndex: 0
+        ),
+      ])
+    )
+    store.save(.init())
 
-    XCTAssertEqual(store.load(), [])
+    XCTAssertEqual(store.load(), PersistedState())
   }
 
   /// A save leaves only the lease file behind. `.atomic` already writes via an
@@ -1064,18 +1195,20 @@ final class FileLeaseStoreTests: XCTestCase {
 
     let name = "leases.json"
     let store = FileLeaseStore(path: directory.appendingPathComponent(name).path)
-    store.save([
-      .init(
-        pid: 1,
-        leaserStartTime: nil,
-        udid: "UDID-A",
-        config: .init(deviceType: "iPhone 16", os: "iOS", version: "26.4"),
-        exclusive: true,
-        slotIndex: 0
-      ),
-    ])
+    store.save(
+      .init(leases: [
+        .init(
+          pid: 1,
+          leaserStartTime: nil,
+          udid: "UDID-A",
+          config: .init(deviceType: "iPhone 16", os: "iOS", version: "26.4"),
+          exclusive: true,
+          slotIndex: 0
+        ),
+      ])
+    )
     // Twice, since the interesting case is overwriting an existing file.
-    store.save([])
+    store.save(.init())
 
     let contents = try FileManager.default.contentsOfDirectory(atPath: directory.path)
     XCTAssertEqual(contents, [name])

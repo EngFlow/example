@@ -246,9 +246,6 @@ actor RealSimulatorControl: SimulatorControl {
           """
         )
 
-        // Wait for it to boot. This shouldn't be necessary, but sometimes the simulator will
-        // reboot because of a migration.
-        try await ensureBooted(udid, context: "clone, existing: \(name)")
       } else {
         isExisting = false
 
@@ -269,28 +266,46 @@ actor RealSimulatorControl: SimulatorControl {
           "\(name, privacy: .public)": \(udid, privacy: .public)
           """
         )
-
-        try await ensureBooted(udid, context: "clone, new: \(name)")
       }
 
-      if let postBoot {
-        Logger.simulatorControl.info(
-          """
-          📱 Running post-boot script "\(postBoot, privacy: .public)" on \
-          \(udid, privacy: .public)
-          """
+      do {
+        // Wait for it to boot. For an existing simulator this shouldn't be necessary, but
+        // sometimes the simulator will reboot because of a migration.
+        try await ensureBooted(
+          udid,
+          context: "clone, \(isExisting ? "existing" : "new"): \(name)"
         )
 
-        do {
-          _ = try await subprocess(postBoot, env: ["SIMULATOR_UDID": udid])
-        } catch {
-          throw NSError(
-            domain: "SimulatorControl",
-            code: 1,
-            userInfo:
-            [NSLocalizedDescriptionKey: "postBoot failed (isExisting: \(isExisting)): \(error)"]
+        if let postBoot {
+          Logger.simulatorControl.info(
+            """
+            📱 Running post-boot script "\(postBoot, privacy: .public)" on \
+            \(udid, privacy: .public)
+            """
           )
+
+          do {
+            _ = try await subprocess(postBoot, env: ["SIMULATOR_UDID": udid])
+          } catch {
+            throw NSError(
+              domain: "SimulatorControl",
+              code: 1,
+              userInfo:
+              [NSLocalizedDescriptionKey: "postBoot failed (isExisting: \(isExisting)): \(error)"]
+            )
+          }
         }
+      } catch {
+        // The caller gets no UDID, so nothing would ever release this device. Delete it rather
+        // than leave it booted.
+        Logger.simulatorControl.warning(
+          """
+          ⚠️ Deleting simulator \(udid, privacy: .public) ("\(name, privacy: .public)"), which \
+          failed to boot or prepare
+          """
+        )
+        try? await delete(udid, name: name, context: "clone, failed: \(name)")
+        throw error
       }
 
       return udid

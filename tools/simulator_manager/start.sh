@@ -13,7 +13,8 @@ set -euo pipefail
 # 48: write the pid file only once the socket is bound, and kill a daemon that
 #     has a live pid but can't report its version; run simulator commands
 #     without a shell; delete a simulator whose reuse fails rather than leaving
-#     it leased to nobody.
+#     it leased to nobody; persist idle simulators too, and put every device a
+#     replacement doesn't adopt back on an idle timer.
 # 47: keep a released simulator warm for 2 hours rather than 1 minute, to see what
 #     the reuse rate looks like when a device is essentially never reclaimed. A
 #     version bump is what makes this take effect on an already-running worker.
@@ -80,8 +81,9 @@ readonly pid_path="${state_prefix}.pid"
 readonly mutex_path="${state_prefix}_start.lock"
 readonly scripts_path="${state_prefix}.scripts"
 # Deliberately outlives any single daemon: a replacement reads it to adopt the
-# leases of tests that are still running. Unlike the socket and pid file, this is
-# never removed on restart.
+# leases of tests that are still running, and to take over the idle timers of
+# simulators being kept warm. Unlike the socket and pid file, this is never
+# removed on restart.
 readonly lease_path="${state_prefix}.leases"
 
 function exitMutex() {

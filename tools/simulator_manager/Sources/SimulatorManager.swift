@@ -145,7 +145,7 @@ actor SimulatorManager {
     }
   }
 
-  /// Adopts the leases a previous daemon left behind.
+  /// Adopts the leases and idle simulators a previous daemon left behind.
   ///
   /// Leases used to live only in this actor's memory, so replacing the daemon --
   /// which `start.sh` does on any version change, on every lease -- lost the
@@ -157,21 +157,33 @@ actor SimulatorManager {
   /// slot holding the device, a reference count, and an exit listener so a leaser
   /// that dies during the handover is still cleaned up.
   ///
-  /// Leases whose process is gone are dropped rather than adopted. The device they
-  /// held is left alone: `createBase`/`clone` find existing devices by name, so it
-  /// gets picked up and reference counted by the next lease of that config.
-  func restoreLeases() {
+  /// Every other device the previous daemon knew about -- those it was keeping
+  /// warm, and those of leases that can't be adopted -- goes back on an idle
+  /// timer, as if just released. Left alone, nothing would ever delete them: they
+  /// are only picked up again if a later lease happens to clone into that exact
+  /// slot.
+  func restoreLeases() async {
     guard let leaseStore else { return }
 
     let persisted = leaseStore.load()
-    guard !persisted.isEmpty else { return }
+    guard !persisted.leases.isEmpty || !persisted.idleSimulators.isEmpty else { return }
+
+    // The previous daemon kept these warm because their configs were recently
+    // leased, so carry that over; otherwise on a worker, where `deleteIdleAfter`
+    // is 0, every restart would delete them immediately. Inserted before adopting
+    // leases so the configs of running tests end up most recent.
+    for idle in persisted.idleSimulators {
+      _ = recentlyLeased.insert(idle.config)
+    }
 
     var adopted = 0
     var dropped = 0
+    var unowned = persisted.idleSimulators
 
-    for lease in persisted {
+    for lease in persisted.leases {
       guard leaserSurvived(lease) else {
         dropped += 1
+        unowned.append(.init(udid: lease.udid, config: lease.config, slotIndex: lease.slotIndex))
         continue
       }
 
@@ -187,6 +199,7 @@ actor SimulatorManager {
           """
         )
         dropped += 1
+        unowned.append(.init(udid: lease.udid, config: lease.config, slotIndex: lease.slotIndex))
         continue
       }
 
@@ -224,16 +237,56 @@ actor SimulatorManager {
       adopted += 1
     }
 
+    var reclaimed = Set<SimulatorUDID>()
+    for idle in unowned {
+      // Skip a device an adopted lease still holds (a dropped lease can share a
+      // non-exclusive device with one that survived), or one already reclaimed.
+      guard referenceCount[idle.udid] == nil, reclaimed.insert(idle.udid).inserted else {
+        continue
+      }
+
+      await reclaim(idle)
+    }
+
     Logger.simulatorManager.info(
       """
       ♻️ Restored \(adopted, privacy: .public) lease(s) from a previous simulator \
-      manager; dropped \(dropped, privacy: .public) whose process had exited
+      manager; dropped \(dropped, privacy: .public) stale or conflicting lease(s); \
+      put \(reclaimed.count, privacy: .public) unowned simulator(s) on an idle timer
       """
     )
 
     // The dropped entries are gone for good, so rewrite the file rather than let a
     // later crash re-adopt them.
-    persistLeases()
+    persistState()
+  }
+
+  /// Puts a simulator the previous daemon left unowned back on an idle timer in
+  /// its slot, or deletes it outright if an adopted lease has taken that slot.
+  private func reclaim(_ idle: PersistedIdleSimulator) async {
+    var slots = simulatorSlots[idle.config] ?? []
+    while slots.count <= idle.slotIndex {
+      slots.append(.empty)
+    }
+    simulatorSlots[idle.config] = slots
+
+    guard case .empty = slots[idle.slotIndex] else {
+      Logger.simulatorManager.warning(
+        """
+        ⚠️ Deleting unowned simulator \(idle.udid, privacy: .public), whose slot is \
+        already taken
+        """
+      )
+      // If we fail to delete, don't throw an error
+      try? await simulatorControl.delete(
+        idle.udid,
+        name: idle.config.cloneDeviceName(index: idle.slotIndex),
+        context: "restoreLeases, slot taken"
+      )
+      return
+    }
+
+    await pendingDeletion(idle.udid, config: idle.config, slotIndex: idle.slotIndex)
   }
 
   /// Whether the process that took `lease` is the one still running under that
@@ -278,26 +331,43 @@ actor SimulatorManager {
     return true
   }
 
-  /// Mirrors the current leases to disk.
+  /// Mirrors the current leases and idle simulators to disk.
   ///
   /// Called on every change rather than at shutdown, because the daemon is not
   /// always shut down politely: `start.sh` escalates to `kill -9`, which runs no
-  /// cleanup. Each lease costs a small JSON write, against provisioning a
+  /// cleanup. Each change costs a small JSON write, against provisioning a
   /// simulator that takes seconds.
-  private func persistLeases() {
+  private func persistState() {
     guard let leaseStore else { return }
 
-    leaseStore.save(
-      leases.map { pid, lease in
-        .init(
-          pid: pid,
-          leaserStartTime: lease.leaserStartTime,
-          udid: lease.udid,
-          config: lease.config,
-          exclusive: lease.exclusive,
-          slotIndex: lease.slotIndex
-        )
+    // Includes devices mid-deletion, so one whose delete a `kill -9` interrupts is
+    // still cleaned up by the successor.
+    var idleSimulators: [PersistedIdleSimulator] = []
+    for (config, slots) in simulatorSlots {
+      for (slotIndex, slot) in slots.enumerated() {
+        switch slot {
+        case .pendingDeletion(let udid, _), .deleting(let udid):
+          idleSimulators.append(.init(udid: udid, config: config, slotIndex: slotIndex))
+        case .empty, .pendingCreation, .active:
+          break
+        }
       }
+    }
+
+    leaseStore.save(
+      .init(
+        leases: leases.map { pid, lease in
+          .init(
+            pid: pid,
+            leaserStartTime: lease.leaserStartTime,
+            udid: lease.udid,
+            config: lease.config,
+            exclusive: lease.exclusive,
+            slotIndex: lease.slotIndex
+          )
+        },
+        idleSimulators: idleSimulators
+      )
     )
   }
 
@@ -350,7 +420,7 @@ actor SimulatorManager {
       slotIndex: slotIndex,
       leaserStartTime: processStartTime(leaser)
     )
-    persistLeases()
+    persistState()
 
     if deleteOnPIDExit, !processIsRunning(leaser) {
       Logger.simulatorManager.info(
@@ -399,7 +469,7 @@ actor SimulatorManager {
 
     // Recorded before the device is torn down, so a daemon replaced mid-release
     // does not adopt a lease whose simulator is already going away.
-    persistLeases()
+    persistState()
 
     removeReleaseOnExit(for: leaser)
 
@@ -784,6 +854,7 @@ actor SimulatorManager {
     }
 
     simulatorSlots[config]![slotIndex] = .pendingDeletion(simulator, task)
+    persistState()
   }
 
   private func delete(
@@ -800,6 +871,7 @@ actor SimulatorManager {
     )
 
     simulatorSlots[config]![slotIndex] = .deleting(simulator)
+    persistState()
 
     referenceCount.removeValue(forKey: simulator)
 
@@ -813,6 +885,8 @@ actor SimulatorManager {
           simulatorSlots[config]!.removeLast()
         }
       }
+
+      persistState()
     }
 
     try await simulatorControl.delete(simulator, name: name, context: context())
