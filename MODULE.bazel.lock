@@ -1473,7 +1473,7 @@
     "@@rules_swift_package_manager+//:extensions.bzl%swift_deps": {
       "general": {
         "bzlTransitiveDigest": "P3DWTjUZ1pwzHERsFeIa+c5ApYlWNz/OyTgSUDNhUrc=",
-        "usagesDigest": "vPdKyRAcS8hrI1NXPs5IzcYNELqwLu/trqqoslDboaw=",
+        "usagesDigest": "/DxyBP/oacQw75h3rLAuUH0wgjqmG9isAZ1Nf+YNrVQ=",
         "recordedInputs": [
           "REPO_MAPPING:rules_swift_package_manager+,bazel_skylib bazel_skylib+",
           "REPO_MAPPING:rules_swift_package_manager+,bazel_tools bazel_tools",
@@ -1481,16 +1481,6 @@
           "FILE:@@//tools/simulator_manager/Package.resolved 72f7694cc0d6e0b46865666695539c02497c8d7196cb2752812c1abe4ffe334a"
         ],
         "generatedRepoSpecs": {
-          "swift_deps_info": {
-            "repoRuleId": "@@rules_swift_package_manager+//swiftpkg/internal:swift_deps_info.bzl%swift_deps_info",
-            "attributes": {
-              "direct_dep_pkg_infos": {
-                "@swiftpkg_swift_argument_parser//:pkg_info.json": "swift-argument-parser",
-                "@swiftpkg_swift_nio//:pkg_info.json": "swift-nio",
-                "@swiftpkg_swift_nio_extras//:pkg_info.json": "swift-nio-extras"
-              }
-            }
-          },
           "swift_package": {
             "repoRuleId": "@@rules_swift_package_manager+//swiftpkg/internal:swift_package_tool_repo.bzl%swift_package_tool_repo",
             "attributes": {
@@ -1792,7 +1782,6 @@
             "swiftpkg_swift_argument_parser",
             "swiftpkg_swift_nio",
             "swiftpkg_swift_nio_extras",
-            "swift_deps_info",
             "swift_package"
           ],
           "explicitRootModuleDirectDevDeps": [],
