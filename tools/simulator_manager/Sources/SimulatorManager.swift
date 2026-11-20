@@ -468,10 +468,9 @@ actor SimulatorManager {
 
   func release(for leaser: PID) async throws {
     guard let lease = leases.removeValue(forKey: leaser) else {
-      // If the manager recently restarted, we might not have the state of all leases. Since
-      // `SimulatorControl` will return existing simulators matching a given name, the dangling
-      // simulator will eventually get picked back up again and properly reference counted. So we
-      // will return an error here, and ignore it in the test runner.
+      // A PID that never leased or already released, or whose lease a restart lost because the
+      // lease store couldn't be read. release_simulator.sh warns on this rather than failing the
+      // test.
       throw SimulatorManagerError.noLease
     }
 

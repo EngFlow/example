@@ -5,11 +5,11 @@
 # start.sh runs on *every* lease, not just at boot: lease_simulator.sh invokes it
 # before leasing. When it finds a daemon whose version differs from the one the
 # action expects, it shuts that daemon down (`/shutdown`, then `kill -9` after a
-# timeout, then `killall simulator_manager`). Leases live only in the daemon's
-# memory.
+# timeout, then any straggler still serving the socket). Leases used to live only
+# in the daemon's memory.
 #
 # So an action starting a new test could destroy the lease bookkeeping for tests
-# already in flight. Their runner scripts keep running and later call
+# already in flight. Their runner scripts kept running and later called
 # release_simulator.sh, which reached a *different* daemon that never knew about
 # them, and reported
 #
@@ -550,7 +550,7 @@ function test_same_version_preserves_a_live_lease() {
 # The lease and the release have to name the same process, and that process has to
 # outlive the test. whatever pid reaches the socket must be the one the runner would later release.
 #
-# $1 is the assignment rules_apple prefixes to the call. rules_apple 5.0.0-rc2 passes
+# $1 is the assignment rules_apple prefixes to the call. rules_apple 5.x passes
 # the runner pid; 4.5.x passes nothing, and then our own `$$` is the trap -- it names
 # this script, which exits the moment it has leased. Both shapes have to work.
 function test_lease_pid_survives_a_command_substitution() {
@@ -637,7 +637,7 @@ readonly device_type="iPhone%2016"
 
 # Needs no simulator, so this runs before the runtime check that can skip the rest.
 #
-# Only 5.0.0-rc2's shape, which is what MODULE.bazel pins. 4.5.x's shape -- no
+# Only 5.x's shape, which is what MODULE.bazel pins. 4.5.x's shape -- no
 # assignment at all -- is not checked because nothing can pass it: with no pid
 # handed to us, `PPID` is the only candidate, and how many levels up the runner
 # sits depends on the bash running it. Bash 3.2 forks for `unused="$( ... )"` and

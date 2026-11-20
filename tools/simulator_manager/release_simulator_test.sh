@@ -7,8 +7,8 @@
 # log, so it is what a report of this problem is made of; a stub daemon returning
 # the real 404 lets these assemble that line end to end without Xcode.
 #
-# The runner template invokes this script at line 650 and only afterwards, at
-# line 658, exits with the test's own status:
+# The runner template (rules_apple 5.4.0) invokes this script at line 796 and
+# only afterwards, at line 804, exits with the test's own status:
 #
 #   SIMULATOR_UDID=... "$clean_up_simulator_action_binary"
 #   ...

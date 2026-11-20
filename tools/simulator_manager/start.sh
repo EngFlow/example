@@ -6,8 +6,9 @@ set -euo pipefail
 #
 # Only change this version after all testing has happened.
 #
-# If this version is changed then CI won't use the staging RBE pool, and the
-# changes will impact all executors in the default pool.
+# Changing this version replaces the daemon on every worker the next time a test
+# leases a simulator there. Setting EXAMPLE_CI_STAGING_VERSION instead expects a
+# `staging-<n>` version, to try a change without bumping this.
 #
 #!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! WARNING !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 # 48: write the pid file only once the socket is bound, and kill a daemon that
@@ -59,11 +60,11 @@ function check_need_shutdown() {
   fi
 }
 
-# While we are only allowing a single simulator on remote executors we need to
-# more aggressively clean up unused simulators. If this is too large, then we
-# have an extra 6GB memory usage sticking around. If this is too small, then we
-# will constantly be deleting and creating simulators, adding at least 10
-# seconds to test runtimes.
+# A released simulator whose configuration is not among the
+# `recently_used_capacity` most recently leased is deleted at once. Each one holds
+# about 6GB, so only the configurations likely to be leased again are kept warm,
+# for `delete_recently_used_after_idle_secs`; the rest would be paying that for
+# a reuse that rarely comes.
 readonly delete_after_idle_secs=0
 # Deliberately long for now: a released simulator effectively stays warm for the
 # rest of the worker's useful life, so consecutive test actions never pay the

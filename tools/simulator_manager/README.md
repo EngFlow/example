@@ -40,6 +40,12 @@ it sets `reuse_simulator = False`: that attribute doubles as the exclusivity
 toggle, since tests opting out of reuse are exactly the ones needing sole
 ownership.
 
+`//ios:ios_shared_simulator_runner` is the same with `reuse_simulator = True`, so
+its leases are shared: a test joins a device another test of the same
+configuration already holds, if there is one. Sharing is opportunistic -- tests
+dispatched at the same moment can still each get their own device.
+`//ios:HelloSharedSimulatorTest` uses it.
+
 ## Running tests
 
 The simulator device type must be set, or the lease hook fails fast rather than
