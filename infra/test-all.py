@@ -43,7 +43,7 @@ def find_tests(package):
     return [t for t in output.split("\n") if t]
 
 
-def run_tests(package):
+def run_tests(package, extra_flags):
     targets = find_tests(package)
     if not targets:
         print(f"No targets found for {package}, skipping.")
@@ -65,6 +65,8 @@ def run_tests(package):
 
     if package in EXTRA_FLAGS:
         flags += EXTRA_FLAGS[package]
+
+    flags += extra_flags
 
     print(f"---------------\nTesting {package}...")
     sys.stdout.flush()
@@ -90,6 +92,11 @@ def main():
         action=argparse.BooleanOptionalAction,
         help="Whether to validate environment variables",
     )
+    parser.add_argument(
+        "extra_flags",
+        nargs="*",
+        help="Extra flags to pass to bazel test, after --.",
+    )
     opts = parser.parse_args()
 
     if opts.validate_env:
@@ -97,7 +104,7 @@ def main():
 
     package = opts.package
 
-    returncode = run_tests(opts.package)
+    returncode = run_tests(opts.package, opts.extra_flags)
     if returncode != 0:
         sys.exit(returncode)
 
