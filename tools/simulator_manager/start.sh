@@ -131,8 +131,12 @@ then
   ); then
     echo "$(date '+[%H:%M:%S]') Existing simulator manager version is $version"
   else
+    # The daemon writes its pid file only once its socket is bound, so a live
+    # pid that cannot answer is wedged. Kill it rather than start a second
+    # daemon alongside it.
     echo >&2 "$(date '+[%H:%M:%S]') ❌ Failed to get simulator manager" \
-      "version: $version"
+      "version: $version; killing it"
+    kill -9 "$server_pid" 2> /dev/null || true
     server_pid=""
     version=""
   fi
@@ -172,16 +176,18 @@ if check_need_shutdown "$version"; then
     if ps -p "$server_pid" > /dev/null; then
       echo >&2 "$(date '+[%H:%M:%S]') 🛑 Simulator manager did not shutdown" \
         "in $shutdown_timeout seconds; killing it"
-      kill -9 "$server_pid"
+      kill -9 "$server_pid" 2> /dev/null || true
     fi
   else
     echo >&2 "$(date '+[%H:%M:%S]') 🛑 Failed to gracefully shut down" \
       "simulator manager ($response); killing it"
-    kill -9 "$server_pid"
+    kill -9 "$server_pid" 2> /dev/null || true
   fi
 
-  # Kill all straggler processes, in case they started under a different pid
-  killall simulator_manager 2> /dev/null || true
+  # Kill any straggler serving this socket under a different pid. Match on the
+  # socket rather than the process name, which would also kill daemons started
+  # with a different state prefix.
+  pkill -9 -f -- "--unix-socket-path $socket" 2> /dev/null || true
 
   server_pid=""
   version=""
@@ -265,7 +271,7 @@ if [[ -z "$version" ]]; then
   done
   if [[ ! -f "$pid_path" ]]; then
     echo >&2 "$(date '+[%H:%M:%S]') error: ❌ Failed to start simulator" \
-      "manager in 10 seconds; exiting"
+      "manager in $startup_timeout seconds; exiting"
     exit 1
   fi
 

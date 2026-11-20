@@ -29,12 +29,6 @@ final class HTTPServer {
     try? FileManager.default.removeItem(at: socketURL)
     try? FileManager.default.removeItem(at: pidURL)
 
-    try String(ProcessInfo.processInfo.processIdentifier).write(
-      to: pidURL,
-      atomically: true,
-      encoding: .utf8
-    )
-
     let eventLoopGroup = MultiThreadedEventLoopGroup(numberOfThreads: System.coreCount)
 
     do {
@@ -74,6 +68,15 @@ final class HTTPServer {
               )
             }
           })
+
+        // start.sh treats the pid file as the signal that the server is ready, so only write it
+        // once the socket is bound. Writing it earlier let start.sh find a live pid with no
+        // socket behind it yet, fail to read the version, and start a second daemon.
+        try String(ProcessInfo.processInfo.processIdentifier).write(
+          to: pidURL,
+          atomically: true,
+          encoding: .utf8
+        )
 
         Logger.httpServer.info("🔌 Server running on UDS at \(unixSocketPath, privacy: .public)")
 
