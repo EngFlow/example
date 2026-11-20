@@ -1141,6 +1141,14 @@ final class SimulatorManagerInvalidDeviceTests: XCTestCase {
     ) { error in
       XCTAssertEqual((error as? ProcessError)?.exitCode, 1)
     }
+
+    // The failed reuse must not strand the device: it is deleted rather than left active with a
+    // reference nobody will release, and the next lease gets a fresh clone.
+    let deleted = await control.deletedSimulators
+    XCTAssertEqual(deleted, [first])
+
+    let next = try await manager.lease(to: 9012, exclusive: true, config: config)
+    XCTAssertNotEqual(next, first)
   }
 }
 

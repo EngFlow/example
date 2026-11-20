@@ -585,13 +585,9 @@ actor SimulatorManager {
       )
 
       return simulator
-    } catch let error as ProcessError {
+    } catch let error as ProcessError where error.exitCode == 148 {
       // 148 happens for "Invalid device". So it either has already been deleted or it's corrupt
       // in some way. Either way, we will "delete" it and return a new one.
-      guard error.exitCode == 148 else {
-        throw error
-      }
-
       Logger.simulatorManager.warning(
         """
         ⚠️ Boot of existing simulator \(simulator, privacy: .public) failed; deleting and \
@@ -612,7 +608,43 @@ actor SimulatorManager {
       let task = createCloneTask(config: config, exclusive: exclusive, slotIndex: slotIndex)
       simulatorSlots[config]![slotIndex] = .pendingCreation(task, exclusive: exclusive)
       return try await task.value
+    } catch {
+      // We don't know what state the simulator is in, so don't leave it to be handed out again.
+      // Without this, the reference taken above is never released, and the slot stays `.active`
+      // for the life of the daemon, first in line for every later lease.
+      await abandonReuse(of: simulator, config: config, slotIndex: slotIndex)
+      throw error
     }
+  }
+
+  /// Drops the reference a failed `reuseSimulator` took, deleting the simulator if no other lease
+  /// still holds it.
+  private func abandonReuse(
+    of simulator: SimulatorUDID,
+    config: SimulatorConfig,
+    slotIndex: Int
+  ) async {
+    guard let count = referenceCount[simulator] else {
+      return
+    }
+
+    guard count == 1 else {
+      referenceCount[simulator] = count - 1
+      return
+    }
+
+    Logger.simulatorManager.warning(
+      "⚠️ Deleting simulator \(simulator, privacy: .public) after a failed reuse"
+    )
+
+    // If we fail to delete, don't throw an error; the caller reports the original failure
+    try? await delete(
+      simulator,
+      config: config,
+      slotIndex: slotIndex,
+      cleanUpSlots: true,
+      context: "abandonReuse: \(config.cloneDeviceName(index: slotIndex))"
+    )
   }
 
   private func createCloneTask(
