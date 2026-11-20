@@ -1,4 +1,5 @@
 import Foundation
+import NIOHTTP1
 import XCTest
 
 final class SimulatorManagerTests: XCTestCase {
@@ -1606,6 +1607,65 @@ final class SimulatorManagerLeaserTests: XCTestCase {
     let deleted = await control.deletedSimulators
     XCTAssertEqual(created.count, 1)
     XCTAssertEqual(Set(deleted), Set(created))
+  }
+}
+
+final class SimulatorRequestHandlerTests: XCTestCase {
+  private func makeHandler() -> SimulatorRequestHandler {
+    SimulatorRequestHandler(
+      simulatorManager: SimulatorManager(
+        simulatorControl: MockSimulatorControl(),
+        deleteRecentlyUsedIdleAfter: 0,
+        deleteIdleAfter: 0,
+        recentlyUsedCapacity: 1,
+        deleteOnPIDExit: false
+      )
+    )
+  }
+
+  private func lease(
+    _ handler: SimulatorRequestHandler,
+    pid: PID,
+    exclusive: String
+  ) async throws -> SimulatorManagerResponse {
+    try await handler.handleRequest(
+      method: .POST,
+      pathComponents: [String(pid)],
+      queryParameters: [
+        "exclusive": exclusive,
+        "deviceType": "iPhone 14",
+        "os": "iOS",
+        "version": "16.4",
+      ]
+    )
+  }
+
+  /// `exclusive=true` used to be read as false, quietly handing out a shared
+  /// device. An exclusive lease never shares, so a second one gets its own.
+  func test_exclusive_true_is_exclusive() async throws {
+    let handler = makeHandler()
+
+    let first = try await lease(handler, pid: 1234, exclusive: "true")
+    let second = try await lease(handler, pid: 5678, exclusive: "true")
+
+    XCTAssertEqual(first.status, .created)
+    XCTAssertEqual(second.status, .created)
+    XCTAssertNotEqual(first.message, second.message)
+  }
+
+  func test_an_unrecognized_exclusive_value_is_rejected() async throws {
+    let response = try await lease(makeHandler(), pid: 1234, exclusive: "yes")
+
+    XCTAssertEqual(response.status, .badRequest)
+  }
+
+  func test_leasing_twice_is_a_conflict() async throws {
+    let handler = makeHandler()
+
+    _ = try await lease(handler, pid: 1234, exclusive: "1")
+    let response = try await lease(handler, pid: 1234, exclusive: "1")
+
+    XCTAssertEqual(response.status, .conflict)
   }
 }
 

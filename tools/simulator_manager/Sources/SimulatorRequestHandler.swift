@@ -32,7 +32,20 @@ final class SimulatorRequestHandler {
       guard let exclusiveString = queryParameters["exclusive"] else {
         return .init(status: .badRequest, message: "Must specify 'exclusive' query parameter")
       }
-      let exclusive = exclusiveString == "1"
+      // Anything else is rejected rather than read as false: `exclusive=true` used to silently
+      // produce a shared lease.
+      let exclusive: Bool
+      switch exclusiveString {
+      case "1", "true":
+        exclusive = true
+      case "0", "false":
+        exclusive = false
+      default:
+        return .init(
+          status: .badRequest,
+          message: "'exclusive' must be 1, 0, true, or false, not '\(exclusiveString)'"
+        )
+      }
       guard let deviceType = queryParameters["deviceType"] else {
         return .init(status: .badRequest, message: "Must specify 'deviceType' query parameter")
       }
@@ -56,14 +69,15 @@ final class SimulatorRequestHandler {
             .lease(to: leaser, exclusive: exclusive, config: config)
         )
       } catch SimulatorManagerError.alreadyLeased(let udid) {
+        // A conflict with the PID's existing lease, not a malformed request.
         return .init(
-          status: .badRequest,
+          status: .conflict,
           // FIXME: Get this from the error itself
           message: "PID \(leaser) has already leased another simulator: \(udid)"
         )
       } catch SimulatorManagerError.leaseInProgress {
         return .init(
-          status: .badRequest,
+          status: .conflict,
           message: "PID \(leaser) already has a simulator lease being provisioned"
         )
       } catch SimulatorManagerError.leaserExited {
