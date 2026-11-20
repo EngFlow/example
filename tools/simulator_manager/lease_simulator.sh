@@ -100,20 +100,36 @@ readonly lease_pid="${XCTESTRUN_RUNNER_PID:-$PPID}"
 
 url_encoded_device_type="${SIMULATOR_DEVICE_TYPE// /%20}"
 
-# On failure --fail-with-body still writes the daemon's error message to stdout,
-# which rules_apple would capture as the UDID and never show, so move it to
-# stderr.
-if ! udid="$(
-  curl \
-    --silent \
-    --show-error \
-    --fail-with-body \
-    --unix-socket "$socket" \
-    --retry 5 \
-    --retry-connrefused \
-    --request POST \
-    "http:/-/simulator/$lease_pid?exclusive=$exclusive&deviceType=$url_encoded_device_type&os=iOS&version=$version"
-)"; then
+# Only a failure to connect is retried. curl's own `--retry` would also repeat a
+# 500, which is the daemon reporting that provisioning failed: repeating it
+# provisions up to five more times and almost always fails the same way. A failed
+# connection (curl's exit 7) means nothing was sent, so it is safe to repeat. It
+# happens when another action's start.sh is replacing the daemon between our own
+# start.sh and this request: the socket is briefly missing, which
+# `--retry-connrefused` would not retry, or not yet listening. The backoff
+# matches what `--retry 5` used.
+attempt=0
+while true; do
+  status=0
+  # On failure --fail-with-body still writes the daemon's error message to
+  # stdout, which rules_apple would capture as the UDID and never show, so it is
+  # moved to stderr below.
+  udid="$(
+    curl \
+      --silent \
+      --show-error \
+      --fail-with-body \
+      --unix-socket "$socket" \
+      --request POST \
+      "http:/-/simulator/$lease_pid?exclusive=$exclusive&deviceType=$url_encoded_device_type&os=iOS&version=$version"
+  )" || status=$?
+  if ((status != 7 || attempt >= 5)); then
+    break
+  fi
+  sleep $((2 ** attempt))
+  attempt=$((attempt + 1))
+done
+if ((status != 0)); then
   echo >&2 "error: failed to lease a simulator: $udid"
   exit 1
 fi
