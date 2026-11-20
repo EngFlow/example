@@ -255,9 +255,12 @@ function test_socket_is_owner_only() {
     return
   fi
 
+  # Only the group and other bits matter. A socket is created from 0777, not
+  # the 0666 a regular file starts from, so the owner-only result is 700; the
+  # execute bit means nothing on a socket.
   local -r mode="$(stat -f %Lp "$prefix.sock")"
-  if [[ "$mode" != 600 ]]; then
-    fail "expected the socket to be mode 600, got $mode"
+  if [[ "$mode" != *00 ]]; then
+    fail "expected the socket to be inaccessible to group and others, got mode $mode"
   fi
 
   stop_daemon "$prefix"
