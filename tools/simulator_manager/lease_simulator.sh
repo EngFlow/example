@@ -100,11 +100,21 @@ readonly lease_pid="${XCTESTRUN_RUNNER_PID:-$PPID}"
 
 url_encoded_device_type="${SIMULATOR_DEVICE_TYPE// /%20}"
 
-curl \
-  --silent \
-  --fail-with-body \
-  --unix-socket "$socket" \
-  --retry 5 \
-  --retry-connrefused \
-  --request POST \
-  "http:/-/simulator/$lease_pid?exclusive=$exclusive&deviceType=$url_encoded_device_type&os=iOS&version=$version"
+# On failure --fail-with-body still writes the daemon's error message to stdout,
+# which rules_apple would capture as the UDID and never show, so move it to
+# stderr.
+if ! udid="$(
+  curl \
+    --silent \
+    --show-error \
+    --fail-with-body \
+    --unix-socket "$socket" \
+    --retry 5 \
+    --retry-connrefused \
+    --request POST \
+    "http:/-/simulator/$lease_pid?exclusive=$exclusive&deviceType=$url_encoded_device_type&os=iOS&version=$version"
+)"; then
+  echo >&2 "error: failed to lease a simulator: $udid"
+  exit 1
+fi
+echo "$udid"
