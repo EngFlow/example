@@ -245,6 +245,50 @@ function test_state_prefix_override_is_honored() {
   stop_daemon "$prefix"
 }
 
+# Anyone who can connect to the socket can shut the daemon down or release
+# another test's simulator, and it lives in world-writable /tmp.
+function test_socket_is_owner_only() {
+  local -r prefix="$(new_prefix)"
+
+  if ! output="$(SIMULATOR_MANAGER_STATE_PREFIX="$prefix" "$start" 2>&1)"; then
+    fail "start.sh failed: $output"
+    return
+  fi
+
+  local -r mode="$(stat -f %Lp "$prefix.sock")"
+  if [[ "$mode" != 600 ]]; then
+    fail "expected the socket to be mode 600, got $mode"
+  fi
+
+  stop_daemon "$prefix"
+}
+
+# A GET, which is all a stray URL fetch would send, must not shut the daemon
+# down.
+function test_shutdown_requires_post() {
+  local -r prefix="$(new_prefix)"
+
+  if ! output="$(SIMULATOR_MANAGER_STATE_PREFIX="$prefix" "$start" 2>&1)"; then
+    fail "start.sh failed: $output"
+    return
+  fi
+  local -r pid="$(daemon_pid "$prefix")"
+
+  local -r status="$(
+    curl --silent --output /dev/null --write-out '%{http_code}' \
+      --unix-socket "$prefix.sock" -XGET 'http:/-/shutdown'
+  )"
+  if [[ "$status" != 405 ]]; then
+    fail "expected GET /shutdown to be rejected with 405, got $status"
+  fi
+  # Shutdown is asynchronous, so give a wrongly accepted one time to take effect.
+  if await_exit "$pid" 3; then
+    fail "GET /shutdown shut the daemon down"
+  fi
+
+  stop_daemon "$prefix"
+}
+
 # The regression test. A version change must not cost an in-flight test its
 # lease: start.sh runs on every lease, so an action starting a new test can
 # otherwise destroy the bookkeeping for tests already running, and their release
@@ -576,6 +620,8 @@ fi
 echo "using iOS $ios_version on $device_type"
 
 test_state_prefix_override_is_honored
+test_socket_is_owner_only
+test_shutdown_requires_post
 test_version_change_preserves_a_live_lease
 test_a_new_daemon_adopts_a_live_lease
 test_a_new_daemon_drops_a_dead_leasers_lease

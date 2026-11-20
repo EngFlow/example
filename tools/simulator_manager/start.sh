@@ -14,7 +14,8 @@ set -euo pipefail
 #     has a live pid but can't report its version; run simulator commands
 #     without a shell; delete a simulator whose reuse fails rather than leaving
 #     it leased to nobody; persist idle simulators too, and put every device a
-#     replacement doesn't adopt back on an idle timer.
+#     replacement doesn't adopt back on an idle timer; create the socket
+#     owner-only, and reject requests that use the wrong HTTP method.
 # 47: keep a released simulator warm for 2 hours rather than 1 minute, to see what
 #     the reuse rate looks like when a device is essentially never reclaimed. A
 #     version bump is what makes this take effect on an already-running worker.
