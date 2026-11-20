@@ -20,7 +20,8 @@ set -euo pipefail
 #     idle keep-alive connections on shutdown rather than waiting on them;
 #     reject an unrecognized `exclusive` value rather than leasing shared, and
 #     answer a second lease for the same pid with 409; check for a stale start
-#     lock on every attempt, not just the first.
+#     lock on every attempt, not just the first; serialize the post-boot
+#     script's rewrite of Simulator.app's preferences.
 # 47: keep a released simulator warm for 2 hours rather than 1 minute, to see what
 #     the reuse rate looks like when a device is essentially never reclaimed. A
 #     version bump is what makes this take effect on an already-running worker.
