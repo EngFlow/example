@@ -21,9 +21,15 @@ readonly dest="$2"
 
 mkdir -p "$(dirname "$dest")"
 
-# `-f` matters: the destination is a copy of a runfile and inherited its mode,
-# which on RBE is read-only (r-xr-xr-x). Overwriting it with a plain `cp` fails
-# with "Permission denied". `-f` unlinks the destination and creates a new file,
-# which also leaves any daemon still executing the old copy holding a valid
-# inode rather than having the bytes changed underneath it.
-cp -f "$src" "$dest"
+# Copied alongside and renamed over the destination, rather than copied onto it.
+# The rename replaces the destination's inode, so a daemon still executing the
+# old copy keeps intact bytes rather than having them rewritten underneath it,
+# and the destination is never seen half-written. `cp -f` only does that when
+# it cannot open the destination: it truncates a writable one in place. The
+# destination is a copy of a runfile and inherits its mode, which on RBE is
+# read-only (r-xr-xr-x) but locally is writable.
+readonly tmp="$dest.tmp.$$"
+trap 'rm -f "$tmp"' EXIT
+rm -f "$tmp"
+cp "$src" "$tmp"
+mv -f "$tmp" "$dest"
