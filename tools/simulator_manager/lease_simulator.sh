@@ -52,16 +52,23 @@ runtimes = [
     r for r in json.load(sys.stdin)["runtimes"]
     if r["platform"] == "iOS" and r["isAvailable"]
 ]
+# Match the requested version exactly or by prefix in either direction, so 26
+# finds 26.4 and 26.4.1 finds 26.4.
+if requested:
+    runtimes = [
+        r for r in runtimes
+        if r["version"] == requested
+        or r["version"].startswith(requested + ".")
+        or requested.startswith(r["version"] + ".")
+    ]
+    if not runtimes:
+        sys.exit(f"no available iOS simulator runtime matches version {requested}")
 if not runtimes:
     sys.exit("no available iOS simulator runtimes")
-# An exact or prefix match on the requested version wins; otherwise take the
-# newest available runtime, matching rules_apple defaulting to latest.
-for r in runtimes:
-    if requested and (r["version"] == requested or r["version"].startswith(requested + ".")):
-        print(r["identifier"].removeprefix("com.apple.CoreSimulator.SimRuntime.iOS-").replace("-", "."))
-        break
-else:
-    print(runtimes[0]["identifier"].removeprefix("com.apple.CoreSimulator.SimRuntime.iOS-").replace("-", "."))
+# Take the newest matching runtime, matching rules_apple defaulting to latest.
+# simctl lists runtimes oldest first, but sort rather than rely on that.
+newest = max(runtimes, key=lambda r: tuple(int(p) for p in r["version"].split(".")))
+print(newest["identifier"].removeprefix("com.apple.CoreSimulator.SimRuntime.iOS-").replace("-", "."))
 ' "${SIMULATOR_OS_VERSION:-}"
 )"
 
