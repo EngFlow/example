@@ -86,7 +86,10 @@ actor SimulatorManager {
   /// Leasers whose lease is still being provisioned, and so not yet in `leases`.
   private var provisioningLeasers: Set<PID> = []
 
-  private var leaserExitListeners: [PID: DispatchSourceProcess] = [:]
+  /// Each leaser's exit listener, with an ID unique to that registration, so a report from a
+  /// listener that has since been replaced or cancelled can be told apart and ignored.
+  private var leaserExitListeners: [PID: (id: Int, source: DispatchSourceProcess)] = [:]
+  private var nextExitListenerID = 0
 
   private var getBaseSimulatorTasks: [SimulatorConfig: Task<SimulatorUDID, Error>] = [:]
 
@@ -756,43 +759,48 @@ actor SimulatorManager {
   }
 
   private func registerReleaseOnExit(for leaser: PID) {
+    let id = nextExitListenerID
+    nextExitListenerID += 1
+
+    // The handler only reports the exit to the actor, which is where it is handled, so it doesn't
+    // matter which queue it runs on.
     let processSource =
-      DispatchSource.makeProcessSource(identifier: leaser, eventMask: .exit, queue: .main)
-
-    var handledExit = false
-    let onExitHandler: () -> Void = { [weak self] in
-      // Avoid double handling of exit in case the process exits between
-      // `processSource.resume()` and the check with `kill`
-      guard !handledExit else { return }
-      handledExit = true
-
-      Task {
-        guard let self else { return }
-
-        Logger.simulatorManager.debug("👋 PID \(leaser, privacy: .public) exited")
-
-        try await self.release(for: leaser)
-      }
+      DispatchSource.makeProcessSource(identifier: leaser, eventMask: .exit, queue: .global())
+    processSource.setEventHandler { [weak self] in
+      guard let self else { return }
+      Task { await self.leaserExited(leaser, listenerID: id) }
     }
-
-    processSource.setEventHandler { onExitHandler() }
+    leaserExitListeners[leaser] = (id: id, source: processSource)
     processSource.resume()
 
-    // Check to see if the process is already dead and cancel the source if it is, which will
-    // trigger `setCancelHandler`, which releases the simulator
-    guard processIsRunning(leaser) else {
-      processSource.cancel()
-      onExitHandler()
-      return
+    // A process that has already exited never fires the source, so check by hand. It may also exit
+    // between `resume()` and this check and be reported twice, which `leaserExited` ignores.
+    if !processIsRunning(leaser) {
+      Task { await leaserExited(leaser, listenerID: id) }
     }
+  }
 
-    leaserExitListeners[leaser] = processSource
+  private func leaserExited(_ leaser: PID, listenerID: Int) async {
+    // Releasing removes the listener, so this also ignores a second report of the same exit.
+    guard leaserExitListeners[leaser]?.id == listenerID else { return }
+
+    Logger.simulatorManager.debug("👋 PID \(leaser, privacy: .public) exited")
+
+    do {
+      try await release(for: leaser)
+    } catch {
+      Logger.simulatorManager.error(
+        """
+        ❌ Failed to release the simulator of exited PID \(leaser, privacy: .public): \
+        \(error, privacy: .public)
+        """
+      )
+    }
   }
 
   private func removeReleaseOnExit(for leaser: PID) {
-    guard let leaserExitListener = leaserExitListeners[leaser] else { return }
-    leaserExitListeners.removeValue(forKey: leaser)
-    leaserExitListener.cancel()
+    guard let listener = leaserExitListeners.removeValue(forKey: leaser) else { return }
+    listener.source.cancel()
   }
 
   private func pendingDeletion(

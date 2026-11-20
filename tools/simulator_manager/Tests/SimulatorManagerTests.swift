@@ -1480,6 +1480,81 @@ final class SimulatorManagerLeaserTests: XCTestCase {
     let deleted = await control.deletedSimulators
     XCTAssertEqual(Set(deleted), Set(created), "a device was provisioned that nothing will release")
   }
+
+  /// Leases are keyed on the runner's PID so that a test which dies without releasing still gives
+  /// its device back.
+  func test_a_leasers_exit_releases_its_lease() async throws {
+    let control = MockSimulatorControl()
+    let manager = SimulatorManager(
+      simulatorControl: control,
+      deleteRecentlyUsedIdleAfter: 0,
+      deleteIdleAfter: 0,
+      recentlyUsedCapacity: 1,
+      deleteOnPIDExit: true
+    )
+
+    let leaser = Process()
+    leaser.executableURL = URL(fileURLWithPath: "/bin/sleep")
+    leaser.arguments = ["30"]
+    try leaser.run()
+    let pid = PID(leaser.processIdentifier)
+
+    let udid = try await manager.lease(to: pid, exclusive: true, config: config)
+
+    leaser.terminate()
+    leaser.waitUntilExit()
+
+    // The release is asynchronous, so wait for it.
+    for _ in 0..<50 {
+      if await control.deletedSimulators.contains(udid) { break }
+      try await Task.sleep(for: .milliseconds(100))
+    }
+    let deleted = await control.deletedSimulators
+    XCTAssertEqual(deleted, [udid], "the exited leaser's device should be released")
+
+    // swiftformat:disable:next hoistAwait
+    try await assertThrowsAsyncError(await manager.release(for: pid))
+  }
+
+  /// The liveness check after provisioning: a leaser that dies while its device is being cloned
+  /// must not be handed that device, and the device must go back to the pool.
+  func test_a_leaser_that_exits_during_provisioning_gets_no_device() async throws {
+    let control = MockSimulatorControl()
+    let manager = SimulatorManager(
+      simulatorControl: control,
+      deleteRecentlyUsedIdleAfter: 0,
+      deleteIdleAfter: 0,
+      recentlyUsedCapacity: 1,
+      deleteOnPIDExit: true
+    )
+
+    let leaser = Process()
+    leaser.executableURL = URL(fileURLWithPath: "/bin/sleep")
+    leaser.arguments = ["30"]
+    try leaser.run()
+    let pid = PID(leaser.processIdentifier)
+
+    await control.setOnClone {
+      kill(pid, SIGKILL)
+      // Reap it, so the PID stops being reported as running.
+      var status: Int32 = 0
+      waitpid(pid, &status, 0)
+    }
+
+    // swiftformat:disable:next hoistAwait
+    await assertThrowsAsyncError(
+      try await manager.lease(to: pid, exclusive: true, config: config)
+    ) { error in
+      guard case SimulatorManagerError.leaserExited = error else {
+        return XCTFail("expected leaserExited, got \(error)")
+      }
+    }
+
+    let created = await control.baseForClones.keys
+    let deleted = await control.deletedSimulators
+    XCTAssertEqual(created.count, 1)
+    XCTAssertEqual(Set(deleted), Set(created))
+  }
 }
 
 final class LRUSetTests: XCTestCase {
