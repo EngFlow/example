@@ -1478,7 +1478,7 @@
           "REPO_MAPPING:rules_swift_package_manager+,bazel_skylib bazel_skylib+",
           "REPO_MAPPING:rules_swift_package_manager+,bazel_tools bazel_tools",
           "REPO_MAPPING:rules_swift_package_manager+,cgrindel_bazel_starlib cgrindel_bazel_starlib+",
-          "FILE:@@//tools/simulator_manager/Package.resolved e8f709681256a2efabdc0cce5da1cf48351fd552a9bcfdca1060b7919219deaf"
+          "FILE:@@//tools/simulator_manager/Package.resolved 72f7694cc0d6e0b46865666695539c02497c8d7196cb2752812c1abe4ffe334a"
         ],
         "generatedRepoSpecs": {
           "swift_deps_info": {
@@ -1487,8 +1487,7 @@
               "direct_dep_pkg_infos": {
                 "@swiftpkg_swift_argument_parser//:pkg_info.json": "swift-argument-parser",
                 "@swiftpkg_swift_nio//:pkg_info.json": "swift-nio",
-                "@swiftpkg_swift_nio_extras//:pkg_info.json": "swift-nio-extras",
-                "@swiftpkg_shellout//:pkg_info.json": "shellout"
+                "@swiftpkg_swift_nio_extras//:pkg_info.json": "swift-nio-extras"
               }
             }
           },
@@ -1538,22 +1537,6 @@
               "commit": "88a51340f59cf181ebde888bd1b749296b3ec029",
               "remote": "https://github.com/apple/swift-nio-extras",
               "version": "1.34.3",
-              "env": {},
-              "env_inherit": [],
-              "cached_json_directory": "",
-              "replace_scm_with_registry": false,
-              "target_deps": {},
-              "module_aliases": {},
-              "dep_module_aliases": ""
-            }
-          },
-          "swiftpkg_shellout": {
-            "repoRuleId": "@@rules_swift_package_manager+//swiftpkg/internal:swift_package.bzl%swift_package",
-            "attributes": {
-              "bazel_package_name": "swiftpkg_shellout",
-              "commit": "e1577acf2b6e90086d01a6d5e2b8efdaae033568",
-              "remote": "https://github.com/JohnSundell/ShellOut",
-              "version": "2.3.0",
               "env": {},
               "env_inherit": [],
               "cached_json_directory": "",
@@ -1809,7 +1792,6 @@
             "swiftpkg_swift_argument_parser",
             "swiftpkg_swift_nio",
             "swiftpkg_swift_nio_extras",
-            "swiftpkg_shellout",
             "swift_deps_info",
             "swift_package"
           ],
