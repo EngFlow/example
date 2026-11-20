@@ -4,11 +4,15 @@ import argparse
 import os
 import subprocess
 import sys
+import uuid
 
 EXTRA_FLAGS = {
     "ios": ["--config=ios"],
     "swift": ["--config=clang"],
 }
+
+# Must match --bes_results_url for --config=opal_bes in .bazelrc.
+BES_RESULTS_URL = "https://opal.cluster.engflow.com/invocations/example-oss/"
 
 
 def report_error(msg):
@@ -69,11 +73,35 @@ def run_tests(package):
     print(f"---------------\nTesting {package}...")
     sys.stdout.flush()
 
+    invocation_id = str(uuid.uuid4())
+    flags.append(f"--invocation_id={invocation_id}")
+
     args = ["bazel", "test"] + flags + ["--"] + targets
     result = subprocess.run(args, check=False)
     sys.stdout.flush()
     sys.stderr.flush()
+    report_invocation(package, BES_RESULTS_URL + invocation_id, result.returncode)
     return result.returncode
+
+
+def report_invocation(package, url, returncode):
+    """Surfaces the BES invocation link in the GitHub Actions UI."""
+    if not os.getenv("GITHUB_ACTIONS"):
+        return
+
+    execution_type = os.getenv("EXECUTION_TYPE")
+    status = "passed" if returncode == 0 else "failed"
+    level = "notice" if returncode == 0 else "error"
+    title = f"{package} ({execution_type}) {status}"
+
+    # Annotation: shown on the run summary page and in the Checks tab.
+    print(f"::{level} title={title}::Invocation results: {url}")
+
+    # Job summary: rendered as Markdown on the run summary page.
+    summary_file = os.getenv("GITHUB_STEP_SUMMARY")
+    if summary_file:
+        with open(summary_file, "a") as f:
+            f.write(f"### {title}\n\n[View invocation results]({url})\n")
 
 
 def main():
