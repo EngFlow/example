@@ -1405,11 +1405,10 @@ final class LRUSetTests: XCTestCase {
   func test_capacity_one_evicts_previous_config() {
     var set = LRUSet<String>(capacity: 1)
 
-    XCTAssertNil(set.insert("iPhone 11_26.5"))
+    set.insert("iPhone 11_26.5")
     XCTAssertTrue(set.contains("iPhone 11_26.5"))
 
-    let evicted = set.insert("iPad Air_26.5")
-    XCTAssertEqual(evicted, "iPhone 11_26.5")
+    set.insert("iPad Air_26.5")
     XCTAssertFalse(
       set.contains("iPhone 11_26.5"),
       "the evicted config now takes the short idle timer"
@@ -1421,35 +1420,34 @@ final class LRUSetTests: XCTestCase {
   func test_capacity_two_keeps_both_configs() {
     var set = LRUSet<String>(capacity: 2)
 
-    XCTAssertNil(set.insert("iPhone 11_26.5"))
-    XCTAssertNil(set.insert("iPad Air_26.5"))
+    set.insert("iPhone 11_26.5")
+    set.insert("iPad Air_26.5")
 
     XCTAssertTrue(set.contains("iPhone 11_26.5"))
     XCTAssertTrue(set.contains("iPad Air_26.5"))
 
     // A third config evicts the least recently used, not the most recent.
-    XCTAssertEqual(set.insert("iPhone 17_26.5"), "iPhone 11_26.5")
+    set.insert("iPhone 17_26.5")
+    XCTAssertFalse(set.contains("iPhone 11_26.5"))
     XCTAssertTrue(set.contains("iPad Air_26.5"))
     XCTAssertTrue(set.contains("iPhone 17_26.5"))
   }
 
   /// Re-inserting an existing element must refresh its recency without evicting
-  /// anything. `insert` reports the element it removed from the ordering array,
-  /// which for a re-insert is the element itself -- callers must not treat that
-  /// as an eviction.
+  /// anything.
   func test_reinsert_does_not_evict() {
     var set = LRUSet<String>(capacity: 2)
 
-    _ = set.insert("a")
-    _ = set.insert("b")
+    set.insert("a")
+    set.insert("b")
 
     // Re-inserting "a" makes it most recent; "b" must stay.
-    _ = set.insert("a")
+    set.insert("a")
     XCTAssertTrue(set.contains("a"))
     XCTAssertTrue(set.contains("b"))
 
     // So a third insert evicts "b", the genuinely least recently used.
-    XCTAssertEqual(set.insert("c"), "b")
+    set.insert("c")
     XCTAssertFalse(set.contains("b"))
     XCTAssertTrue(set.contains("a"))
   }
@@ -1586,14 +1584,5 @@ actor MockSimulatorControl: SimulatorControl {
     if devicesByName[name] == simulator {
       devicesByName.removeValue(forKey: name)
     }
-  }
-
-  func getExisting(
-    name: String,
-    deviceType: String,
-    runtimeIdentifier: String,
-    context: @escaping @autoclosure () -> String?
-  ) async throws -> String? {
-    return devicesByName[name]
   }
 }

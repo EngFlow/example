@@ -97,13 +97,6 @@ protocol SimulatorControl: Actor {
     name: String,
     context: @escaping @autoclosure () -> String?
   ) async throws
-
-  func getExisting(
-    name: String,
-    deviceType: String,
-    runtimeIdentifier: String,
-    context: @escaping @autoclosure () -> String?
-  ) async throws -> String?
 }
 
 actor RealSimulatorControl: SimulatorControl {
@@ -361,7 +354,7 @@ actor RealSimulatorControl: SimulatorControl {
     }
   }
 
-  func getExisting(
+  private func getExisting(
     name: String,
     deviceType: String,
     runtimeIdentifier: String,

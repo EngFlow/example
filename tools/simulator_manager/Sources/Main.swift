@@ -27,19 +27,6 @@ struct Main: AsyncParsableCommand {
   )
   var recentlyUsedCapacity = 1
 
-  @Option(
-    name: .customLong("startup-process"),
-    help: """
-    The path to a startup process that will be run when the simulator manager is started. This \
-    process will not be relaunched if it exits.
-
-    To pass custom arguments to the process you should wrap it in a script.
-
-    Setting this flag multiple times will result in multiple startup process being launched.
-    """
-  )
-  var startupProcesses: [String] = []
-
   @Option(help: "Path to an executable that will run after a simulator clone is booted")
   var postBoot: String
 
@@ -60,10 +47,6 @@ struct Main: AsyncParsableCommand {
         """
       )
     }
-
-    guard Set(startupProcesses).count == startupProcesses.count else {
-      throw ValidationError("'startup-process' must be unique.")
-    }
   }
 
   func run() async throws {
@@ -73,7 +56,6 @@ struct Main: AsyncParsableCommand {
       deleteIdleAfter: deleteIdleAfter,
       recentlyUsedCapacity: recentlyUsedCapacity,
       deleteOnPIDExit: true,
-      startupProcesses: startupProcesses,
       postBoot: postBoot,
       leaseStore: leasePath.map { FileLeaseStore(path: $0) }
     )
@@ -81,8 +63,6 @@ struct Main: AsyncParsableCommand {
     // Before serving, so the first release to arrive already sees the leases this
     // daemon inherited.
     await simulatorManager.restoreLeases()
-
-    try await simulatorManager.startChildProcesses()
 
     try await HTTPServer(
       simulatorRequestHandler: SimulatorRequestHandler(

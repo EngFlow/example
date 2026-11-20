@@ -5,7 +5,6 @@ typealias PID = pid_t
 
 extension Logger {
   static let simulatorManager = simulatorManager(category: "manager")
-  static let childProcess = simulatorManager(category: "manager.child-process")
 }
 
 enum SimulatorManagerError: Error {
@@ -98,10 +97,7 @@ actor SimulatorManager {
 
   private var recentlyLeased: LRUSet<SimulatorConfig>
 
-  private var startupProcessPaths: [String]
   private var postBoot: String?
-  private var childProcessTasks: [Task<Void, Never>] = []
-  private var childProcesses: [String: (Process, DispatchSourceRead, DispatchSourceRead)] = [:]
 
   init(
     simulatorControl: SimulatorControl,
@@ -109,7 +105,6 @@ actor SimulatorManager {
     deleteIdleAfter: UInt16,
     recentlyUsedCapacity: Int,
     deleteOnPIDExit: Bool,
-    startupProcesses: [String] = [],
     postBoot: String? = nil,
     leaseStore: LeaseStore? = nil
   ) {
@@ -118,31 +113,12 @@ actor SimulatorManager {
     self.deleteRecentlyUsedIdleAfter = deleteRecentlyUsedIdleAfter
     self.deleteOnPIDExit = deleteOnPIDExit
     self.recentlyLeased = LRUSet(capacity: recentlyUsedCapacity)
-    self.startupProcessPaths = startupProcesses
     self.postBoot = postBoot
     self.leaseStore = leaseStore
 
     // Change the working directory to some place stable, since on RBE the runfiles directory can
     // get cleaned up
     FileManager.default.changeCurrentDirectoryPath("/tmp")
-  }
-
-  deinit {
-    for task in childProcessTasks {
-      task.cancel()
-    }
-
-    for (process, outWatcher, errWatcher) in childProcesses.values {
-      process.terminate()
-      outWatcher.cancel()
-      errWatcher.cancel()
-    }
-  }
-
-  func startChildProcesses() throws {
-    for path in startupProcessPaths {
-      childProcessTasks.append(createStartChildProcessTask(path: path))
-    }
   }
 
   /// Adopts the leases and idle simulators a previous daemon left behind.
@@ -173,7 +149,7 @@ actor SimulatorManager {
     // is 0, every restart would delete them immediately. Inserted before adopting
     // leases so the configs of running tests end up most recent.
     for idle in persisted.idleSimulators {
-      _ = recentlyLeased.insert(idle.config)
+      recentlyLeased.insert(idle.config)
     }
 
     var adopted = 0
@@ -226,7 +202,7 @@ actor SimulatorManager {
       // `deleteIdleAfter` -- 0 on a worker -- and deletes a device the daemon we
       // replaced would have kept, making every version bump cost the tests in
       // flight a fresh boot.
-      _ = recentlyLeased.insert(lease.config)
+      recentlyLeased.insert(lease.config)
 
       incrementReferenceCount(for: lease.udid)
 
@@ -407,7 +383,7 @@ actor SimulatorManager {
     // `getSimulator()` will increment the reference count for the simulator
     let (simulator, slotIndex) = try await getSimulator(for: config, exclusive: exclusive)
 
-    _ = recentlyLeased.insert(config)
+    recentlyLeased.insert(config)
 
     // Re-check now that provisioning is done: the leaser may have exited while we
     // were cloning and booting. Record the lease first so `release` can unwind the
@@ -475,7 +451,7 @@ actor SimulatorManager {
 
     await simulatorControl.cleanTempFiles(in: lease.udid)
 
-    try await decrementReferenceCount(
+    await decrementReferenceCount(
       for: lease.udid,
       config: lease.config,
       slotIndex: lease.slotIndex
@@ -536,7 +512,7 @@ actor SimulatorManager {
     for simulator: SimulatorUDID,
     config: SimulatorConfig,
     slotIndex: Int
-  ) async throws {
+  ) async {
     guard var count = referenceCount[simulator] else {
       // Simulator was already deleted, nothing to do
       return
@@ -895,118 +871,4 @@ actor SimulatorManager {
       "🗑️ Deleted simulator \(simulator, privacy: .public) (\(name, privacy: .public)"
     )
   }
-
-  // MARK: Child Process Management
-
-  private nonisolated func createStartChildProcessTask(path: String) -> Task<Void, Never> {
-    return Task.detached { [weak self] in
-      let process: Process
-      do {
-        guard let self else { return }
-        process = try await self.createProcess(path: path)
-        // `self` drops out of scope here, so `SimulatorManager` can deinit
-      } catch {
-        Logger.simulatorManager.info(
-          """
-          ❌ Failed to create child process at "\(path, privacy: .public)": \
-          \(error, privacy: .public)
-          """
-        )
-        return
-      }
-
-      await withCheckedContinuation { cont in
-        process.terminationHandler = { proc in
-          let exitCode = proc.terminationStatus
-          Logger.simulatorManager.warning(
-            """
-            ⚠️ "\(path, privacy: .public)" exited with code: \(exitCode, privacy: .public)
-            """
-          )
-          cont.resume()
-        }
-
-        do {
-          Logger.simulatorManager.info(
-            #"🧒 Starting "\#(path, privacy: .public)""#
-          )
-          try process.run()
-        } catch {
-          Logger.simulatorManager.info(
-            """
-            ❌ Failed to start "\(path, privacy: .public)": \
-            \(error, privacy: .public)
-            """
-          )
-          cont.resume()
-        }
-      }
-    }
-  }
-
-  private func createProcess(path: String) throws -> Process {
-    let process = Process()
-
-    process.executableURL = URL(fileURLWithPath: path)
-
-    let outPTY = try PTY()
-    process.standardOutput = FileHandle(fileDescriptor: outPTY.child, closeOnDealloc: true)
-    let outQueue = DispatchQueue(label: "com.example.simulator_manager.child_process.out")
-    let outWatcher = watch(fd: outPTY.parent, queue: outQueue) { line in
-      Logger.childProcess.info("[\(path, privacy: .public)] \(line, privacy: .public)")
-    }
-
-    let errPTY = try PTY()
-    process.standardError = FileHandle(fileDescriptor: errPTY.child, closeOnDealloc: true)
-    let errQueue = DispatchQueue(label: "com.example.simulator_manager.child_process.err")
-    let errWatcher = watch(fd: errPTY.parent, queue: errQueue) { line in
-      Logger.childProcess.error("[\(path, privacy: .public)] \(line, privacy: .public)")
-    }
-
-    childProcesses[path] = (process, outWatcher, errWatcher)
-
-    return process
-  }
-}
-
-/// Installs a DispatchSourceRead on `fd`.
-private func watch(
-  fd: Int32,
-  queue: DispatchQueue,
-  onLine: @escaping (String) -> Void
-) -> DispatchSourceRead {
-  let src = DispatchSource.makeReadSource(fileDescriptor: fd, queue: queue)
-  var buffer = Data()
-
-  src.setEventHandler {
-    var tmp = [UInt8](repeating: 0, count: 4096)
-    let n = read(fd, &tmp, tmp.count)
-    guard n > 0 else {
-      src.cancel()
-      close(fd)
-      return
-    }
-
-    buffer.append(contentsOf: tmp[0..<n])
-
-    // Split on newline; last segment may be an incomplete tail
-    let segments = buffer.split(
-      separator: UInt8(ascii: "\n"),
-      omittingEmptySubsequences: false
-    )
-
-    // Emit every complete line (all but the last segment)
-    for lineData in segments.dropLast() {
-      if let line = String(data: lineData, encoding: .utf8) {
-        onLine(line)
-      }
-    }
-
-    // Keep the last segment (possibly empty or partial) for next time
-    buffer = Data(segments.last ?? Data())
-  }
-
-  src.resume()
-
-  return src
 }

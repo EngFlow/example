@@ -141,14 +141,11 @@ swift_deps = use_extension(
     "swift_deps",
 )
 swift_deps.from_package(
-    declare_swift_deps_info = True,
     resolved = "//tools/simulator_manager:Package.resolved",
     swift = "//tools/simulator_manager:Package.swift",
 )
 use_repo(
     swift_deps,
-    "swift_deps_info",
-    "swift_package",
     "swiftpkg_swift_argument_parser",
     "swiftpkg_swift_nio",
     "swiftpkg_swift_nio_extras",
