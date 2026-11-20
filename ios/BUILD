@@ -163,34 +163,16 @@ swift_library(
     module_name = "HelloLongRunningTest",
 )
 
+# Runs for LONG_RUNNING_TEST_SECONDS (600 by default) on one leased simulator.
+# `manual` so `//ios/...` and CI don't pay that on every run.
 ios_unit_test(
     name = "HelloLongRunningTest",
     minimum_os_version = "26.0",
     runner = ":ios_leased_simulator_runner",
+    tags = ["manual"],
     test_host = ":HelloApp",
     timeout = "long",
     deps = [":HelloLongRunningTestLib"],
-    exec_properties = {
-        "sandboxAllowed": "False",
-    },
-)
-
-swift_library(
-    name = "HelloLeakProbeTestLib",
-    testonly = True,
-    srcs = ["HelloLeakProbeTest.swift"],
-    module_name = "HelloLeakProbeTest",
-)
-
-# Found what was holding on to memory in HelloLongRunningTest; `manual` because it just
-# measures rather than checking anything, and safe to delete now.
-ios_unit_test(
-    name = "HelloLeakProbeTest",
-    minimum_os_version = "26.0",
-    runner = ":ios_leased_simulator_runner",
-    tags = ["manual"],
-    test_host = ":HelloApp",
-    deps = [":HelloLeakProbeTestLib"],
     exec_properties = {
         "sandboxAllowed": "False",
     },
