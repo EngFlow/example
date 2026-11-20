@@ -149,7 +149,6 @@ use_repo(
     swift_deps,
     "swift_deps_info",
     "swift_package",
-    "swiftpkg_shellout",
     "swiftpkg_swift_argument_parser",
     "swiftpkg_swift_nio",
     "swiftpkg_swift_nio_extras",
