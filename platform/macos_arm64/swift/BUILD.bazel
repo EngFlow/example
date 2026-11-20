@@ -1,0 +1,35 @@
+load("@apple_support//configs:platforms.bzl", "APPLE_PLATFORMS_CONSTRAINTS")
+load("@rules_swift//swift/internal:feature_names.bzl", "SWIFT_FEATURE_MODULE_MAP_NO_PRIVATE_HEADERS")
+load("@rules_swift//swift/toolchains:xcode_swift_toolchain.bzl", "xcode_swift_toolchain")
+
+# Vendored Swift configuration for different XCode versions.
+
+# Regenerate them with:
+# DEVELOPER_DIR=/Applications/Xcode-$VERSION.app/Contents/Developer/ bazel run --  @rules_swift//tools/explicit_modules:scan  --output  vendored.BUILD  --developer-dir /Applications/Xcode-$VERSION.app/Contents/Developer/
+
+exports_files(["vendored.27.2.BUILD", "vendored.26.5.BUILD"])
+
+# Same as @rules_swift//swift/toolchains:xcode-toolchain, but uses the vendored
+# explicit modules instead of scanning the local Xcode installations. These
+# toolchains are registered by --config=remote_macos_arm64.
+xcode_swift_toolchain(
+    name = "xcode-toolchain",
+    cross_import_overlays = ["@vendored_system_sdk//:all_cross_import_overlays"],
+    features = [SWIFT_FEATURE_MODULE_MAP_NO_PRIVATE_HEADERS],
+    implicit_system_modules = "@vendored_system_sdk//:implicit_modules",
+    system_modules = "@vendored_system_sdk//:all_modules",
+    tags = ["manual"],
+)
+
+[
+    toolchain(
+        name = "xcode-toolchain-" + arch,
+        exec_compatible_with = [
+            "@platforms//os:macos",
+        ],
+        target_compatible_with = constraints,
+        toolchain = ":xcode-toolchain",
+        toolchain_type = "@rules_swift//toolchains:toolchain_type",
+    )
+    for arch, constraints in APPLE_PLATFORMS_CONSTRAINTS.items()
+]
