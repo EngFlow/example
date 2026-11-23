@@ -7,8 +7,8 @@
 # log, so it is what a report of this problem is made of; a stub daemon returning
 # the real 404 lets these assemble that line end to end without Xcode.
 #
-# The runner template invokes this script at line 650 and only afterwards, at
-# line 658, exits with the test's own status:
+# The runner template (rules_apple 5.4.0) invokes this script at line 796 and
+# only afterwards, at line 804, exits with the test's own status:
 #
 #   SIMULATOR_UDID=... "$clean_up_simulator_action_binary"
 #   ...
@@ -37,7 +37,9 @@ source "${RUNFILES_DIR:-/dev/null}/$f" 2> /dev/null \
     exit 1
   }
 f=
-set -e
+# The upstream snippet ends with `set -e`, which is left out on purpose: these
+# tests count failures and report them at the end, so a failing command must
+# not abort the script part way through.
 # --- end runfiles.bash initialization v3 ---
 
 readonly release="$(rlocation _main/tools/simulator_manager/release_simulator)"
@@ -56,7 +58,8 @@ function socket_with_no_listener() {
 }
 
 # Serves one request on a unix socket and replies with `status` and `body`, then
-# exits. Prints the socket path.
+# exits. Prints the socket path, which is the optional fourth argument or else a
+# fresh one.
 #
 # An unreachable socket is not the reported case: curl then fails with an empty
 # body, so the warning ends in a bare colon. Reproducing the reported line needs
@@ -72,7 +75,7 @@ function start_stub_daemon() {
   local -r status="$1"
   local -r reason="$2"
   local -r body="$3"
-  local -r path="$(mktemp -u "/tmp/relstub.XXXXXX")"
+  local -r path="${4:-$(mktemp -u "/tmp/relstub.XXXXXX")}"
 
   python3 -c '
 import socket, sys
@@ -173,29 +176,25 @@ function test_a_successful_release_is_silent() {
   stop_stub_daemon "$path"
 }
 
-# The precondition the reproduction rests on: `--fail-with-body` has to treat the
-# 404 as a failure *and* hand back the body. If curl ever stopped doing both, the
-# warning would lose the daemon's message and the test above would be asserting
-# something the script no longer does.
-function test_curl_reports_the_body_of_a_failed_release() {
+# start.sh puts the daemon's socket under SIMULATOR_MANAGER_STATE_PREFIX, so a
+# release given only the prefix must reach that socket rather than the
+# well-known one.
+function test_releases_through_the_state_prefix() {
+  local -r prefix="$(mktemp -u "/tmp/relstub.XXXXXX")"
   local path
-  path="$(start_stub_daemon 404 "Not Found" "PID 4242 doesn't have a simulator leased")" || {
+  path="$(start_stub_daemon 200 "OK" "Success" "$prefix.sock")" || {
     fail "could not start the stub daemon"
     return
   }
 
-  local body
-  local status=0
-  body="$(
-    curl --silent --fail-with-body --unix-socket "$path" \
-      --request DELETE 'http:/-/simulator/4242' 2>&1
-  )" || status=$?
+  local output
+  output="$(
+    SIMULATOR_MANAGER_STATE_PREFIX="$prefix" XCTESTRUN_RUNNER_PID=4242 \
+      "$release" 2>&1
+  )" || true
 
-  if ((status == 0)); then
-    fail "precondition broken: curl treated a 404 as success"
-  fi
-  if [[ "$body" != *"doesn't have a simulator leased"* ]]; then
-    fail "precondition broken: curl dropped the body of a 404: $body"
+  if [[ -n "$output" ]]; then
+    fail "expected a silent release through the prefix's socket, got: $output"
   fi
 
   stop_stub_daemon "$path"
@@ -217,21 +216,6 @@ function test_exits_zero_when_daemon_is_unreachable() {
   fi
 }
 
-# The warning has to name the pid, since that is what correlates a release
-# failure with the daemon's own lease bookkeeping when debugging from logs alone.
-function test_warns_with_the_lease_pid() {
-  local output
-  output="$(
-    SIMULATOR_MANAGER_SOCKET="$(socket_with_no_listener)" \
-      XCTESTRUN_RUNNER_PID=4242 \
-      "$release" 2>&1
-  )" || true
-
-  if [[ "$output" != *"failed to release simulator lease for pid 4242"* ]]; then
-    fail "warning did not name the lease pid: $output"
-  fi
-}
-
 # The warning must go to stderr: on stdout it would be captured as part of a
 # command substitution's value by any caller that reads this script's output.
 function test_warning_goes_to_stderr() {
@@ -247,10 +231,11 @@ function test_warning_goes_to_stderr() {
   fi
 }
 
-# `XCTESTRUN_RUNNER_PID` is what keys the lease. Falling back to `$$` when it is
-# unset means releasing a pid the daemon never leased to, so the fallback must
-# stay a fallback -- if this stopped being honored the release would silently
-# target the wrong process.
+# `XCTESTRUN_RUNNER_PID` is what keys the lease, and the warning has to name it,
+# since that is what correlates a release failure with the daemon's own lease
+# bookkeeping when debugging from logs alone. The fallback when it is unset is
+# `PPID`, which here is this test's own `$$`; if the passed pid stopped being
+# honored the release would silently target the wrong process.
 function test_uses_the_runner_pid_over_its_own() {
   local output
   output="$(
@@ -267,25 +252,12 @@ function test_uses_the_runner_pid_over_its_own() {
   fi
 }
 
-function test_mutation_check() {
-  local status=0
-  ( SIMULATOR_MANAGER_SOCKET="$(socket_with_no_listener)" \
-      XCTESTRUN_RUNNER_PID=4242 \
-      bash -c 'set -euo pipefail; curl --silent --fail-with-body --unix-socket "$SIMULATOR_MANAGER_SOCKET" --request DELETE "http:/-/simulator/$XCTESTRUN_RUNNER_PID"' \
-      > /dev/null 2>&1 ) || status=$?
-  if ((status == 0)); then
-    fail "precondition broken: the curl this script wraps was expected to fail"
-  fi
-}
-
 test_exits_zero_when_daemon_is_unreachable
-test_warns_with_the_lease_pid
-test_mutation_check
 test_warning_goes_to_stderr
 test_uses_the_runner_pid_over_its_own
 test_warning_reproduces_the_reported_line
 test_a_successful_release_is_silent
-test_curl_reports_the_body_of_a_failed_release
+test_releases_through_the_state_prefix
 
 if ((failures > 0)); then
   echo >&2 "$failures test(s) failed"

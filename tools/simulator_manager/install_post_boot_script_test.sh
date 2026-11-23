@@ -28,7 +28,9 @@ source "${RUNFILES_DIR:-/dev/null}/$f" 2> /dev/null \
     exit 1
   }
 f=
-set -e
+# The upstream snippet ends with `set -e`, which is left out on purpose: these
+# tests count failures and report them at the end, so a failing command must
+# not abort the script part way through.
 # --- end runfiles.bash initialization v3 ---
 
 readonly install="$(rlocation _main/tools/simulator_manager/install_post_boot_script)"
@@ -58,7 +60,7 @@ function new_readonly_src() {
   echo "$src"
 }
 
-# The regression test. Without `cp -f` this is the failure quoted above.
+# The regression test. A plain `cp` onto the destination fails as quoted above.
 function test_overwrites_read_only_destination() {
   local -r dir="$(new_tmpdir)"
   local -r src="$(new_readonly_src "$dir" v2)"
@@ -120,7 +122,7 @@ function test_installed_script_is_executable() {
   fi
 }
 
-# `-f` must unlink rather than truncate: a daemon already executing the old copy
+# The install must replace rather than truncate: a daemon already executing the old copy
 # keeps its inode, instead of having the bytes rewritten under it. Verified via
 # a hard link, which observes the original inode after the replacement.
 function test_replaces_rather_than_truncates() {
@@ -139,6 +141,30 @@ function test_replaces_rather_than_truncates() {
   local -r got="$(< "$witness")"
   if [[ "$got" != *v1* ]]; then
     fail "old inode was modified in place rather than replaced: $got"
+  fi
+}
+
+# The same, for the writable copy a local runfile leaves behind: `cp -f` only
+# unlinks a destination it cannot open, and truncated this one in place.
+function test_replaces_a_writable_destination() {
+  local -r dir="$(new_tmpdir)"
+  local -r src="$(new_readonly_src "$dir" v2)"
+  local -r dest="$dir/scripts/prepare_simulator.sh"
+
+  mkdir -p "$(dirname "$dest")"
+  printf '#!/bin/bash\necho v1\n' > "$dest"
+  chmod 755 "$dest"
+  local -r witness="$dir/scripts/witness"
+  ln "$dest" "$witness"
+
+  "$install" "$src" "$dest" > /dev/null 2>&1
+
+  local -r got="$(< "$witness")"
+  if [[ "$got" != *v1* ]]; then
+    fail "old inode was modified in place rather than replaced: $got"
+  fi
+  if [[ "$(< "$dest")" != *v2* ]]; then
+    fail "destination was not updated: $(< "$dest")"
   fi
 }
 
@@ -175,6 +201,7 @@ test_overwrites_read_only_destination
 test_creates_destination_and_parents
 test_installed_script_is_executable
 test_replaces_rather_than_truncates
+test_replaces_a_writable_destination
 test_repeated_installs
 test_rejects_wrong_arg_count
 

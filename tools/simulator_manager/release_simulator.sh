@@ -11,12 +11,11 @@
 
 set -euo pipefail
 
-# Overridable only so the test can point at its own socket; production callers
-# leave it unset and get the well-known path.
-readonly socket="${SIMULATOR_MANAGER_SOCKET:-/tmp/simulator_manager.sock}"
+# Resolved the same way as in lease_simulator.sh; see the comment there.
+readonly socket="${SIMULATOR_MANAGER_SOCKET:-${SIMULATOR_MANAGER_STATE_PREFIX:-/tmp/simulator_manager}.sock}"
 # Must resolve to the same pid lease_simulator.sh used, or the release names a
-# lease that does not exist. See the comment there for why `$$` is not it: on
-# rules_apple 4.5.x, which passes no pid, `$$` is this script's own.
+# lease that does not exist. See the comment there for why it is the passed pid,
+# and why the fallback is `PPID` rather than `$$`.
 readonly lease_pid="${XCTESTRUN_RUNNER_PID:-$PPID}"
 
 if ! response=$(

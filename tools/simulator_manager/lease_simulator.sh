@@ -12,23 +12,31 @@
 
 set -euo pipefail
 
-# Overridable only so the test can point at its own socket, matching
-# release_simulator.sh; production callers leave it unset and get the well-known
-# path.
-readonly socket="${SIMULATOR_MANAGER_SOCKET:-/tmp/simulator_manager.sock}"
+# The daemon start.sh runs: like start.sh, under SIMULATOR_MANAGER_STATE_PREFIX if
+# that is set, so a test that sets only the prefix leases from its own daemon.
+# SIMULATOR_MANAGER_SOCKET sends just this request elsewhere, for a test that
+# needs to see it. Production callers set neither.
+readonly socket="${SIMULATOR_MANAGER_SOCKET:-${SIMULATOR_MANAGER_STATE_PREFIX:-/tmp/simulator_manager}.sock}"
 
-# --- begin runfiles.bash initialization ---
+# --- begin runfiles.bash initialization v3 ---
+# Copy-pasted from the Bazel Bash runfiles library v3, as in this package's other
+# scripts. It is what finds the runfiles library, so it can't itself be shared
+# through runfiles.
 set +e
 f=bazel_tools/tools/bash/runfiles/runfiles.bash
 # shellcheck disable=SC1090
-source "${RUNFILES_DIR:-/dev/null}/$f" 2>/dev/null ||
-  source "$(grep -sm1 "^$f " "${RUNFILES_MANIFEST_FILE:-/dev/null}" | cut -f2- -d' ')" 2>/dev/null ||
-  source "$0.runfiles/$f" 2>/dev/null ||
-  source "$(grep -sm1 "^$f " "$0.runfiles_manifest" | cut -f2- -d' ')" 2>/dev/null ||
-  source "$(grep -sm1 "^$f " "$0.exe.runfiles_manifest" | cut -f2- -d' ')" 2>/dev/null ||
-  { echo >&2 "ERROR: cannot find $f"; exit 1; }
+source "${RUNFILES_DIR:-/dev/null}/$f" 2> /dev/null \
+  || source "$(grep -sm1 "^$f " "${RUNFILES_MANIFEST_FILE:-/dev/null}" | cut -f2- -d' ')" 2> /dev/null \
+  || source "$0.runfiles/$f" 2> /dev/null \
+  || source "$(grep -sm1 "^$f " "$0.runfiles_manifest" | cut -f2- -d' ')" 2> /dev/null \
+  || source "$(grep -sm1 "^$f " "$0.exe.runfiles_manifest" | cut -f2- -d' ')" 2> /dev/null \
+  || {
+    echo >&2 "ERROR: cannot find $f"
+    exit 1
+  }
+f=
 set -e
-# --- end runfiles.bash initialization ---
+# --- end runfiles.bash initialization v3 ---
 
 if [[ -z "${SIMULATOR_DEVICE_TYPE:-}" ]]; then
   echo >&2 "error: SIMULATOR_DEVICE_TYPE must be set; set the device_type on the" \
@@ -40,29 +48,12 @@ fi
 # daemon bootstrap's progress logging has to go to stderr.
 "$(rlocation _main/tools/simulator_manager/start)" >&2
 
-# The daemon derives the runtime identifier by substituting dots for dashes, so
-# it needs the runtime's own version (26.4), not a patch version (26.4.1) which
-# would produce the nonexistent com.apple.CoreSimulator.SimRuntime.iOS-26-4-1.
+# The runtime's own version (26.4), which is what the daemon needs; see the
+# script for why that isn't simply SIMULATOR_OS_VERSION.
 version="$(
   xcrun simctl list runtimes -j |
-    python3 -c '
-import json, sys
-requested = sys.argv[1]
-runtimes = [
-    r for r in json.load(sys.stdin)["runtimes"]
-    if r["platform"] == "iOS" and r["isAvailable"]
-]
-if not runtimes:
-    sys.exit("no available iOS simulator runtimes")
-# An exact or prefix match on the requested version wins; otherwise take the
-# newest available runtime, matching rules_apple defaulting to latest.
-for r in runtimes:
-    if requested and (r["version"] == requested or r["version"].startswith(requested + ".")):
-        print(r["identifier"].removeprefix("com.apple.CoreSimulator.SimRuntime.iOS-").replace("-", "."))
-        break
-else:
-    print(runtimes[0]["identifier"].removeprefix("com.apple.CoreSimulator.SimRuntime.iOS-").replace("-", "."))
-' "${SIMULATOR_OS_VERSION:-}"
+    python3 "$(rlocation _main/tools/simulator_manager/ios_runtime_version.py)" \
+      "${SIMULATOR_OS_VERSION:-}"
 )"
 
 # rules_apple's `reuse_simulator` doubles as the exclusivity toggle: tests that
@@ -78,26 +69,61 @@ fi
 # this test dies without releasing. So the pid has to name a process that lives
 # for the whole test.
 #
-# rules_apple only passes that pid from 5.0.0-rc2 on; 4.5.x calls us with nothing.
-# `$$` is the wrong fallback: it is evaluated here, in our own process, so it names
-# this script -- which exits as soon as we have printed the UDID. The daemon's
-# release-on-exit watcher then reclaims the device while the test is still using
-# it, or hands it to a concurrent test. `PPID` is the runner, which lives for the
-# whole test.
+# rules_apple passes that pid, as XCTESTRUN_RUNNER_PID, from 5.0.0-rc2 on, and
+# that is what we rely on. The runner names itself, which is better evidence than
+# anything we could infer from process topology.
 #
-# Prefer the passed value when we have it: the runner naming itself is better
-# evidence than our inferring it from process topology, which assumes the runner
-# is exactly one level up. That holds for a direct call from `$( ... )`; a
-# launcher that forks rather than `exec`s would break it.
+# The fallback is for a caller that passes nothing, as rules_apple 4.5.x did, and
+# it is best-effort. `$$` would certainly be wrong: it names this script, which
+# exits as soon as we have printed the UDID, and the daemon's release-on-exit
+# watcher would then reclaim the device while the test is still using it.
+# `PPID` is right only when the runner is exactly one level up. Called from
+# `unused="$( ... )"` under bash 3.2 -- macOS's /bin/bash, which the runner uses
+# -- it is not: that bash forks for the substitution, so `PPID` is the fork,
+# which exits with us. start_restart_test.sh covers only the passed-pid case for
+# that reason.
 readonly lease_pid="${XCTESTRUN_RUNNER_PID:-$PPID}"
 
-url_encoded_device_type="${SIMULATOR_DEVICE_TYPE// /%20}"
+# Fully percent-encoded, not just its spaces: a device type containing `&`, `#`
+# or `+` would otherwise split or truncate the query. Not curl's
+# `--data-urlencode`, which encodes a space as `+`; the daemon's URLComponents
+# only decodes `%20`.
+url_encoded_device_type="$(
+  python3 -c 'import sys, urllib.parse; print(urllib.parse.quote(sys.argv[1], safe=""))' \
+    "$SIMULATOR_DEVICE_TYPE"
+)"
 
-curl \
-  --silent \
-  --fail-with-body \
-  --unix-socket "$socket" \
-  --retry 5 \
-  --retry-connrefused \
-  --request POST \
-  "http:/-/simulator/$lease_pid?exclusive=$exclusive&deviceType=$url_encoded_device_type&os=iOS&version=$version"
+# Only a failure to connect is retried. curl's own `--retry` would also repeat a
+# 500, which is the daemon reporting that provisioning failed: repeating it
+# provisions up to five more times and almost always fails the same way. A failed
+# connection (curl's exit 7) means nothing was sent, so it is safe to repeat. It
+# happens when another action's start.sh is replacing the daemon between our own
+# start.sh and this request: the socket is briefly missing, which
+# `--retry-connrefused` would not retry, or not yet listening. The backoff
+# matches what `--retry 5` used.
+attempt=0
+while true; do
+  status=0
+  # On failure --fail-with-body still writes the daemon's error message to
+  # stdout, which rules_apple would capture as the UDID and never show, so it is
+  # moved to stderr below.
+  udid="$(
+    curl \
+      --silent \
+      --show-error \
+      --fail-with-body \
+      --unix-socket "$socket" \
+      --request POST \
+      "http:/-/simulator/$lease_pid?exclusive=$exclusive&deviceType=$url_encoded_device_type&os=iOS&version=$version"
+  )" || status=$?
+  if ((status != 7 || attempt >= 5)); then
+    break
+  fi
+  sleep $((2 ** attempt))
+  attempt=$((attempt + 1))
+done
+if ((status != 0)); then
+  echo >&2 "error: failed to lease a simulator: $udid"
+  exit 1
+fi
+echo "$udid"

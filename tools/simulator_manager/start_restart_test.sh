@@ -5,11 +5,11 @@
 # start.sh runs on *every* lease, not just at boot: lease_simulator.sh invokes it
 # before leasing. When it finds a daemon whose version differs from the one the
 # action expects, it shuts that daemon down (`/shutdown`, then `kill -9` after a
-# timeout, then `killall simulator_manager`). Leases live only in the daemon's
-# memory.
+# timeout, then any straggler still serving the socket). Leases used to live only
+# in the daemon's memory.
 #
 # So an action starting a new test could destroy the lease bookkeeping for tests
-# already in flight. Their runner scripts keep running and later call
+# already in flight. Their runner scripts kept running and later called
 # release_simulator.sh, which reached a *different* daemon that never knew about
 # them, and reported
 #
@@ -52,17 +52,35 @@ source "${RUNFILES_DIR:-/dev/null}/$f" 2> /dev/null \
     exit 1
   }
 f=
-set -e
+# The upstream snippet ends with `set -e`, which is left out on purpose: these
+# tests count failures and report them at the end, so a failing command must
+# not abort the script part way through.
 # --- end runfiles.bash initialization v3 ---
 
 readonly start="$(rlocation _main/tools/simulator_manager/start)"
 readonly lease="$(rlocation _main/tools/simulator_manager/lease_simulator)"
 readonly release="$(rlocation _main/tools/simulator_manager/release_simulator)"
 
+# Every daemon these tests start names its devices with this rather than the
+# production prefix, so the cleanup below, which deletes by name, can never take a
+# device from the worker's own daemon or the tests it is serving.
+export SIMULATOR_MANAGER_DEVICE_NAME_PREFIX="EXAMPLE_TEST_"
+readonly test_clone_prefix="${SIMULATOR_MANAGER_DEVICE_NAME_PREFIX}CLONE_"
+
 failures=0
 
+# Names the test that is running, not just the caller, so helpers can report
+# failures too.
 function fail() {
-  echo >&2 "❌ ${FUNCNAME[1]}: $1"
+  local test_name="${FUNCNAME[1]}"
+  local name
+  for name in "${FUNCNAME[@]}"; do
+    if [[ "$name" == test_* ]]; then
+      test_name="$name"
+      break
+    fi
+  done
+  echo >&2 "❌ $test_name: $1"
   failures=$((failures + 1))
 }
 
@@ -73,37 +91,18 @@ function new_prefix() {
   mktemp -u "/tmp/smtest.XXXXXX"
 }
 
-# `|| true` because this is called on a prefix that may have no daemon, and a
-# failing `cat` inside `$(...)` under `set -e` would take the whole script down
-# -- silently, and leaving a daemon behind.
+# Empty, not an error, for a prefix that has no daemon.
 function daemon_pid() {
   cat "$1.pid" 2> /dev/null || true
 }
 
-function daemon_version() {
-  curl --silent --unix-socket "$1.sock" -XGET 'http:/-/version'
-}
-
-# The newest available iOS runtime, in the dotted form the daemon turns back into
-# a runtime identifier. A lease really does provision a device, so a made-up
-# version fails with "Invalid runtime" rather than producing a lease.
-#
-# Derived from the runtime's identifier, not its `version` field: the daemon
-# builds the identifier by substituting dots for dashes, so a patch version like
-# 26.4.1 would yield the nonexistent iOS-26-4-1. lease_simulator.sh takes the
-# same care for the same reason.
+# The newest available iOS runtime, chosen the way lease_simulator.sh chooses
+# one. A lease really does provision a device, so a made-up version fails with
+# "Invalid runtime" rather than producing a lease. Empty if there is none.
 function available_ios_version() {
-  xcrun simctl list runtimes -j 2> /dev/null | python3 -c '
-import json, sys
-runtimes = [
-    r for r in json.load(sys.stdin)["runtimes"]
-    if r["platform"] == "iOS" and r["isAvailable"]
-]
-if not runtimes:
-    sys.exit(1)
-prefix = "com.apple.CoreSimulator.SimRuntime.iOS-"
-print(runtimes[-1]["identifier"].removeprefix(prefix).replace("-", "."))
-'
+  xcrun simctl list runtimes -j 2> /dev/null |
+    python3 "$(rlocation _main/tools/simulator_manager/ios_runtime_version.py)" \
+      2> /dev/null
 }
 
 # Leases with an explicit pid, bypassing lease_simulator.sh so the leaser can be
@@ -118,7 +117,7 @@ function lease_as() {
 function release_as() {
   local -r prefix="$1"
   local -r pid="$2"
-  SIMULATOR_MANAGER_SOCKET="$prefix.sock" XCTESTRUN_RUNNER_PID="$pid" "$release" 2>&1
+  SIMULATOR_MANAGER_STATE_PREFIX="$prefix" XCTESTRUN_RUNNER_PID="$pid" "$release" 2>&1
 }
 
 # A process that outlives the test, standing in for a runner script still running
@@ -138,20 +137,21 @@ function spawn_leaser() {
   echo $!
 }
 
-# Blocks until `pid` is gone. `wait` is not usable here: the leaser is spawned
-# inside a command substitution, so it is not this shell's child and `wait` fails
-# with 127 rather than waiting.
-# The UDIDs of every device these tests may have created, by name prefix.
+# The UDIDs of the devices whose names start with `name_prefix`.
 function list_test_simulators() {
+  local -r name_prefix="$1"
   xcrun simctl list devices -j 2> /dev/null | python3 -c '
 import json, sys
 for devices in json.load(sys.stdin)["devices"].values():
     for device in devices:
-        if device["name"].startswith("EXAMPLE_BAZEL_"):
+        if device["name"].startswith(sys.argv[1]):
             print(device["udid"])
-' 2> /dev/null
+' "$name_prefix" 2> /dev/null
 }
 
+# Blocks until `pid` is gone. `wait` is not usable here: the leaser is spawned
+# inside a command substitution, so it is not this shell's child and `wait` fails
+# with 127 rather than waiting.
 function await_exit() {
   local -r pid="$1"
   local -r timeout="${2:-10}"
@@ -175,7 +175,7 @@ function stop_daemon() {
   # rather than killing it, so any delete it has in flight finishes: a device
   # interrupted mid-delete is still listed under its name but rejected by every
   # operation, and the next test's `getExisting` then adopts it and fails
-  # "postBoot failed (isExisting: true) ... Invalid device".
+  # "(postBoot on existing clone ...) failed with exit code ... Invalid device".
   if [[ -n "$pid" ]]; then
     curl --silent --max-time 10 --unix-socket "$prefix.sock" \
       -XPOST 'http:/-/shutdown' > /dev/null 2>&1
@@ -188,10 +188,10 @@ function stop_daemon() {
 
   # Belt and braces: a graceful shutdown is not guaranteed to have deleted
   # everything (a lease held by a live process is deliberately left alone), and
-  # anything left behind is a device the next test would adopt by name. Each test
-  # pays a base-simulator rebuild for this, which is the price of not having tests
-  # fail depending on what ran before them.
-  delete_test_simulators
+  # anything left behind is a device the next test would adopt by name. Only the
+  # clones, though: the base is never leased, so no test's state lives in it, and
+  # keeping it spares every test after the first a base-simulator rebuild.
+  delete_test_simulators "$test_clone_prefix"
 }
 
 # The devices these tests provision outlive the daemons that made them, either
@@ -199,10 +199,12 @@ function stop_daemon() {
 # prefix keeps repeated runs from accumulating simulators, each of which costs
 # several GB, and keeps one test's devices from being adopted by the next.
 #
-# Registered as an EXIT trap so it also runs when a test returns early.
+# Deletes the devices whose names start with `name_prefix`, by default every
+# device these tests name, base included.
 function delete_test_simulators() {
+  local -r name_prefix="${1:-$SIMULATOR_MANAGER_DEVICE_NAME_PREFIX}"
   local udid
-  for udid in $(list_test_simulators); do
+  for udid in $(list_test_simulators "$name_prefix"); do
     # Shut down first: simctl refuses to delete a booted device, and a device left
     # behind is one the next test adopts by name.
     xcrun simctl shutdown "$udid" > /dev/null 2>&1 || true
@@ -213,9 +215,10 @@ function delete_test_simulators() {
   # test would then find it by name and fail on it. Wait for the namespace to be
   # actually clear.
   local waited=0
-  while [[ -n "$(list_test_simulators)" ]]; do
+  while [[ -n "$(list_test_simulators "$name_prefix")" ]]; do
     if ((waited >= 30)); then
-      echo >&2 "⚠️ test simulators still present after ${waited}s: $(list_test_simulators)"
+      echo >&2 "⚠️ test simulators still present after ${waited}s:" \
+        "$(list_test_simulators "$name_prefix")"
       return
     fi
     sleep 1
@@ -223,6 +226,11 @@ function delete_test_simulators() {
   done
 }
 
+# Everything, base included, once the tests are done -- an EXIT trap, so this
+# also runs when the script stops early. And once before they start, since a run
+# killed outright never reached its trap, and the base it left could be one it was
+# still building.
+delete_test_simulators
 trap delete_test_simulators EXIT
 
 # start.sh only starts a daemon; nothing in the repo asserts that the state
@@ -245,6 +253,115 @@ function test_state_prefix_override_is_honored() {
   stop_daemon "$prefix"
 }
 
+# Anyone who can connect to the socket can shut the daemon down or release
+# another test's simulator, and it lives in world-writable /tmp.
+function test_socket_is_owner_only() {
+  local -r prefix="$(new_prefix)"
+
+  if ! output="$(SIMULATOR_MANAGER_STATE_PREFIX="$prefix" "$start" 2>&1)"; then
+    fail "start.sh failed: $output"
+    return
+  fi
+
+  # Only the group and other bits matter. A socket is created from 0777, not
+  # the 0666 a regular file starts from, so the owner-only result is 700; the
+  # execute bit means nothing on a socket.
+  local -r mode="$(stat -f %Lp "$prefix.sock")"
+  if [[ "$mode" != *00 ]]; then
+    fail "expected the socket to be inaccessible to group and others, got mode $mode"
+  fi
+
+  stop_daemon "$prefix"
+}
+
+# A GET, which is all a stray URL fetch would send, must not shut the daemon
+# down.
+function test_shutdown_requires_post() {
+  local -r prefix="$(new_prefix)"
+
+  if ! output="$(SIMULATOR_MANAGER_STATE_PREFIX="$prefix" "$start" 2>&1)"; then
+    fail "start.sh failed: $output"
+    return
+  fi
+  local -r pid="$(daemon_pid "$prefix")"
+
+  local -r status="$(
+    curl --silent --output /dev/null --write-out '%{http_code}' \
+      --unix-socket "$prefix.sock" -XGET 'http:/-/shutdown'
+  )"
+  if [[ "$status" != 405 ]]; then
+    fail "expected GET /shutdown to be rejected with 405, got $status"
+  fi
+  # Shutdown is asynchronous, so give a wrongly accepted one time to take effect.
+  if await_exit "$pid" 3; then
+    fail "GET /shutdown shut the daemon down"
+  fi
+
+  stop_daemon "$prefix"
+}
+
+# A request the daemon can't parse gets a 400, not just a dropped connection,
+# so the client can tell a malformed request from a daemon that went away.
+function test_malformed_request_gets_400() {
+  local -r prefix="$(new_prefix)"
+
+  if ! output="$(SIMULATOR_MANAGER_STATE_PREFIX="$prefix" "$start" 2>&1)"; then
+    fail "start.sh failed: $output"
+    return
+  fi
+
+  local -r status_line="$(
+    python3 -c '
+import socket, sys
+s = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+s.settimeout(10)
+s.connect(sys.argv[1])
+s.sendall(b"NOT HTTP AT ALL\r\n\r\n")
+print(s.recv(4096).decode(errors="replace").splitlines()[0])
+' "$prefix.sock" 2>&1
+  )"
+  if [[ "$status_line" != "HTTP/1.1 400"* ]]; then
+    fail "expected a 400 for a malformed request, got: $status_line"
+  fi
+
+  stop_daemon "$prefix"
+}
+
+# A client that keeps its connection open between requests must not hold up a
+# shutdown: the daemon only exits once every connection has closed, and before
+# it closed idle ones itself, start.sh had to wait out its timeout and kill it.
+function test_shutdown_does_not_wait_for_an_idle_connection() {
+  local -r prefix="$(new_prefix)"
+
+  if ! output="$(SIMULATOR_MANAGER_STATE_PREFIX="$prefix" "$start" 2>&1)"; then
+    fail "start.sh failed: $output"
+    return
+  fi
+  local -r pid="$(daemon_pid "$prefix")"
+
+  # Makes one keep-alive request, then holds the connection open, idle.
+  python3 -c '
+import socket, sys, time
+s = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+s.connect(sys.argv[1])
+s.sendall(b"GET /version HTTP/1.1\r\nHost: x\r\n\r\n")
+s.recv(4096)
+time.sleep(60)
+' "$prefix.sock" > /dev/null 2>&1 &
+  local -r client=$!
+  # Give it time to connect and get its response.
+  sleep 1
+
+  curl --silent --max-time 10 --unix-socket "$prefix.sock" \
+    -XPOST 'http:/-/shutdown' > /dev/null 2>&1
+  if ! await_exit "$pid" 10; then
+    fail "the daemon was still running 10s after /shutdown, with an idle connection open"
+  fi
+
+  kill "$client" 2> /dev/null || true
+  stop_daemon "$prefix"
+}
+
 # The regression test. A version change must not cost an in-flight test its
 # lease: start.sh runs on every lease, so an action starting a new test can
 # otherwise destroy the bookkeeping for tests already running, and their release
@@ -257,47 +374,68 @@ function test_state_prefix_override_is_honored() {
 # Asserts the outcome -- the live leaser can still release -- rather than how the
 # daemon avoids it. Handing the lease to the replacement and declining to upgrade
 # at all are both acceptable; losing the lease is not.
-function test_version_change_preserves_a_live_lease() {
-  local -r prefix="$(new_prefix)"
+# The setup the restart tests share: starts a daemon under $1 and leases a
+# device to a fresh leaser process. Sets the caller's `leaser`, `lease_response`
+# and `first_pid`. On failure, reports it, cleans up, and returns 1.
+function start_with_a_lease() {
+  local -r prefix="$1"
 
   local output
   if ! output="$(SIMULATOR_MANAGER_STATE_PREFIX="$prefix" "$start" 2>&1)"; then
     fail "first start failed: $output"
-    return
+    return 1
   fi
-  local -r first_pid="$(daemon_pid "$prefix")"
+  first_pid="$(daemon_pid "$prefix")"
 
-  local -r leaser="$(spawn_leaser)"
-
+  leaser="$(spawn_leaser)"
   # A successful lease returns a UDID. Checking the response beats releasing and
   # re-leasing to prove it worked: each lease provisions a real device, so a
   # round trip would double an already slow test.
-  local -r lease_response="$(lease_as "$prefix" "$leaser")"
+  lease_response="$(lease_as "$prefix" "$leaser")"
   if ! [[ "$lease_response" =~ ^[0-9A-F-]{36}$ ]]; then
     fail "precondition: lease did not return a UDID: $lease_response"
     kill "$leaser" 2> /dev/null
     stop_daemon "$prefix"
-    return
+    return 1
   fi
+}
 
-  # A concurrent action wants a different version, so start.sh replaces the
-  # daemon holding the lease above.
+# Runs start.sh again under $1, as a later action would. With $2, expects
+# staging version $2, which differs from the running daemon's and so replaces
+# it. Sets the caller's `second_pid`. On failure, reports it, kills `leaser` if
+# the caller has one, cleans up, and returns 1.
+function restart() {
+  local -r prefix="$1"
+  local -r staging_version="${2:-}"
+
+  local output
   if ! output="$(
     SIMULATOR_MANAGER_STATE_PREFIX="$prefix" \
-      EXAMPLE_CI_STAGING_VERSION=99999 \
+      EXAMPLE_CI_STAGING_VERSION="$staging_version" \
       "$start" 2>&1
   )"; then
     fail "second start failed: $output"
-    kill "$leaser" 2> /dev/null
+    if [[ -n "${leaser:-}" ]]; then
+      kill "$leaser" 2> /dev/null
+    fi
     stop_daemon "$prefix"
-    return
+    return 1
   fi
+  second_pid="$(daemon_pid "$prefix")"
+}
 
+function test_version_change_preserves_a_live_lease() {
+  local -r prefix="$(new_prefix)"
+  local leaser lease_response first_pid second_pid
+  start_with_a_lease "$prefix" || return
+
+  # A concurrent action wants a different version, so start.sh replaces the
+  # daemon holding the lease above.
+  restart "$prefix" 99999 || return
   # Deliberately not asserting whether the daemon was replaced; that is the next
   # test's job. Either the lease was handed over or the upgrade was declined, and
   # both keep the leaser whole. The pid is reported on failure only, as a hint
   # about which path was taken.
-  local -r second_pid="$(daemon_pid "$prefix")"
 
   # The leaser is still alive -- this is the whole point. A dead leaser would make
   # a lost lease correct behavior rather than a bug.
@@ -323,35 +461,11 @@ function test_version_change_preserves_a_live_lease() {
 # would fix the warning by abandoning upgrades altogether.
 function test_a_new_daemon_adopts_a_live_lease() {
   local -r prefix="$(new_prefix)"
+  local leaser lease_response first_pid second_pid
+  start_with_a_lease "$prefix" || return
 
-  local output
-  if ! output="$(SIMULATOR_MANAGER_STATE_PREFIX="$prefix" "$start" 2>&1)"; then
-    fail "first start failed: $output"
-    return
-  fi
-  local -r first_pid="$(daemon_pid "$prefix")"
+  restart "$prefix" 99999 || return
 
-  local -r leaser="$(spawn_leaser)"
-  local -r lease_response="$(lease_as "$prefix" "$leaser")"
-  if ! [[ "$lease_response" =~ ^[0-9A-F-]{36}$ ]]; then
-    fail "precondition: lease did not return a UDID: $lease_response"
-    kill "$leaser" 2> /dev/null
-    stop_daemon "$prefix"
-    return
-  fi
-
-  if ! output="$(
-    SIMULATOR_MANAGER_STATE_PREFIX="$prefix" \
-      EXAMPLE_CI_STAGING_VERSION=99999 \
-      "$start" 2>&1
-  )"; then
-    fail "second start failed: $output"
-    kill "$leaser" 2> /dev/null
-    stop_daemon "$prefix"
-    return
-  fi
-
-  local -r second_pid="$(daemon_pid "$prefix")"
   if [[ "$first_pid" == "$second_pid" ]]; then
     fail "expected the upgrade to replace the daemon, but pid $first_pid remains"
     kill "$leaser" 2> /dev/null
@@ -382,35 +496,20 @@ function test_a_new_daemon_adopts_a_live_lease() {
 # to be restarted again.
 function test_a_new_daemon_drops_a_dead_leasers_lease() {
   local -r prefix="$(new_prefix)"
-
-  local output
-  if ! output="$(SIMULATOR_MANAGER_STATE_PREFIX="$prefix" "$start" 2>&1)"; then
-    fail "first start failed: $output"
-    return
-  fi
-
-  local -r leaser="$(spawn_leaser)"
-  local -r lease_response="$(lease_as "$prefix" "$leaser")"
-  if ! [[ "$lease_response" =~ ^[0-9A-F-]{36}$ ]]; then
-    fail "precondition: lease did not return a UDID: $lease_response"
-    kill "$leaser" 2> /dev/null
-    stop_daemon "$prefix"
-    return
-  fi
+  local leaser lease_response first_pid second_pid
+  start_with_a_lease "$prefix" || return
 
   # Kill the daemon before the leaser, so the exit listener never fires and the
   # lease survives on disk with a pid that is already gone. That is exactly the
   # state a `kill -9` upgrade leaves behind.
-  local -r first_pid="$(daemon_pid "$prefix")"
   kill -9 "$first_pid" 2> /dev/null
   kill -9 "$leaser" 2> /dev/null
   await_exit "$leaser"
 
-  if ! output="$(SIMULATOR_MANAGER_STATE_PREFIX="$prefix" "$start" 2>&1)"; then
-    fail "second start failed: $output"
-    stop_daemon "$prefix"
-    return
-  fi
+  # Already dead, and its pid may be reused, so there is nothing for a failed
+  # restart to kill.
+  leaser=""
+  restart "$prefix" || return
 
   local -r live="$(curl --silent --unix-socket "$prefix.sock" -XGET 'http:/-/leases')"
   if [[ "$live" != "0" ]]; then
@@ -425,33 +524,13 @@ function test_a_new_daemon_drops_a_dead_leasers_lease() {
 # because start.sh restarts unconditionally.
 function test_same_version_preserves_a_live_lease() {
   local -r prefix="$(new_prefix)"
-
-  local output
-  if ! output="$(SIMULATOR_MANAGER_STATE_PREFIX="$prefix" "$start" 2>&1)"; then
-    fail "first start failed: $output"
-    return
-  fi
-  local -r first_pid="$(daemon_pid "$prefix")"
-
-  local -r leaser="$(spawn_leaser)"
-  local -r lease_response="$(lease_as "$prefix" "$leaser")"
-  if ! [[ "$lease_response" =~ ^[0-9A-F-]{36}$ ]]; then
-    fail "precondition: lease did not return a UDID: $lease_response"
-    kill "$leaser" 2> /dev/null
-    stop_daemon "$prefix"
-    return
-  fi
+  local leaser lease_response first_pid second_pid
+  start_with_a_lease "$prefix" || return
 
   # Same version: this is the common case, an action leasing while other tests
   # are already running.
-  if ! output="$(SIMULATOR_MANAGER_STATE_PREFIX="$prefix" "$start" 2>&1)"; then
-    fail "second start failed: $output"
-    kill "$leaser" 2> /dev/null
-    stop_daemon "$prefix"
-    return
-  fi
+  restart "$prefix" || return
 
-  local -r second_pid="$(daemon_pid "$prefix")"
   if [[ "$first_pid" != "$second_pid" ]]; then
     fail "daemon was replaced despite an unchanged version: $first_pid -> $second_pid"
   fi
@@ -465,12 +544,12 @@ function test_same_version_preserves_a_live_lease() {
   stop_daemon "$prefix"
 }
 
-# The lease and the release have to name the same process, and that process has to
-# outlive the test. whatever pid reaches the socket must be the one the runner would later release.
+# The lease and the release have to name the same process, and that process has
+# to outlive the test: whatever pid reaches the socket must be the one the runner
+# will later release under.
 #
-# $1 is the assignment rules_apple prefixes to the call. rules_apple 5.0.0-rc2 passes
-# the runner pid; 4.5.x passes nothing, and then our own `$$` is the trap -- it names
-# this script, which exits the moment it has leased. Both shapes have to work.
+# $1 is the assignment rules_apple prefixes to the call, which is how it passes
+# the runner's pid. See the call below for which shapes are checked.
 function test_lease_pid_survives_a_command_substitution() {
   local -r runner_pid_assignment="$1"
   local -r prefix="$(new_prefix)"
@@ -555,7 +634,7 @@ readonly device_type="iPhone%2016"
 
 # Needs no simulator, so this runs before the runtime check that can skip the rest.
 #
-# Only 5.0.0-rc2's shape, which is what MODULE.bazel pins. 4.5.x's shape -- no
+# Only 5.x's shape, which is what MODULE.bazel pins. 4.5.x's shape -- no
 # assignment at all -- is not checked because nothing can pass it: with no pid
 # handed to us, `PPID` is the only candidate, and how many levels up the runner
 # sits depends on the bash running it. Bash 3.2 forks for `unused="$( ... )"` and
@@ -576,6 +655,10 @@ fi
 echo "using iOS $ios_version on $device_type"
 
 test_state_prefix_override_is_honored
+test_socket_is_owner_only
+test_shutdown_requires_post
+test_shutdown_does_not_wait_for_an_idle_connection
+test_malformed_request_gets_400
 test_version_change_preserves_a_live_lease
 test_a_new_daemon_adopts_a_live_lease
 test_a_new_daemon_drops_a_dead_leasers_lease

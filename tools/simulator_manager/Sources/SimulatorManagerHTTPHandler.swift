@@ -60,10 +60,15 @@ final class SimulatorManagerHTTPHandler: ChannelInboundHandler, ChannelOutboundH
   func write(context: ChannelHandlerContext, data: NIOAny, promise: EventLoopPromise<Void>?) {
     let response = unwrapOutboundIn(data)
 
-    write(context: context, response: response)
+    // Passed on rather than dropped, so whoever wrote the response learns whether it was sent.
+    write(context: context, response: response, promise: promise)
   }
 
-  private func write(context: ChannelHandlerContext, response: SimulatorManagerResponse) {
+  private func write(
+    context: ChannelHandlerContext,
+    response: SimulatorManagerResponse,
+    promise: EventLoopPromise<Void>? = nil
+  ) {
     let message = response.message + "\n"
 
     context.write(
@@ -77,7 +82,7 @@ final class SimulatorManagerHTTPHandler: ChannelInboundHandler, ChannelOutboundH
           body: context.channel.allocator.buffer(string: message)
         )
       ),
-      promise: nil
+      promise: promise
     )
   }
 }

@@ -6,10 +6,26 @@ set -euo pipefail
 #
 # Only change this version after all testing has happened.
 #
-# If this version is changed then CI won't use the staging RBE pool, and the
-# changes will impact all executors in the default pool.
+# Changing this version replaces the daemon on every worker the next time a test
+# leases a simulator there. Setting EXAMPLE_CI_STAGING_VERSION instead expects a
+# `staging-<n>` version, to try a change without bumping this.
 #
 #!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! WARNING !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+# 48: write the pid file only once the socket is bound, and kill a daemon that
+#     has a live pid but can't report its version; run simulator commands
+#     without a shell; delete a simulator whose reuse fails rather than leaving
+#     it leased to nobody; persist idle simulators too, and put every device a
+#     replacement doesn't adopt back on an idle timer; create the socket
+#     owner-only, and reject requests that use the wrong HTTP method; close
+#     idle keep-alive connections on shutdown rather than waiting on them;
+#     reject an unrecognized `exclusive` value rather than leasing shared, and
+#     answer a second lease for the same pid with 409; check for a stale start
+#     lock on every attempt, not just the first; serialize the post-boot
+#     script's rewrite of Simulator.app's preferences; discard request bodies
+#     rather than buffering them without a limit; answer a malformed request
+#     with 400 rather than just closing; report a failed post-boot script's
+#     exit code and output as its own ProcessError; take the device name
+#     prefix as an option, so tests can keep off the worker's devices.
 # 47: keep a released simulator warm for 2 hours rather than 1 minute, to see what
 #     the reuse rate looks like when a device is essentially never reclaimed. A
 #     version bump is what makes this take effect on an already-running worker.
@@ -24,7 +40,7 @@ set -euo pipefail
 # 43: install the post-boot script with `cp -f`, so an upgrade can overwrite the
 #     read-only copy a previous version left in place.
 # 42: liveness check for a leaser that exits during provisioning.
-readonly non_staging_version=47
+readonly non_staging_version=48
 
 if [[ -z "${EXAMPLE_CI_STAGING_VERSION:-}" ]]; then
   readonly expected_version="$non_staging_version"
@@ -50,11 +66,11 @@ function check_need_shutdown() {
   fi
 }
 
-# While we are only allowing a single simulator on remote executors we need to
-# more aggressively clean up unused simulators. If this is too large, then we
-# have an extra 6GB memory usage sticking around. If this is too small, then we
-# will constantly be deleting and creating simulators, adding at least 10
-# seconds to test runtimes.
+# A released simulator whose configuration is not among the
+# `recently_used_capacity` most recently leased is deleted at once. Each one holds
+# about 6GB, so only the configurations likely to be leased again are kept warm,
+# for `delete_recently_used_after_idle_secs`; the rest would be paying that for
+# a reuse that rarely comes.
 readonly delete_after_idle_secs=0
 # Deliberately long for now: a released simulator effectively stays warm for the
 # rest of the worker's useful life, so consecutive test actions never pay the
@@ -63,21 +79,31 @@ readonly delete_after_idle_secs=0
 readonly delete_recently_used_after_idle_secs=7200
 readonly recently_used_capacity="${EXAMPLE_SIMULATOR_MANAGER_RECENTLY_USED_CAPACITY:-1}"
 
-readonly mutex_timeout=60
 readonly shutdown_timeout=45
 readonly startup_timeout=10
-readonly stale_mutex_seconds=120
+# Comfortably longer than a holder can legitimately take -- a full shutdown,
+# then a startup -- so only a crashed holder's lock counts as stale.
+readonly stale_mutex_seconds=$((shutdown_timeout + startup_timeout + 15))
+# Longer than `stale_mutex_seconds`, so a waiter clears a crashed holder's lock
+# rather than giving up first.
+readonly mutex_timeout=$((stale_mutex_seconds + 20))
 # Overridable only so tests can drive a daemon on their own paths instead of the
 # well-known ones; production callers leave these unset. A test that reused the
 # real paths would fight the worker's live daemon.
 readonly state_prefix="${SIMULATOR_MANAGER_STATE_PREFIX:-/tmp/simulator_manager}"
+# Likewise only for tests: the daemon finds its devices again by name, so one
+# started with its own prefix never adopts or deletes the worker's devices. Only
+# read when starting a daemon; a test that sets it has to set the state prefix
+# too, or it reuses the worker's daemon and that daemon's names.
+readonly device_name_prefix="${SIMULATOR_MANAGER_DEVICE_NAME_PREFIX:-EXAMPLE_BAZEL_}"
 readonly socket="${state_prefix}.sock"
 readonly pid_path="${state_prefix}.pid"
 readonly mutex_path="${state_prefix}_start.lock"
 readonly scripts_path="${state_prefix}.scripts"
 # Deliberately outlives any single daemon: a replacement reads it to adopt the
-# leases of tests that are still running. Unlike the socket and pid file, this is
-# never removed on restart.
+# leases of tests that are still running, and to take over the idle timers of
+# simulators being kept warm. Unlike the socket and pid file, this is never
+# removed on restart.
 readonly lease_path="${state_prefix}.leases"
 
 function exitMutex() {
@@ -85,24 +111,28 @@ function exitMutex() {
   trap - EXIT
 }
 
-function enterMutex() {
-  if [[ -d "$mutex_path" ]]; then
-    local mtime
-    mtime=$(stat -f %B "$mutex_path")
-    local now
-    now=$(date +%s)
-    if (((now - mtime) > stale_mutex_seconds)); then
-      echo >&2 "$(date '+[%H:%M:%S]') ⚠️ Deleting stale lock file. This" \
-        "shouldn't happen."
-      rm -rf "$mutex_path"
-    fi
+# Checked on every attempt, not just the first: a lock that goes stale while we
+# wait would otherwise hold every caller until its own timeout.
+function removeStaleMutex() {
+  local mtime
+  # Gone already if its holder released it since our `mkdir` failed.
+  mtime=$(stat -f %B "$mutex_path" 2> /dev/null) || return 0
+  local now
+  now=$(date +%s)
+  if (((now - mtime) > stale_mutex_seconds)); then
+    echo >&2 "$(date '+[%H:%M:%S]') ⚠️ Deleting stale lock file. This" \
+      "shouldn't happen."
+    rm -rf "$mutex_path"
   fi
+}
 
+function enterMutex() {
   for _ in $(seq 1 "$mutex_timeout"); do
     if mkdir "$mutex_path" 2> /dev/null; then
       trap 'exitMutex' EXIT
       return 0
     fi
+    removeStaleMutex
     sleep 1
   done
 
@@ -131,8 +161,12 @@ then
   ); then
     echo "$(date '+[%H:%M:%S]') Existing simulator manager version is $version"
   else
+    # The daemon writes its pid file only once its socket is bound, so a live
+    # pid that cannot answer is wedged. Kill it rather than start a second
+    # daemon alongside it.
     echo >&2 "$(date '+[%H:%M:%S]') ❌ Failed to get simulator manager" \
-      "version: $version"
+      "version: $version; killing it"
+    kill -9 "$server_pid" 2> /dev/null || true
     server_pid=""
     version=""
   fi
@@ -172,16 +206,18 @@ if check_need_shutdown "$version"; then
     if ps -p "$server_pid" > /dev/null; then
       echo >&2 "$(date '+[%H:%M:%S]') 🛑 Simulator manager did not shutdown" \
         "in $shutdown_timeout seconds; killing it"
-      kill -9 "$server_pid"
+      kill -9 "$server_pid" 2> /dev/null || true
     fi
   else
     echo >&2 "$(date '+[%H:%M:%S]') 🛑 Failed to gracefully shut down" \
       "simulator manager ($response); killing it"
-    kill -9 "$server_pid"
+    kill -9 "$server_pid" 2> /dev/null || true
   fi
 
-  # Kill all straggler processes, in case they started under a different pid
-  killall simulator_manager 2> /dev/null || true
+  # Kill any straggler serving this socket under a different pid. Match on the
+  # socket rather than the process name, which would also kill daemons started
+  # with a different state prefix.
+  pkill -9 -f -- "--unix-socket-path $socket" 2> /dev/null || true
 
   server_pid=""
   version=""
@@ -254,6 +290,8 @@ if [[ -z "$version" ]]; then
     "$prepare_simulator" \
     --lease-path \
     "$lease_path" \
+    --device-name-prefix \
+    "$device_name_prefix" \
     > /dev/null 2>&1 \
     &
 
@@ -265,7 +303,7 @@ if [[ -z "$version" ]]; then
   done
   if [[ ! -f "$pid_path" ]]; then
     echo >&2 "$(date '+[%H:%M:%S]') error: ❌ Failed to start simulator" \
-      "manager in 10 seconds; exiting"
+      "manager in $startup_timeout seconds; exiting"
     exit 1
   fi
 

@@ -2,7 +2,7 @@ import XCTest
 
 /// Checks that concurrent tests each lease their own simulator.
 ///
-/// Unlike HelloAppConcurrentUITest this has no test host, so rules_apple runs it
+/// Unlike HelloAppUITest this has no test host, so rules_apple runs it
 /// via `simctl spawn` rather than `xcodebuild`.
 ///
 /// Several targets share this source; each logs its UDID, and no two should

@@ -1,16 +1,15 @@
 import Foundation
 import os
-import ShellOut
 
 typealias PID = pid_t
 
 extension Logger {
   static let simulatorManager = simulatorManager(category: "manager")
-  static let childProcess = simulatorManager(category: "manager.child-process")
 }
 
 enum SimulatorManagerError: Error {
   case alreadyLeased(udid: SimulatorUDID)
+  case leaseInProgress
   case noLease
   case leaserExited
 }
@@ -20,7 +19,7 @@ private struct SimulatorLease {
   let config: SimulatorConfig
   let exclusive: Bool
   let slotIndex: Int
-  /// When the leasing process started, captured at lease time.
+  /// When the leasing process started, captured when its lease request arrived.
   ///
   /// Persisted so a successor daemon can tell a still-running leaser from a
   /// recycled PID. Nil when it could not be read.
@@ -84,8 +83,13 @@ actor SimulatorManager {
   private var simulatorSlots: [SimulatorConfig: [SimulatorSlot]] = [:]
   private var referenceCount: [SimulatorUDID: Int] = [:]
   private var leases: [PID: SimulatorLease] = [:]
+  /// Leasers whose lease is still being provisioned, and so not yet in `leases`.
+  private var provisioningLeasers: Set<PID> = []
 
-  private var leaserExitListeners: [PID: DispatchSourceProcess] = [:]
+  /// Each leaser's exit listener, with an ID unique to that registration, so a report from a
+  /// listener that has since been replaced or cancelled can be told apart and ignored.
+  private var leaserExitListeners: [PID: (id: Int, source: DispatchSourceProcess)] = [:]
+  private var nextExitListenerID = 0
 
   private var getBaseSimulatorTasks: [SimulatorConfig: Task<SimulatorUDID, Error>] = [:]
 
@@ -99,10 +103,25 @@ actor SimulatorManager {
 
   private var recentlyLeased: LRUSet<SimulatorConfig>
 
-  private var startupProcessPaths: [String]
   private var postBoot: String?
-  private var childProcessTasks: [Task<Void, Never>] = []
-  private var childProcesses: [String: (Process, DispatchSourceRead, DispatchSourceRead)] = [:]
+
+  /// What the names of the devices this daemon creates and adopts start with. Devices are found
+  /// again by name, so daemons with different prefixes never touch each other's devices.
+  private let deviceNamePrefix: String
+
+  /// What every device name starts with unless the daemon is given another prefix.
+  static let defaultDeviceNamePrefix = "EXAMPLE_BAZEL_"
+
+  private func baseName(for config: SimulatorConfig) -> String {
+    return "\(deviceNamePrefix)BASE_\(config.deviceType)_\(config.version)"
+  }
+
+  private func cloneName(for config: SimulatorConfig, slotIndex: Int) -> String {
+    return "\(deviceNamePrefix)CLONE_\(config.deviceType)_\(config.version)_\(slotIndex)"
+  }
+
+  /// Reads a process's start time. Injectable so tests can stand in for a PID being recycled.
+  private let startTimeOf: @Sendable (PID) -> UInt64?
 
   init(
     simulatorControl: SimulatorControl,
@@ -110,43 +129,27 @@ actor SimulatorManager {
     deleteIdleAfter: UInt16,
     recentlyUsedCapacity: Int,
     deleteOnPIDExit: Bool,
-    startupProcesses: [String] = [],
     postBoot: String? = nil,
-    leaseStore: LeaseStore? = nil
+    deviceNamePrefix: String = SimulatorManager.defaultDeviceNamePrefix,
+    leaseStore: LeaseStore? = nil,
+    startTimeOf: @escaping @Sendable (PID) -> UInt64? = processStartTime
   ) {
     self.simulatorControl = simulatorControl
     self.deleteIdleAfter = deleteIdleAfter
     self.deleteRecentlyUsedIdleAfter = deleteRecentlyUsedIdleAfter
     self.deleteOnPIDExit = deleteOnPIDExit
     self.recentlyLeased = LRUSet(capacity: recentlyUsedCapacity)
-    self.startupProcessPaths = startupProcesses
     self.postBoot = postBoot
+    self.deviceNamePrefix = deviceNamePrefix
     self.leaseStore = leaseStore
+    self.startTimeOf = startTimeOf
 
     // Change the working directory to some place stable, since on RBE the runfiles directory can
     // get cleaned up
     FileManager.default.changeCurrentDirectoryPath("/tmp")
   }
 
-  deinit {
-    for task in childProcessTasks {
-      task.cancel()
-    }
-
-    for (process, outWatcher, errWatcher) in childProcesses.values {
-      process.terminate()
-      outWatcher.cancel()
-      errWatcher.cancel()
-    }
-  }
-
-  func startChildProcesses() throws {
-    for path in startupProcessPaths {
-      childProcessTasks.append(createStartChildProcessTask(path: path))
-    }
-  }
-
-  /// Adopts the leases a previous daemon left behind.
+  /// Adopts the leases and idle simulators a previous daemon left behind.
   ///
   /// Leases used to live only in this actor's memory, so replacing the daemon --
   /// which `start.sh` does on any version change, on every lease -- lost the
@@ -158,26 +161,41 @@ actor SimulatorManager {
   /// slot holding the device, a reference count, and an exit listener so a leaser
   /// that dies during the handover is still cleaned up.
   ///
-  /// Leases whose process is gone are dropped rather than adopted. The device they
-  /// held is left alone: `createBase`/`clone` find existing devices by name, so it
-  /// gets picked up and reference counted by the next lease of that config.
-  func restoreLeases() {
+  /// Every other device the previous daemon knew about -- those it was keeping
+  /// warm, and those of leases that can't be adopted -- goes back on an idle
+  /// timer, as if just released. Left alone, nothing would ever delete them: they
+  /// are only picked up again if a later lease happens to clone into that exact
+  /// slot.
+  func restoreLeases() async {
     guard let leaseStore else { return }
 
     let persisted = leaseStore.load()
-    guard !persisted.isEmpty else { return }
+    guard !persisted.leases.isEmpty || !persisted.idleSimulators.isEmpty else { return }
+
+    // The previous daemon kept these warm because their configs were recently
+    // leased, so carry that over; otherwise on a worker, where `deleteIdleAfter`
+    // is 0, every restart would delete them immediately. Inserted before adopting
+    // leases so the configs of running tests end up most recent.
+    for idle in persisted.idleSimulators {
+      recentlyLeased.insert(idle.config)
+    }
 
     var adopted = 0
     var dropped = 0
+    var unowned = persisted.idleSimulators
 
-    for lease in persisted {
-      guard leaserSurvived(lease) else {
+    for lease in persisted.leases {
+      // Without exit tracking the caller owns the lease's lifetime, and the PID need not name a
+      // running process, just as in `lease`.
+      guard !deleteOnPIDExit || leaserSurvived(lease) else {
         dropped += 1
+        unowned.append(.init(udid: lease.udid, config: lease.config, slotIndex: lease.slotIndex))
         continue
       }
 
-      // Two leases cannot share an exclusive device, and a slot cannot hold two
-      // different devices. A file that says otherwise is inconsistent -- possibly
+      // Two leases cannot share an exclusive device, a device cannot be in two
+      // slots, and a slot cannot hold two different devices. A file that says
+      // otherwise is inconsistent -- possibly
       // hand-edited, or written by a version with different slot semantics -- so
       // prefer dropping the lease over corrupting the slot bookkeeping.
       guard canAdopt(lease) else {
@@ -188,6 +206,7 @@ actor SimulatorManager {
           """
         )
         dropped += 1
+        unowned.append(.init(udid: lease.udid, config: lease.config, slotIndex: lease.slotIndex))
         continue
       }
 
@@ -201,7 +220,7 @@ actor SimulatorManager {
 
       // Recreate the slot the device occupies, so it is neither handed to an
       // incompatible lease nor deleted as idle while its owner is still running.
-      var slots = simulatorSlots[lease.config] ?? []
+      var slots = simulatorSlots[lease.config, default: []]
       while slots.count <= lease.slotIndex {
         slots.append(.empty)
       }
@@ -214,7 +233,7 @@ actor SimulatorManager {
       // `deleteIdleAfter` -- 0 on a worker -- and deletes a device the daemon we
       // replaced would have kept, making every version bump cost the tests in
       // flight a fresh boot.
-      _ = recentlyLeased.insert(lease.config)
+      recentlyLeased.insert(lease.config)
 
       incrementReferenceCount(for: lease.udid)
 
@@ -225,16 +244,56 @@ actor SimulatorManager {
       adopted += 1
     }
 
+    var reclaimed = Set<SimulatorUDID>()
+    for idle in unowned {
+      // Skip a device an adopted lease still holds (a dropped lease can share a
+      // non-exclusive device with one that survived), or one already reclaimed.
+      guard referenceCount[idle.udid] == nil, reclaimed.insert(idle.udid).inserted else {
+        continue
+      }
+
+      await reclaim(idle)
+    }
+
     Logger.simulatorManager.info(
       """
       ♻️ Restored \(adopted, privacy: .public) lease(s) from a previous simulator \
-      manager; dropped \(dropped, privacy: .public) whose process had exited
+      manager; dropped \(dropped, privacy: .public) stale or conflicting lease(s); \
+      put \(reclaimed.count, privacy: .public) unowned simulator(s) on an idle timer
       """
     )
 
     // The dropped entries are gone for good, so rewrite the file rather than let a
     // later crash re-adopt them.
-    persistLeases()
+    persistState()
+  }
+
+  /// Puts a simulator the previous daemon left unowned back on an idle timer in
+  /// its slot, or deletes it outright if an adopted lease has taken that slot.
+  private func reclaim(_ idle: PersistedIdleSimulator) async {
+    var slots = simulatorSlots[idle.config, default: []]
+    while slots.count <= idle.slotIndex {
+      slots.append(.empty)
+    }
+    simulatorSlots[idle.config] = slots
+
+    guard case .empty = slots[idle.slotIndex] else {
+      Logger.simulatorManager.warning(
+        """
+        ⚠️ Deleting unowned simulator \(idle.udid, privacy: .public), whose slot is \
+        already taken
+        """
+      )
+      // If we fail to delete, don't throw an error
+      try? await simulatorControl.delete(
+        idle.udid,
+        name: cloneName(for: idle.config, slotIndex: idle.slotIndex),
+        context: "restoreLeases, slot taken"
+      )
+      return
+    }
+
+    await pendingDeletion(idle.udid, config: idle.config, slotIndex: idle.slotIndex)
   }
 
   /// Whether the process that took `lease` is the one still running under that
@@ -242,14 +301,7 @@ actor SimulatorManager {
   private func leaserSurvived(_ lease: PersistedLease) -> Bool {
     guard processIsRunning(lease.pid) else { return false }
 
-    // A record without a start time predates that field. Fall back to liveness
-    // alone: adopting on a PID collision costs one device held until that process
-    // exits, which is better than dropping every lease on a mixed-version upgrade.
-    guard let persistedStart = lease.leaserStartTime else { return true }
-
-    guard let currentStart = processStartTime(lease.pid) else { return false }
-
-    guard currentStart == persistedStart else {
+    guard isRunning(lease.pid, startedAt: lease.leaserStartTime) else {
       Logger.simulatorManager.info(
         """
         👻 PID \(lease.pid, privacy: .public) is running but started at a different \
@@ -262,10 +314,24 @@ actor SimulatorManager {
     return true
   }
 
+  /// Whether `pid` is running and is the process that started at `startTime`, rather than an
+  /// unrelated one that reused the number.
+  ///
+  /// A nil `startTime` means it couldn't be read, or the record predates that field. Fall back to
+  /// liveness alone: adopting on a PID collision costs one device held until that process exits,
+  /// which is better than refusing every such lease.
+  private func isRunning(_ pid: PID, startedAt startTime: UInt64?) -> Bool {
+    guard processIsRunning(pid) else { return false }
+    guard let startTime else { return true }
+    return startTimeOf(pid) == startTime
+  }
+
   /// Whether `lease` can be adopted without contradicting one already restored.
   private func canAdopt(_ lease: PersistedLease) -> Bool {
     for existing in leases.values {
-      if existing.udid == lease.udid, existing.exclusive || lease.exclusive {
+      if existing.udid == lease.udid,
+         existing.exclusive || lease.exclusive
+         || existing.config != lease.config || existing.slotIndex != lease.slotIndex {
         return false
       }
 
@@ -279,26 +345,43 @@ actor SimulatorManager {
     return true
   }
 
-  /// Mirrors the current leases to disk.
+  /// Mirrors the current leases and idle simulators to disk.
   ///
   /// Called on every change rather than at shutdown, because the daemon is not
   /// always shut down politely: `start.sh` escalates to `kill -9`, which runs no
-  /// cleanup. Each lease costs a small JSON write, against provisioning a
+  /// cleanup. Each change costs a small JSON write, against provisioning a
   /// simulator that takes seconds.
-  private func persistLeases() {
+  private func persistState() {
     guard let leaseStore else { return }
 
-    leaseStore.save(
-      leases.map { pid, lease in
-        .init(
-          pid: pid,
-          leaserStartTime: lease.leaserStartTime,
-          udid: lease.udid,
-          config: lease.config,
-          exclusive: lease.exclusive,
-          slotIndex: lease.slotIndex
-        )
+    // Includes devices mid-deletion, so one whose delete a `kill -9` interrupts is
+    // still cleaned up by the successor.
+    var idleSimulators: [PersistedIdleSimulator] = []
+    for (config, slots) in simulatorSlots {
+      for (slotIndex, slot) in slots.enumerated() {
+        switch slot {
+        case .pendingDeletion(let udid, _), .deleting(let udid):
+          idleSimulators.append(.init(udid: udid, config: config, slotIndex: slotIndex))
+        case .empty, .pendingCreation, .active:
+          break
+        }
       }
+    }
+
+    leaseStore.save(
+      .init(
+        leases: leases.map { pid, lease in
+          .init(
+            pid: pid,
+            leaserStartTime: lease.leaserStartTime,
+            udid: lease.udid,
+            config: lease.config,
+            exclusive: lease.exclusive,
+            slotIndex: lease.slotIndex
+          )
+        },
+        idleSimulators: idleSimulators
+      )
     )
   }
 
@@ -311,6 +394,20 @@ actor SimulatorManager {
     if let existingLease = leases[leaser] {
       throw SimulatorManagerError.alreadyLeased(udid: existingLease.udid)
     }
+
+    // The lease isn't recorded until provisioning is done, so the check above can't see one that
+    // is still being provisioned. Without this, a second request for the same PID would provision
+    // its own device and overwrite the first lease, leaving the first device held by nobody.
+    // Claimed before the first `await`, so the two can't interleave.
+    guard provisioningLeasers.insert(leaser).inserted else {
+      throw SimulatorManagerError.leaseInProgress
+    }
+    defer { provisioningLeasers.remove(leaser) }
+
+    // Read now, not once provisioning is done: that can take minutes, and a leaser that dies in
+    // the meantime can have its PID reused. Reading it afterwards would record the new process's
+    // start time, and hand the lease to it.
+    let leaserStartTime = startTimeOf(leaser)
 
     Logger.simulatorManager.info(
       """
@@ -338,22 +435,23 @@ actor SimulatorManager {
     // `getSimulator()` will increment the reference count for the simulator
     let (simulator, slotIndex) = try await getSimulator(for: config, exclusive: exclusive)
 
-    _ = recentlyLeased.insert(config)
+    recentlyLeased.insert(config)
 
     // Re-check now that provisioning is done: the leaser may have exited while we
-    // were cloning and booting. Record the lease first so `release` can unwind the
-    // reference count and put the device back in the idle pool, then hand it back
-    // rather than returning a UDID nobody will use.
+    // were cloning and booting, and its PID may even belong to another process by
+    // now. Record the lease first so `release` can unwind the reference count and
+    // put the device back in the idle pool, then hand it back rather than returning
+    // a UDID nobody will use.
     leases[leaser] = .init(
       udid: simulator,
       config: config,
       exclusive: exclusive,
       slotIndex: slotIndex,
-      leaserStartTime: processStartTime(leaser)
+      leaserStartTime: leaserStartTime
     )
-    persistLeases()
+    persistState()
 
-    if deleteOnPIDExit, !processIsRunning(leaser) {
+    if deleteOnPIDExit, !isRunning(leaser, startedAt: leaserStartTime) {
       Logger.simulatorManager.info(
         """
         👋 PID \(leaser, privacy: .public) exited while its simulator was being \
@@ -387,10 +485,9 @@ actor SimulatorManager {
 
   func release(for leaser: PID) async throws {
     guard let lease = leases.removeValue(forKey: leaser) else {
-      // If the manager recently restarted, we might not have the state of all leases. Since
-      // `SimulatorControl` will return existing simulators matching a given name, the dangling
-      // simulator will eventually get picked back up again and properly reference counted. So we
-      // will return an error here, and ignore it in the test runner.
+      // A PID that never leased or already released, or whose lease a restart lost because the
+      // lease store couldn't be read. release_simulator.sh warns on this rather than failing the
+      // test.
       throw SimulatorManagerError.noLease
     }
 
@@ -400,13 +497,13 @@ actor SimulatorManager {
 
     // Recorded before the device is torn down, so a daemon replaced mid-release
     // does not adopt a lease whose simulator is already going away.
-    persistLeases()
+    persistState()
 
     removeReleaseOnExit(for: leaser)
 
     await simulatorControl.cleanTempFiles(in: lease.udid)
 
-    try await decrementReferenceCount(
+    await decrementReferenceCount(
       for: lease.udid,
       config: lease.config,
       slotIndex: lease.slotIndex
@@ -433,7 +530,7 @@ actor SimulatorManager {
       let baseSimulator =
         try await simulatorControl
           .createBase(
-            name: config.baseDeviceName(),
+            name: baseName(for: config),
             with: config,
             runtimeIdentifier: config.runtimeIdentifier()
           )
@@ -467,7 +564,7 @@ actor SimulatorManager {
     for simulator: SimulatorUDID,
     config: SimulatorConfig,
     slotIndex: Int
-  ) async throws {
+  ) async {
     guard var count = referenceCount[simulator] else {
       // Simulator was already deleted, nothing to do
       return
@@ -494,12 +591,8 @@ actor SimulatorManager {
     for config: SimulatorConfig,
     exclusive: Bool
   ) async throws -> (simulator: SimulatorUDID, slotIndex: Int) {
-    if simulatorSlots.keys.contains(config) == false {
-      simulatorSlots[config] = []
-    }
-
     // Need to sort so we reuse the the correct slots
-    let sortedSlots = simulatorSlots[config]!.enumerated().sorted { lhs, rhs in
+    let sortedSlots = simulatorSlots[config, default: []].enumerated().sorted { lhs, rhs in
       let lhsSortOrder = lhs.element.sortOrder
       let rhsSortOrder = rhs.element.sortOrder
 
@@ -561,9 +654,9 @@ actor SimulatorManager {
     }
 
     // If we got here, we need to add a new slot
-    let index = simulatorSlots[config]!.count
+    let index = simulatorSlots[config, default: []].count
     let task = createCloneTask(config: config, exclusive: exclusive, slotIndex: index)
-    simulatorSlots[config]!.append(.pendingCreation(task, exclusive: exclusive))
+    simulatorSlots[config, default: []].append(.pendingCreation(task, exclusive: exclusive))
     return try await (task.value, slotIndex: index)
   }
 
@@ -581,17 +674,13 @@ actor SimulatorManager {
       // from under us, as it will error, and we can then "delete" it and return a new one.
       try await simulatorControl.ensureBooted(
         simulator,
-        context: "getSimulator, reused: \(config.cloneDeviceName(index: slotIndex))"
+        context: "getSimulator, reused: \(self.cloneName(for: config, slotIndex: slotIndex))"
       )
 
       return simulator
-    } catch let error as ProcessError {
+    } catch let error as ProcessError where error.exitCode == 148 {
       // 148 happens for "Invalid device". So it either has already been deleted or it's corrupt
       // in some way. Either way, we will "delete" it and return a new one.
-      guard error.exitCode == 148 else {
-        throw error
-      }
-
       Logger.simulatorManager.warning(
         """
         ⚠️ Boot of existing simulator \(simulator, privacy: .public) failed; deleting and \
@@ -606,13 +695,49 @@ actor SimulatorManager {
         slotIndex: slotIndex,
         // We can't clean up slots, since we assign to it below
         cleanUpSlots: false,
-        context: "getSimulator, reused: \(config.cloneDeviceName(index: slotIndex))"
+        context: "getSimulator, reused: \(self.cloneName(for: config, slotIndex: slotIndex))"
       )
 
       let task = createCloneTask(config: config, exclusive: exclusive, slotIndex: slotIndex)
       simulatorSlots[config]![slotIndex] = .pendingCreation(task, exclusive: exclusive)
       return try await task.value
+    } catch {
+      // We don't know what state the simulator is in, so don't leave it to be handed out again.
+      // Without this, the reference taken above is never released, and the slot stays `.active`
+      // for the life of the daemon, first in line for every later lease.
+      await abandonReuse(of: simulator, config: config, slotIndex: slotIndex)
+      throw error
     }
+  }
+
+  /// Drops the reference a failed `reuseSimulator` took, deleting the simulator if no other lease
+  /// still holds it.
+  private func abandonReuse(
+    of simulator: SimulatorUDID,
+    config: SimulatorConfig,
+    slotIndex: Int
+  ) async {
+    guard let count = referenceCount[simulator] else {
+      return
+    }
+
+    guard count == 1 else {
+      referenceCount[simulator] = count - 1
+      return
+    }
+
+    Logger.simulatorManager.warning(
+      "⚠️ Deleting simulator \(simulator, privacy: .public) after a failed reuse"
+    )
+
+    // If we fail to delete, don't throw an error; the caller reports the original failure
+    try? await delete(
+      simulator,
+      config: config,
+      slotIndex: slotIndex,
+      cleanUpSlots: true,
+      context: "abandonReuse: \(self.cloneName(for: config, slotIndex: slotIndex))"
+    )
   }
 
   private func createCloneTask(
@@ -624,7 +749,7 @@ actor SimulatorManager {
       do {
         let simulator = try await simulatorControl.clone(
           getBase(for: config),
-          name: config.cloneDeviceName(index: slotIndex),
+          name: cloneName(for: config, slotIndex: slotIndex),
           deviceType: config.deviceType,
           runtimeIdentifier: config.runtimeIdentifier(),
           postBoot: postBoot
@@ -651,43 +776,48 @@ actor SimulatorManager {
   }
 
   private func registerReleaseOnExit(for leaser: PID) {
+    let id = nextExitListenerID
+    nextExitListenerID += 1
+
+    // The handler only reports the exit to the actor, which is where it is handled, so it doesn't
+    // matter which queue it runs on.
     let processSource =
-      DispatchSource.makeProcessSource(identifier: leaser, eventMask: .exit, queue: .main)
-
-    var handledExit = false
-    let onExitHandler: () -> Void = { [weak self] in
-      // Avoid double handling of exit in case the process exits between
-      // `processSource.resume()` and the check with `kill`
-      guard !handledExit else { return }
-      handledExit = true
-
-      Task {
-        guard let self else { return }
-
-        Logger.simulatorManager.debug("👋 PID \(leaser, privacy: .public) exited")
-
-        try await self.release(for: leaser)
-      }
+      DispatchSource.makeProcessSource(identifier: leaser, eventMask: .exit, queue: .global())
+    processSource.setEventHandler { [weak self] in
+      guard let self else { return }
+      Task { await self.leaserExited(leaser, listenerID: id) }
     }
-
-    processSource.setEventHandler { onExitHandler() }
+    leaserExitListeners[leaser] = (id: id, source: processSource)
     processSource.resume()
 
-    // Check to see if the process is already dead and cancel the source if it is, which will
-    // trigger `setCancelHandler`, which releases the simulator
-    guard processIsRunning(leaser) else {
-      processSource.cancel()
-      onExitHandler()
-      return
+    // A process that has already exited never fires the source, so check by hand. It may also exit
+    // between `resume()` and this check and be reported twice, which `leaserExited` ignores.
+    if !processIsRunning(leaser) {
+      Task { await leaserExited(leaser, listenerID: id) }
     }
+  }
 
-    leaserExitListeners[leaser] = processSource
+  private func leaserExited(_ leaser: PID, listenerID: Int) async {
+    // Releasing removes the listener, so this also ignores a second report of the same exit.
+    guard leaserExitListeners[leaser]?.id == listenerID else { return }
+
+    Logger.simulatorManager.debug("👋 PID \(leaser, privacy: .public) exited")
+
+    do {
+      try await release(for: leaser)
+    } catch {
+      Logger.simulatorManager.error(
+        """
+        ❌ Failed to release the simulator of exited PID \(leaser, privacy: .public): \
+        \(error, privacy: .public)
+        """
+      )
+    }
   }
 
   private func removeReleaseOnExit(for leaser: PID) {
-    guard let leaserExitListener = leaserExitListeners[leaser] else { return }
-    leaserExitListeners.removeValue(forKey: leaser)
-    leaserExitListener.cancel()
+    guard let listener = leaserExitListeners.removeValue(forKey: leaser) else { return }
+    listener.source.cancel()
   }
 
   private func pendingDeletion(
@@ -753,6 +883,7 @@ actor SimulatorManager {
     }
 
     simulatorSlots[config]![slotIndex] = .pendingDeletion(simulator, task)
+    persistState()
   }
 
   private func delete(
@@ -762,13 +893,14 @@ actor SimulatorManager {
     cleanUpSlots: Bool,
     context: @escaping @autoclosure () -> String?
   ) async throws {
-    let name = config.cloneDeviceName(index: slotIndex)
+    let name = cloneName(for: config, slotIndex: slotIndex)
 
     Logger.simulatorManager.info(
       "🗑️ Deleting simulator \(simulator, privacy: .public) (\(name, privacy: .public))"
     )
 
     simulatorSlots[config]![slotIndex] = .deleting(simulator)
+    persistState()
 
     referenceCount.removeValue(forKey: simulator)
 
@@ -782,6 +914,8 @@ actor SimulatorManager {
           simulatorSlots[config]!.removeLast()
         }
       }
+
+      persistState()
     }
 
     try await simulatorControl.delete(simulator, name: name, context: context())
@@ -790,118 +924,4 @@ actor SimulatorManager {
       "🗑️ Deleted simulator \(simulator, privacy: .public) (\(name, privacy: .public)"
     )
   }
-
-  // MARK: Child Process Management
-
-  private nonisolated func createStartChildProcessTask(path: String) -> Task<Void, Never> {
-    return Task.detached { [weak self] in
-      let process: Process
-      do {
-        guard let self else { return }
-        process = try await self.createProcess(path: path)
-        // `self` drops out of scope here, so `SimulatorManager` can deinit
-      } catch {
-        Logger.simulatorManager.info(
-          """
-          ❌ Failed to create child process at "\(path, privacy: .public)": \
-          \(error, privacy: .public)
-          """
-        )
-        return
-      }
-
-      await withCheckedContinuation { cont in
-        process.terminationHandler = { proc in
-          let exitCode = proc.terminationStatus
-          Logger.simulatorManager.warning(
-            """
-            ⚠️ "\(path, privacy: .public)" exited with code: \(exitCode, privacy: .public)
-            """
-          )
-          cont.resume()
-        }
-
-        do {
-          Logger.simulatorManager.info(
-            #"🧒 Starting "\#(path, privacy: .public)""#
-          )
-          try process.run()
-        } catch {
-          Logger.simulatorManager.info(
-            """
-            ❌ Failed to start "\(path, privacy: .public)": \
-            \(error, privacy: .public)
-            """
-          )
-          cont.resume()
-        }
-      }
-    }
-  }
-
-  private func createProcess(path: String) throws -> Process {
-    let process = Process()
-
-    process.executableURL = URL(fileURLWithPath: path)
-
-    let outPTY = try PTY()
-    process.standardOutput = FileHandle(fileDescriptor: outPTY.child, closeOnDealloc: true)
-    let outQueue = DispatchQueue(label: "com.example.simulator_manager.child_process.out")
-    let outWatcher = watch(fd: outPTY.parent, queue: outQueue) { line in
-      Logger.childProcess.info("[\(path, privacy: .public)] \(line, privacy: .public)")
-    }
-
-    let errPTY = try PTY()
-    process.standardError = FileHandle(fileDescriptor: errPTY.child, closeOnDealloc: true)
-    let errQueue = DispatchQueue(label: "com.example.simulator_manager.child_process.err")
-    let errWatcher = watch(fd: errPTY.parent, queue: errQueue) { line in
-      Logger.childProcess.error("[\(path, privacy: .public)] \(line, privacy: .public)")
-    }
-
-    childProcesses[path] = (process, outWatcher, errWatcher)
-
-    return process
-  }
-}
-
-/// Installs a DispatchSourceRead on `fd`.
-private func watch(
-  fd: Int32,
-  queue: DispatchQueue,
-  onLine: @escaping (String) -> Void
-) -> DispatchSourceRead {
-  let src = DispatchSource.makeReadSource(fileDescriptor: fd, queue: queue)
-  var buffer = Data()
-
-  src.setEventHandler {
-    var tmp = [UInt8](repeating: 0, count: 4096)
-    let n = read(fd, &tmp, tmp.count)
-    guard n > 0 else {
-      src.cancel()
-      close(fd)
-      return
-    }
-
-    buffer.append(contentsOf: tmp[0..<n])
-
-    // Split on newline; last segment may be an incomplete tail
-    let segments = buffer.split(
-      separator: UInt8(ascii: "\n"),
-      omittingEmptySubsequences: false
-    )
-
-    // Emit every complete line (all but the last segment)
-    for lineData in segments.dropLast() {
-      if let line = String(data: lineData, encoding: .utf8) {
-        onLine(line)
-      }
-    }
-
-    // Keep the last segment (possibly empty or partial) for next time
-    buffer = Data(segments.last ?? Data())
-  }
-
-  src.resume()
-
-  return src
 }

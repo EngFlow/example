@@ -29,12 +29,6 @@ final class HTTPServer {
     try? FileManager.default.removeItem(at: socketURL)
     try? FileManager.default.removeItem(at: pidURL)
 
-    try String(ProcessInfo.processInfo.processIdentifier).write(
-      to: pidURL,
-      atomically: true,
-      encoding: .utf8
-    )
-
     let eventLoopGroup = MultiThreadedEventLoopGroup(numberOfThreads: System.coreCount)
 
     do {
@@ -50,30 +44,48 @@ final class HTTPServer {
       }
 
       do {
-        let serverChannel = try await ServerBootstrap(group: eventLoopGroup)
-          .serverChannelOption(ChannelOptions.backlog, value: 256)
-          .serverChannelInitializer { channel in
-            return channel.eventLoop.makeCompletedFuture {
-              try channel.pipeline.syncOperations.addHandler(
-                quiesce.makeServerChannelHandler(channel: channel)
-              )
+        // The socket lives in /tmp, and anyone who can connect to it can shut the daemon down or
+        // release another test's simulator. So create it owner-only: under the default umask it
+        // would be connectable by every user on the machine. Set the umask around `bind` rather
+        // than `chmod`ing afterwards, which would leave a window where the socket is open to all.
+        let serverChannel = try await withUmask(0o077) {
+          try await ServerBootstrap(group: eventLoopGroup)
+            .serverChannelOption(ChannelOptions.backlog, value: 256)
+            .serverChannelInitializer { channel in
+              return channel.eventLoop.makeCompletedFuture {
+                try channel.pipeline.syncOperations.addHandler(
+                  quiesce.makeServerChannelHandler(channel: channel)
+                )
+              }
             }
-          }
-          .bind(unixDomainSocketPath: unixSocketPath, childChannelInitializer: { childChannel in
-            return childChannel.eventLoop.makeCompletedFuture {
-              try childChannel.pipeline.syncOperations.addHandlers([
-                HTTPResponseEncoder(),
-                ByteToMessageHandler(HTTPRequestDecoder()),
-                AccumulatedHTTPHandler(),
-                SimulatorManagerHTTPHandler(),
-              ])
+            .bind(unixDomainSocketPath: unixSocketPath, childChannelInitializer: { childChannel in
+              return childChannel.eventLoop.makeCompletedFuture {
+                try childChannel.pipeline.syncOperations.addHandlers([
+                  HTTPResponseEncoder(),
+                  ByteToMessageHandler(HTTPRequestDecoder()),
+                  // Answers a request the decoder can't parse with a 400 before closing, rather than
+                  // the client seeing only a dropped connection.
+                  HTTPServerProtocolErrorHandler(),
+                  AccumulatedHTTPHandler(),
+                  SimulatorManagerHTTPHandler(),
+                ])
 
-              return try NIOAsyncChannel<SimulatorManagerRequest, SimulatorManagerResponse>(
-                wrappingChannelSynchronously: childChannel,
-                configuration: .init()
-              )
-            }
-          })
+                return try NIOAsyncChannel<SimulatorManagerRequest, SimulatorManagerResponse>(
+                  wrappingChannelSynchronously: childChannel,
+                  configuration: .init()
+                )
+              }
+            })
+        }
+
+        // start.sh treats the pid file as the signal that the server is ready, so only write it
+        // once the socket is bound. Writing it earlier let start.sh find a live pid with no
+        // socket behind it yet, fail to read the version, and start a second daemon.
+        try String(ProcessInfo.processInfo.processIdentifier).write(
+          to: pidURL,
+          atomically: true,
+          encoding: .utf8
+        )
 
         Logger.httpServer.info("🔌 Server running on UDS at \(unixSocketPath, privacy: .public)")
 
@@ -147,16 +159,20 @@ final class HTTPServer {
       }
 
     case "version":
+      guard request.method == .GET else { return methodNotAllowed(request) }
       return .init(
         status: .ok,
         message: version
       )
 
     case "leases":
+      guard request.method == .GET else { return methodNotAllowed(request) }
       let count = await simulatorRequestHandler.liveLeaseCount()
       return .init(status: .ok, message: String(count))
 
     case "shutdown":
+      // POST only, so that nothing which merely fetches URLs can shut the daemon down.
+      guard request.method == .POST else { return methodNotAllowed(request) }
       // Shutting down with leases outstanding is safe: they are mirrored to disk,
       // and the replacement daemon adopts the ones whose process is still running.
       Logger.httpServer.info("⚠️ Shutdown request received")
@@ -164,7 +180,22 @@ final class HTTPServer {
       return .init(status: .ok, message: "Server shutting down")
 
     default:
-      return .init(status: .badRequest, message: "Unknown method: \(request.path)")
+      return .init(status: .notFound, message: "Unknown path: \(request.path)")
     }
+  }
+
+  /// Runs `body` with the process umask set to `mask`. The umask is process-wide, so anything
+  /// else creating a file meanwhile gets it too; keep `body` short.
+  private func withUmask<T>(_ mask: mode_t, _ body: () async throws -> T) async rethrows -> T {
+    let previous = umask(mask)
+    defer { umask(previous) }
+    return try await body()
+  }
+
+  private func methodNotAllowed(_ request: SimulatorManagerRequest) -> SimulatorManagerResponse {
+    return .init(
+      status: .methodNotAllowed,
+      message: "Unsupported HTTP method for /\(request.path): \(request.method)"
+    )
   }
 }

@@ -1,6 +1,5 @@
 import Foundation
 import os.log
-import ShellOut
 
 typealias SimulatorUDID = String
 
@@ -98,13 +97,6 @@ protocol SimulatorControl: Actor {
     name: String,
     context: @escaping @autoclosure () -> String?
   ) async throws
-
-  func getExisting(
-    name: String,
-    deviceType: String,
-    runtimeIdentifier: String,
-    context: @escaping @autoclosure () -> String?
-  ) async throws -> String?
 }
 
 actor RealSimulatorControl: SimulatorControl {
@@ -247,9 +239,6 @@ actor RealSimulatorControl: SimulatorControl {
           """
         )
 
-        // Wait for it to boot. This shouldn't be necessary, but sometimes the simulator will
-        // reboot because of a migration.
-        try await ensureBooted(udid, context: "clone, existing: \(name)")
       } else {
         isExisting = false
 
@@ -270,28 +259,54 @@ actor RealSimulatorControl: SimulatorControl {
           "\(name, privacy: .public)": \(udid, privacy: .public)
           """
         )
-
-        try await ensureBooted(udid, context: "clone, new: \(name)")
       }
 
-      if let postBoot {
-        Logger.simulatorControl.info(
-          """
-          📱 Running post-boot script "\(postBoot, privacy: .public)" on \
-          \(udid, privacy: .public)
-          """
+      do {
+        // Wait for it to boot. For an existing simulator this shouldn't be necessary, but
+        // sometimes the simulator will reboot because of a migration.
+        try await ensureBooted(
+          udid,
+          context: "clone, \(isExisting ? "existing" : "new"): \(name)"
         )
 
-        do {
-          _ = try await subprocess(postBoot, env: ["SIMULATOR_UDID": udid])
-        } catch {
-          throw NSError(
-            domain: "SimulatorControl",
-            code: 1,
-            userInfo:
-            [NSLocalizedDescriptionKey: "postBoot failed (isExisting: \(isExisting)): \(error)"]
+        if let postBoot {
+          Logger.simulatorControl.info(
+            """
+            📱 Running post-boot script "\(postBoot, privacy: .public)" on \
+            \(udid, privacy: .public)
+            """
           )
+
+          // A script that runs and fails throws its own ProcessError, context and all, so the
+          // caller keeps its exit code and output. Only a failure to run it at all is wrapped.
+          do {
+            _ = try await subprocess(
+              postBoot,
+              env: ["SIMULATOR_UDID": udid],
+              context: "postBoot on \(isExisting ? "existing" : "new") clone \(name)"
+            )
+          } catch let error as ProcessError {
+            throw error
+          } catch {
+            throw NSError(
+              domain: "SimulatorControl",
+              code: 1,
+              userInfo:
+              [NSLocalizedDescriptionKey: "postBoot failed (isExisting: \(isExisting)): \(error)"]
+            )
+          }
         }
+      } catch {
+        // The caller gets no UDID, so nothing would ever release this device. Delete it rather
+        // than leave it booted.
+        Logger.simulatorControl.warning(
+          """
+          ⚠️ Deleting simulator \(udid, privacy: .public) ("\(name, privacy: .public)"), which \
+          failed to boot or prepare
+          """
+        )
+        try? await delete(udid, name: name, context: "clone, failed: \(name)")
+        throw error
       }
 
       return udid
@@ -347,7 +362,7 @@ actor RealSimulatorControl: SimulatorControl {
     }
   }
 
-  func getExisting(
+  private func getExisting(
     name: String,
     deviceType: String,
     runtimeIdentifier: String,
@@ -574,53 +589,83 @@ private func subprocess(
   env: [String: String] = [:],
   context: @escaping @autoclosure () -> String? = nil
 ) async throws -> String {
-  return try await Task { try syncSubprocess(executable, args, env: env, context: context()) }.value
+  let context = context()
+
+  // `simctl` calls such as `bootstatus -b` and `clone` can block for minutes, so run them on a
+  // Dispatch queue rather than tying up a thread in Swift concurrency's small cooperative pool.
+  // Blocking there with several provisions in flight would stall every actor, including
+  // `SimulatorManager`, and with it releases and HTTP responses.
+  return try await withCheckedThrowingContinuation { continuation in
+    DispatchQueue.global().async {
+      continuation.resume(
+        with: Result { try syncSubprocess(executable, args, env: env, context: context) }
+      )
+    }
+  }
 }
 
 private func syncSubprocess(
   _ executable: String,
-  _ args: [String] = [],
-  env: [String: String] = [:],
-  context: @escaping @autoclosure () -> String? = nil
+  _ args: [String],
+  env: [String: String],
+  context: String?
 ) throws -> String {
-  let quotedArgs = args.map { "'\($0)'" }
-
-  var newEnv = ProcessInfo.processInfo.environment.merging(env) { _, new in new }
-  newEnv["PWD"] = FileManager.default.currentDirectoryPath
-
-  let process = Process()
-  process.environment = ProcessInfo.processInfo.environment.merging(env) { _, new in new }
-
-  let command = "\(executable) \(quotedArgs.joined(separator: " "))"
+  let command = ([executable] + args).map { "'\($0)'" }.joined(separator: " ")
 
   Logger.simulatorControl.debug(#"🛠️ Running "\#(command, privacy: .public)""#)
 
-  do {
-    return try shellOut(
-      to: executable,
-      arguments: quotedArgs,
-      process: process
-    )
-  } catch let error as ShellOutError {
+  // Run the executable directly, without a shell, so arguments such as a device type taken from
+  // the request are passed through verbatim rather than interpreted.
+  let stdOutPipe = Pipe()
+  let stdErrPipe = Pipe()
+  let process = Process()
+  process.executableURL = URL(fileURLWithPath: executable)
+  process.arguments = args
+  process.environment = ProcessInfo.processInfo.environment.merging(env) { _, new in new }
+  process.standardInput = FileHandle.nullDevice
+  process.standardOutput = stdOutPipe
+  process.standardError = stdErrPipe
+
+  try process.run()
+
+  // Drain stderr concurrently, so a child that fills the stderr pipe while we are still reading
+  // stdout can't deadlock us.
+  let stdErrData = DataBox()
+  let stdErrRead = DispatchWorkItem {
+    stdErrData.data = stdErrPipe.fileHandleForReading.readDataToEndOfFile()
+  }
+  DispatchQueue.global().async(execute: stdErrRead)
+  let stdOut = stdOutPipe.fileHandleForReading.readDataToEndOfFile().trimmedOutput()
+  stdErrRead.wait()
+  process.waitUntilExit()
+
+  guard process.terminationStatus == 0 else {
     throw ProcessError(
       command: command,
-      context: context(),
-      exitCode: error.terminationStatus,
-      stdOut: error.output,
-      stdErr: error.message
+      context: context,
+      exitCode: process.terminationStatus,
+      stdOut: stdOut,
+      stdErr: stdErrData.data.trimmedOutput()
     )
+  }
+
+  return stdOut
+}
+
+/// Holds data written by one `DispatchWorkItem` and read after `wait()`ing on it.
+private final class DataBox: @unchecked Sendable {
+  var data = Data()
+}
+
+extension Data {
+  /// The data as a string, minus the single trailing newline most commands end their output with.
+  fileprivate func trimmedOutput() -> String {
+    let output = String(decoding: self, as: UTF8.self)
+    return output.hasSuffix("\n") ? String(output.dropLast()) : output
   }
 }
 
 extension SimulatorConfig {
-  func baseDeviceName() -> String {
-    return "EXAMPLE_BAZEL_BASE_\(deviceType)_\(version)"
-  }
-
-  func cloneDeviceName(index: Int) -> String {
-    return "EXAMPLE_BAZEL_CLONE_\(deviceType)_\(version)_\(index)"
-  }
-
   func runtimeIdentifier() -> String {
     let runtimeVersion = version.replacingOccurrences(of: ".", with: "-")
     return "com.apple.CoreSimulator.SimRuntime.\(os)-\(runtimeVersion)"

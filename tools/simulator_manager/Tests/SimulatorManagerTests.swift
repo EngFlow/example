@@ -1,4 +1,5 @@
 import Foundation
+import NIOHTTP1
 import XCTest
 
 final class SimulatorManagerTests: XCTestCase {
@@ -647,24 +648,31 @@ final class SimulatorManagerRestartTests: XCTestCase {
 /// observe the store before the write it just triggered had landed.
 private final class FakeLeaseStore: LeaseStore, @unchecked Sendable {
   private let lock = NSLock()
-  private var stored: [PersistedLease] = []
+  private var stored = PersistedState()
 
   /// Hands `load()` something the daemon never wrote, for the cases where the file
   /// is corrupt, hand-edited or written by another version.
-  func preload(_ leases: [PersistedLease]) {
-    lock.withLock { stored = leases }
+  func preload(
+    _ leases: [PersistedLease],
+    idleSimulators: [PersistedIdleSimulator] = []
+  ) {
+    lock.withLock { stored = .init(leases: leases, idleSimulators: idleSimulators) }
   }
 
   func contents() -> [PersistedLease] {
+    return lock.withLock { stored.leases }
+  }
+
+  func idleContents() -> [PersistedIdleSimulator] {
+    return lock.withLock { stored.idleSimulators }
+  }
+
+  func save(_ state: PersistedState) {
+    lock.withLock { stored = state }
+  }
+
+  func load() -> PersistedState {
     return lock.withLock { stored }
-  }
-
-  func save(_ leases: [PersistedLease]) {
-    lock.withLock { stored = leases }
-  }
-
-  func load() -> [PersistedLease] {
-    return contents()
   }
 }
 
@@ -753,7 +761,7 @@ final class SimulatorManagerLeaseHandoverTests: XCTestCase {
       ),
     ])
 
-    let manager = makeManager(control, store: store)
+    let manager = makeManager(control, store: store, deleteOnPIDExit: true)
     await manager.restoreLeases()
 
     let live = await manager.liveLeaseCount()
@@ -806,7 +814,7 @@ final class SimulatorManagerLeaseHandoverTests: XCTestCase {
       ),
     ])
 
-    await makeManager(control, store: store).restoreLeases()
+    await makeManager(control, store: store, deleteOnPIDExit: true).restoreLeases()
 
     // The rewrite is asynchronous in the fake, so let the save land.
     try await Task.sleep(for: .milliseconds(100))
@@ -846,6 +854,149 @@ final class SimulatorManagerLeaseHandoverTests: XCTestCase {
 
     let live = await manager.liveLeaseCount()
     XCTAssertEqual(live, 1, "only one lease can hold an exclusive device")
+  }
+
+  /// The same device in two slots would be deleted through one slot while the other still hands
+  /// it out, so the second lease claiming it is dropped, even though it is shared.
+  func test_one_device_in_two_slots_is_not_adopted_twice() async throws {
+    let control = MockSimulatorControl()
+    let store = FakeLeaseStore()
+
+    let leaser = getpid()
+    let start = processStartTime(leaser)
+    store.preload([
+      .init(
+        pid: leaser,
+        leaserStartTime: start,
+        udid: "SHARED-DEVICE",
+        config: config,
+        exclusive: false,
+        slotIndex: 0
+      ),
+      .init(
+        pid: 1,
+        leaserStartTime: nil,
+        udid: "SHARED-DEVICE",
+        config: config,
+        exclusive: false,
+        slotIndex: 1
+      ),
+    ])
+
+    let manager = makeManager(control, store: store)
+    await manager.restoreLeases()
+
+    try await manager.release(for: leaser)
+    // swiftformat:disable:next hoistAwait
+    try await assertThrowsAsyncError(await manager.release(for: 1))
+  }
+
+  /// Without exit tracking, a lease's PID doesn't have to be a running process, so restoring
+  /// mustn't drop the lease for not being one.
+  func test_without_exit_tracking_a_dead_pids_lease_is_adopted() async throws {
+    let control = MockSimulatorControl()
+    let store = FakeLeaseStore()
+
+    let udid = try await makeManager(control, store: store)
+      .lease(to: 4242, exclusive: true, config: config)
+
+    let successor = makeManager(control, store: store)
+    await successor.restoreLeases()
+    try await successor.release(for: 4242)
+
+    let deleted = await control.deletedSimulators
+    XCTAssertEqual(deleted, [udid])
+  }
+
+  /// A dropped lease's device has nobody left to release it, so the successor puts
+  /// it on an idle timer -- here 0, so it is deleted -- rather than leaving it
+  /// booted for the life of the worker.
+  func test_a_dropped_leases_device_is_reclaimed() async throws {
+    let control = MockSimulatorControl()
+    let store = FakeLeaseStore()
+
+    store.preload([
+      .init(
+        pid: 1,
+        leaserStartTime: 999,
+        udid: "DEAD-DEVICE",
+        config: config,
+        exclusive: true,
+        slotIndex: 0
+      ),
+    ])
+
+    await makeManager(control, store: store, deleteOnPIDExit: true).restoreLeases()
+
+    let deleted = await control.deletedSimulators
+    XCTAssertEqual(deleted, ["DEAD-DEVICE"])
+  }
+
+  /// A dropped lease that shared a non-exclusive device with one that survived must
+  /// not take the device away from the survivor.
+  func test_a_dropped_lease_does_not_reclaim_a_device_still_in_use() async throws {
+    let control = MockSimulatorControl()
+    let store = FakeLeaseStore()
+
+    let leaser = getpid()
+    store.preload([
+      .init(
+        pid: leaser,
+        leaserStartTime: processStartTime(leaser),
+        udid: "SHARED-DEVICE",
+        config: config,
+        exclusive: false,
+        slotIndex: 0
+      ),
+      .init(
+        pid: 1,
+        leaserStartTime: 999,
+        udid: "SHARED-DEVICE",
+        config: config,
+        exclusive: false,
+        slotIndex: 0
+      ),
+    ])
+
+    let manager = makeManager(control, store: store, deleteOnPIDExit: true)
+    await manager.restoreLeases()
+
+    let deleted = await control.deletedSimulators
+    XCTAssertEqual(deleted, [])
+    let live = await manager.liveLeaseCount()
+    XCTAssertEqual(live, 1)
+  }
+
+  /// A device the previous daemon was keeping warm is handed over too: the
+  /// successor reuses it rather than cloning a new one, and doesn't leave it booted
+  /// with nobody tracking it.
+  func test_an_idle_simulator_is_handed_over_and_reused() async throws {
+    let control = MockSimulatorControl()
+    let store = FakeLeaseStore()
+    let makeWarmManager = {
+      SimulatorManager(
+        simulatorControl: control,
+        deleteRecentlyUsedIdleAfter: 600,
+        deleteIdleAfter: 600,
+        recentlyUsedCapacity: 1,
+        deleteOnPIDExit: false,
+        leaseStore: store
+      )
+    }
+
+    let first = makeWarmManager()
+    let udid = try await first.lease(to: 4242, exclusive: true, config: config)
+    try await first.release(for: 4242)
+
+    XCTAssertEqual(store.idleContents(), [.init(udid: udid, config: config, slotIndex: 0)])
+
+    let successor = makeWarmManager()
+    await successor.restoreLeases()
+
+    let reused = try await successor.lease(to: 4343, exclusive: true, config: config)
+    XCTAssertEqual(reused, udid)
+    let deleted = await control.deletedSimulators
+    XCTAssertEqual(deleted, [])
   }
 
   /// Persistence is opt-in. Without a store the manager behaves as it always did,
@@ -983,7 +1134,7 @@ final class FileLeaseStoreTests: XCTestCase {
       .path
   }
 
-  func test_leases_round_trip_through_a_file() throws {
+  func test_state_round_trips_through_a_file() throws {
     let path = temporaryPath()
     defer { try? FileManager.default.removeItem(atPath: path) }
 
@@ -1006,15 +1157,46 @@ final class FileLeaseStoreTests: XCTestCase {
         slotIndex: 3
       ),
     ]
+    let state = PersistedState(
+      leases: leases,
+      idleSimulators: [
+        .init(
+          udid: "UDID-C",
+          config: .init(deviceType: "iPhone 16", os: "iOS", version: "26.4"),
+          slotIndex: 1
+        ),
+      ]
+    )
 
-    store.save(leases)
+    store.save(state)
 
-    XCTAssertEqual(FileLeaseStore(path: path).load(), leases)
+    XCTAssertEqual(FileLeaseStore(path: path).load(), state)
+  }
+
+  /// Daemons before version 48 wrote a bare array of leases, and a successor must
+  /// still adopt those across the upgrade.
+  func test_a_bare_lease_array_loads_as_leases() throws {
+    let path = temporaryPath()
+    defer { try? FileManager.default.removeItem(atPath: path) }
+
+    let leases: [PersistedLease] = [
+      .init(
+        pid: 501,
+        leaserStartTime: 1234,
+        udid: "UDID-A",
+        config: .init(deviceType: "iPhone 16", os: "iOS", version: "26.4"),
+        exclusive: true,
+        slotIndex: 0
+      ),
+    ]
+    try JSONEncoder().encode(leases).write(to: URL(fileURLWithPath: path))
+
+    XCTAssertEqual(FileLeaseStore(path: path).load(), PersistedState(leases: leases))
   }
 
   /// A missing file is the first-ever start, not an error.
   func test_a_missing_file_loads_as_empty() {
-    XCTAssertEqual(FileLeaseStore(path: temporaryPath()).load(), [])
+    XCTAssertEqual(FileLeaseStore(path: temporaryPath()).load(), PersistedState())
   }
 
   /// A corrupt file must not stop the daemon from starting; the worst case is the
@@ -1025,7 +1207,7 @@ final class FileLeaseStoreTests: XCTestCase {
 
     try "not json".write(toFile: path, atomically: true, encoding: .utf8)
 
-    XCTAssertEqual(FileLeaseStore(path: path).load(), [])
+    XCTAssertEqual(FileLeaseStore(path: path).load(), PersistedState())
   }
 
   /// Saving replaces rather than appends, so a released lease does not come back.
@@ -1034,19 +1216,21 @@ final class FileLeaseStoreTests: XCTestCase {
     defer { try? FileManager.default.removeItem(atPath: path) }
 
     let store = FileLeaseStore(path: path)
-    store.save([
-      .init(
-        pid: 1,
-        leaserStartTime: nil,
-        udid: "OLD",
-        config: .init(deviceType: "iPhone 16", os: "iOS", version: "26.4"),
-        exclusive: true,
-        slotIndex: 0
-      ),
-    ])
-    store.save([])
+    store.save(
+      .init(leases: [
+        .init(
+          pid: 1,
+          leaserStartTime: nil,
+          udid: "OLD",
+          config: .init(deviceType: "iPhone 16", os: "iOS", version: "26.4"),
+          exclusive: true,
+          slotIndex: 0
+        ),
+      ])
+    )
+    store.save(.init())
 
-    XCTAssertEqual(store.load(), [])
+    XCTAssertEqual(store.load(), PersistedState())
   }
 
   /// A save leaves only the lease file behind. `.atomic` already writes via an
@@ -1064,18 +1248,20 @@ final class FileLeaseStoreTests: XCTestCase {
 
     let name = "leases.json"
     let store = FileLeaseStore(path: directory.appendingPathComponent(name).path)
-    store.save([
-      .init(
-        pid: 1,
-        leaserStartTime: nil,
-        udid: "UDID-A",
-        config: .init(deviceType: "iPhone 16", os: "iOS", version: "26.4"),
-        exclusive: true,
-        slotIndex: 0
-      ),
-    ])
+    store.save(
+      .init(leases: [
+        .init(
+          pid: 1,
+          leaserStartTime: nil,
+          udid: "UDID-A",
+          config: .init(deviceType: "iPhone 16", os: "iOS", version: "26.4"),
+          exclusive: true,
+          slotIndex: 0
+        ),
+      ])
+    )
     // Twice, since the interesting case is overwriting an existing file.
-    store.save([])
+    store.save(.init())
 
     let contents = try FileManager.default.contentsOfDirectory(atPath: directory.path)
     XCTAssertEqual(contents, [name])
@@ -1141,6 +1327,14 @@ final class SimulatorManagerInvalidDeviceTests: XCTestCase {
     ) { error in
       XCTAssertEqual((error as? ProcessError)?.exitCode, 1)
     }
+
+    // The failed reuse must not strand the device: it is deleted rather than left active with a
+    // reference nobody will release, and the next lease gets a fresh clone.
+    let deleted = await control.deletedSimulators
+    XCTAssertEqual(deleted, [first])
+
+    let next = try await manager.lease(to: 9012, exclusive: true, config: config)
+    XCTAssertNotEqual(next, first)
   }
 }
 
@@ -1254,6 +1448,227 @@ final class SimulatorManagerPendingDeletionTests: XCTestCase {
   }
 }
 
+/// A value tests can change from a `@Sendable` hook while the manager reads it.
+private final class LockedBox<Value>: @unchecked Sendable {
+  private let lock = NSLock()
+  private var stored: Value
+
+  init(_ value: Value) {
+    stored = value
+  }
+
+  var value: Value {
+    get { lock.withLock { stored } }
+    set { lock.withLock { stored = newValue } }
+  }
+}
+
+/// The bookkeeping that ties a lease to the process holding it.
+final class SimulatorManagerLeaserTests: XCTestCase {
+  private let config = SimulatorConfig(deviceType: "iPhone 14", os: "iOS", version: "16.4")
+
+  /// Provisioning can take minutes, and a leaser that dies during it can have its PID handed to
+  /// another process. That process is still running, so a liveness check alone passes, and the
+  /// device would be leased to it until it exits. The start time read when the request arrived is
+  /// what tells them apart.
+  func test_a_pid_reused_during_provisioning_gets_no_device() async throws {
+    let control = MockSimulatorControl()
+    let startTime = LockedBox<UInt64>(1)
+    let manager = SimulatorManager(
+      simulatorControl: control,
+      deleteRecentlyUsedIdleAfter: 0,
+      deleteIdleAfter: 0,
+      recentlyUsedCapacity: 1,
+      deleteOnPIDExit: true,
+      startTimeOf: { _ in startTime.value }
+    )
+
+    // The leaser dies mid-clone and an unrelated process, started later, takes its PID.
+    await control.setOnClone { startTime.value = 2 }
+
+    // swiftformat:disable:next hoistAwait
+    await assertThrowsAsyncError(
+      try await manager.lease(to: PID(getpid()), exclusive: true, config: config)
+    ) { error in
+      guard case SimulatorManagerError.leaserExited = error else {
+        return XCTFail("expected leaserExited, got \(error)")
+      }
+    }
+
+    // The clone goes back to the pool, which with these timers deletes it.
+    let created = await control.baseForClones.keys
+    let deleted = await control.deletedSimulators
+    XCTAssertEqual(created.count, 1)
+    XCTAssertEqual(Set(deleted), Set(created))
+  }
+
+  /// A lease is only recorded once its device is provisioned, so a second request for the same
+  /// PID arriving before then used to get a device of its own. It then overwrote the first lease,
+  /// and nothing would ever release the first device.
+  func test_concurrent_leases_for_one_pid_grant_only_one() async throws {
+    let control = MockSimulatorControl()
+    let manager = SimulatorManager(
+      simulatorControl: control,
+      deleteRecentlyUsedIdleAfter: 0,
+      deleteIdleAfter: 0,
+      recentlyUsedCapacity: 1,
+      deleteOnPIDExit: false
+    )
+    let config = self.config
+
+    // Holds the first lease in provisioning long enough for the second to arrive.
+    await control.setOnClone { try? await Task.sleep(for: .milliseconds(200)) }
+
+    @Sendable func lease() async -> SimulatorUDID? {
+      return try? await manager.lease(to: 1234, exclusive: true, config: config)
+    }
+    async let first = lease()
+    async let second = lease()
+    let granted = await [first, second].compactMap { $0 }
+    XCTAssertEqual(granted.count, 1, "only one of two concurrent leases for a PID may succeed")
+
+    // Releasing that one lease must return every device provisioned for the PID.
+    try await manager.release(for: 1234)
+    let created = await control.baseForClones.keys
+    let deleted = await control.deletedSimulators
+    XCTAssertEqual(Set(deleted), Set(created), "a device was provisioned that nothing will release")
+  }
+
+  /// Leases are keyed on the runner's PID so that a test which dies without releasing still gives
+  /// its device back.
+  func test_a_leasers_exit_releases_its_lease() async throws {
+    let control = MockSimulatorControl()
+    let manager = SimulatorManager(
+      simulatorControl: control,
+      deleteRecentlyUsedIdleAfter: 0,
+      deleteIdleAfter: 0,
+      recentlyUsedCapacity: 1,
+      deleteOnPIDExit: true
+    )
+
+    let leaser = Process()
+    leaser.executableURL = URL(fileURLWithPath: "/bin/sleep")
+    leaser.arguments = ["30"]
+    try leaser.run()
+    let pid = PID(leaser.processIdentifier)
+
+    let udid = try await manager.lease(to: pid, exclusive: true, config: config)
+
+    leaser.terminate()
+    leaser.waitUntilExit()
+
+    // The release is asynchronous, so wait for it.
+    for _ in 0..<50 {
+      if await control.deletedSimulators.contains(udid) { break }
+      try await Task.sleep(for: .milliseconds(100))
+    }
+    let deleted = await control.deletedSimulators
+    XCTAssertEqual(deleted, [udid], "the exited leaser's device should be released")
+
+    // swiftformat:disable:next hoistAwait
+    try await assertThrowsAsyncError(await manager.release(for: pid))
+  }
+
+  /// The liveness check after provisioning: a leaser that dies while its device is being cloned
+  /// must not be handed that device, and the device must go back to the pool.
+  func test_a_leaser_that_exits_during_provisioning_gets_no_device() async throws {
+    let control = MockSimulatorControl()
+    let manager = SimulatorManager(
+      simulatorControl: control,
+      deleteRecentlyUsedIdleAfter: 0,
+      deleteIdleAfter: 0,
+      recentlyUsedCapacity: 1,
+      deleteOnPIDExit: true
+    )
+
+    let leaser = Process()
+    leaser.executableURL = URL(fileURLWithPath: "/bin/sleep")
+    leaser.arguments = ["30"]
+    try leaser.run()
+    let pid = PID(leaser.processIdentifier)
+
+    await control.setOnClone {
+      kill(pid, SIGKILL)
+      // Reap it, so the PID stops being reported as running.
+      var status: Int32 = 0
+      waitpid(pid, &status, 0)
+    }
+
+    // swiftformat:disable:next hoistAwait
+    await assertThrowsAsyncError(
+      try await manager.lease(to: pid, exclusive: true, config: config)
+    ) { error in
+      guard case SimulatorManagerError.leaserExited = error else {
+        return XCTFail("expected leaserExited, got \(error)")
+      }
+    }
+
+    let created = await control.baseForClones.keys
+    let deleted = await control.deletedSimulators
+    XCTAssertEqual(created.count, 1)
+    XCTAssertEqual(Set(deleted), Set(created))
+  }
+}
+
+final class SimulatorRequestHandlerTests: XCTestCase {
+  private func makeHandler() -> SimulatorRequestHandler {
+    SimulatorRequestHandler(
+      simulatorManager: SimulatorManager(
+        simulatorControl: MockSimulatorControl(),
+        deleteRecentlyUsedIdleAfter: 0,
+        deleteIdleAfter: 0,
+        recentlyUsedCapacity: 1,
+        deleteOnPIDExit: false
+      )
+    )
+  }
+
+  private func lease(
+    _ handler: SimulatorRequestHandler,
+    pid: PID,
+    exclusive: String
+  ) async throws -> SimulatorManagerResponse {
+    try await handler.handleRequest(
+      method: .POST,
+      pathComponents: [String(pid)],
+      queryParameters: [
+        "exclusive": exclusive,
+        "deviceType": "iPhone 14",
+        "os": "iOS",
+        "version": "16.4",
+      ]
+    )
+  }
+
+  /// `exclusive=true` used to be read as false, quietly handing out a shared
+  /// device. An exclusive lease never shares, so a second one gets its own.
+  func test_exclusive_true_is_exclusive() async throws {
+    let handler = makeHandler()
+
+    let first = try await lease(handler, pid: 1234, exclusive: "true")
+    let second = try await lease(handler, pid: 5678, exclusive: "true")
+
+    XCTAssertEqual(first.status, .created)
+    XCTAssertEqual(second.status, .created)
+    XCTAssertNotEqual(first.message, second.message)
+  }
+
+  func test_an_unrecognized_exclusive_value_is_rejected() async throws {
+    let response = try await lease(makeHandler(), pid: 1234, exclusive: "yes")
+
+    XCTAssertEqual(response.status, .badRequest)
+  }
+
+  func test_leasing_twice_is_a_conflict() async throws {
+    let handler = makeHandler()
+
+    _ = try await lease(handler, pid: 1234, exclusive: "1")
+    let response = try await lease(handler, pid: 1234, exclusive: "1")
+
+    XCTAssertEqual(response.status, .conflict)
+  }
+}
+
 final class LRUSetTests: XCTestCase {
   /// With capacity 1, leasing a second configuration evicts the first -- which
   /// flips the first config's released devices from `delete-recently-used-idle-after`
@@ -1264,11 +1679,10 @@ final class LRUSetTests: XCTestCase {
   func test_capacity_one_evicts_previous_config() {
     var set = LRUSet<String>(capacity: 1)
 
-    XCTAssertNil(set.insert("iPhone 11_26.5"))
+    set.insert("iPhone 11_26.5")
     XCTAssertTrue(set.contains("iPhone 11_26.5"))
 
-    let evicted = set.insert("iPad Air_26.5")
-    XCTAssertEqual(evicted, "iPhone 11_26.5")
+    set.insert("iPad Air_26.5")
     XCTAssertFalse(
       set.contains("iPhone 11_26.5"),
       "the evicted config now takes the short idle timer"
@@ -1280,35 +1694,34 @@ final class LRUSetTests: XCTestCase {
   func test_capacity_two_keeps_both_configs() {
     var set = LRUSet<String>(capacity: 2)
 
-    XCTAssertNil(set.insert("iPhone 11_26.5"))
-    XCTAssertNil(set.insert("iPad Air_26.5"))
+    set.insert("iPhone 11_26.5")
+    set.insert("iPad Air_26.5")
 
     XCTAssertTrue(set.contains("iPhone 11_26.5"))
     XCTAssertTrue(set.contains("iPad Air_26.5"))
 
     // A third config evicts the least recently used, not the most recent.
-    XCTAssertEqual(set.insert("iPhone 17_26.5"), "iPhone 11_26.5")
+    set.insert("iPhone 17_26.5")
+    XCTAssertFalse(set.contains("iPhone 11_26.5"))
     XCTAssertTrue(set.contains("iPad Air_26.5"))
     XCTAssertTrue(set.contains("iPhone 17_26.5"))
   }
 
   /// Re-inserting an existing element must refresh its recency without evicting
-  /// anything. `insert` reports the element it removed from the ordering array,
-  /// which for a re-insert is the element itself -- callers must not treat that
-  /// as an eviction.
+  /// anything.
   func test_reinsert_does_not_evict() {
     var set = LRUSet<String>(capacity: 2)
 
-    _ = set.insert("a")
-    _ = set.insert("b")
+    set.insert("a")
+    set.insert("b")
 
     // Re-inserting "a" makes it most recent; "b" must stay.
-    _ = set.insert("a")
+    set.insert("a")
     XCTAssertTrue(set.contains("a"))
     XCTAssertTrue(set.contains("b"))
 
     // So a third insert evicts "b", the genuinely least recently used.
-    XCTAssertEqual(set.insert("c"), "b")
+    set.insert("c")
     XCTAssertFalse(set.contains("b"))
     XCTAssertTrue(set.contains("a"))
   }
@@ -1378,6 +1791,13 @@ actor MockSimulatorControl: SimulatorControl {
     return simulator
   }
 
+  /// Runs during every `clone`, standing in for whatever happens while a real clone boots.
+  var onClone: (@Sendable () async -> Void)?
+
+  func setOnClone(_ hook: @escaping @Sendable () async -> Void) {
+    onClone = hook
+  }
+
   func clone(
     _ simulator: SimulatorUDID,
     name: String,
@@ -1385,6 +1805,10 @@ actor MockSimulatorControl: SimulatorControl {
     runtimeIdentifier: String,
     postBoot: String?
   ) async throws -> SimulatorUDID {
+    if let onClone {
+      await onClone()
+    }
+
     // Mirrors the real implementation, which looks for an existing device of this
     // name first so that a clone left behind by a killed manager is adopted rather
     // than duplicated.
@@ -1445,14 +1869,5 @@ actor MockSimulatorControl: SimulatorControl {
     if devicesByName[name] == simulator {
       devicesByName.removeValue(forKey: name)
     }
-  }
-
-  func getExisting(
-    name: String,
-    deviceType: String,
-    runtimeIdentifier: String,
-    context: @escaping @autoclosure () -> String?
-  ) async throws -> String? {
-    return devicesByName[name]
   }
 }
